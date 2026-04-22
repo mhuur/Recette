@@ -115,6 +115,48 @@ body {
   gap: 4px;
 }
 .sidebar-user.active { display: flex; }
+
+.user-avatar-wrapper {
+  position: relative;
+}
+.user-menu {
+  display: none;
+  position: absolute;
+  left: calc(100% + 8px);
+  top: 0;
+  background: var(--bg-2);
+  border: 1px solid var(--border-light);
+  border-radius: 10px;
+  box-shadow: var(--shadow);
+  padding: 8px;
+  min-width: 220px;
+  z-index: 60;
+}
+.user-avatar-wrapper:hover .user-menu,
+.user-avatar-wrapper.open .user-menu {
+  display: block;
+}
+.user-menu-header {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 6px;
+}
+.user-menu-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  color: var(--text);
+  border: none;
+  padding: 8px 10px;
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+  font-family: inherit;
+}
+.user-menu-item:hover {
+  background: var(--surface);
+}
 .count-badge {
   display: inline-block;
   background: rgba(255,255,255,0.15);
@@ -223,21 +265,28 @@ label {
 }
 .filter-group.compact .chips-input-wrapper {
   padding: 1px 3px;
-  min-height: 24px;
+  min-height: 22px;
   border: none;
   background: transparent;
-  gap: 3px;
+  gap: 2px;
 }
 .filter-group.compact .chips-inner-input {
-  font-size: 12px;
+  font-size: 11px;
   padding: 1px 2px;
-  min-width: 60px;
+  min-width: 40px;
 }
 .filter-group.compact .chip {
+  font-size: 10px;
+  padding: 1px 5px;
+}
+.filter-group.compact .chip::after {
   font-size: 11px;
-  padding: 1px 7px;
 }
 .filter-group.compact .autocomplete-dropdown {
+  font-size: 12px;
+}
+.filter-group.compact .autocomplete-item {
+  padding: 5px 8px;
   font-size: 12px;
 }
 .filter-group label { margin: 0; font-size: 11px; white-space: nowrap; }
@@ -483,11 +532,18 @@ label {
 .autocomplete-item:last-child { border-bottom: none; }
 .autocomplete-item:hover, .autocomplete-item.highlighted { background: var(--surface-2); }
 .autocomplete-item.selected {
-  background: rgba(74, 158, 255, 0.15);
-  color: var(--accent);
+  background: var(--primary);
+  color: white;
   font-weight: 500;
+  position: relative;
 }
-.autocomplete-item.selected:hover { background: rgba(239, 68, 68, 0.15); color: var(--danger); }
+.autocomplete-item.selected:hover {
+  background: var(--danger);
+}
+.autocomplete-item.selected::before {
+  content: '✓ ';
+  margin-right: 4px;
+}
 .autocomplete-create {
   padding: 9px 12px;
   color: var(--accent);
@@ -789,8 +845,13 @@ label {
   gap: 10px;
   overflow-x: auto;
   overflow-y: visible;
-  padding-bottom: 10px;
-  scrollbar-width: thin;
+  padding-bottom: 4px;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.season-grid::-webkit-scrollbar {
+  display: none;
+  height: 0;
 }
 .season-col {
   flex: 0 0 220px;
@@ -881,6 +942,28 @@ label {
   background: var(--border);
   margin: 0 4px;
 }
+.note-color-wrapper {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 4px 6px;
+  border-radius: 4px;
+  cursor: pointer;
+  color: var(--text-muted);
+  margin: 0;
+}
+.note-color-wrapper:hover {
+  background: var(--surface-2);
+  color: var(--text);
+}
+.note-color-wrapper input[type="color"] {
+  width: 22px;
+  height: 20px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+}
 .notes-editor {
   min-height: 500px;
   padding: 14px;
@@ -955,7 +1038,18 @@ label {
     <button class="tab-btn" data-tab="notes">Notes & bugs</button>
   </nav>
   <div class="sidebar-user" id="sidebar-user">
-    <div id="sidebar-user-avatar" style="width:36px; height:36px; border-radius:50%; background:var(--primary); display:flex; align-items:center; justify-content:center; font-weight:600; color:white; overflow:hidden;" title="Synchronisé"></div>
+    <div class="user-avatar-wrapper" id="user-avatar-wrapper">
+      <div id="sidebar-user-avatar" style="width:36px; height:36px; border-radius:50%; background:var(--primary); display:flex; align-items:center; justify-content:center; font-weight:600; color:white; overflow:hidden; cursor:pointer;"></div>
+      <div class="user-menu" id="user-menu">
+        <div class="user-menu-header">
+          <div id="user-menu-name" style="font-weight:500; color:var(--text);">—</div>
+          <div id="user-menu-email" style="font-size:11px; color:var(--text-dim); word-break:break-all;">—</div>
+        </div>
+        <button class="user-menu-item" id="menu-push-cloud">⬆ Envoyer vers le cloud</button>
+        <button class="user-menu-item" id="menu-pull-cloud">⬇ Recharger depuis le cloud</button>
+        <button class="user-menu-item" id="menu-sign-out">🚪 Se déconnecter</button>
+      </div>
+    </div>
     <div class="sync-status" id="sidebar-sync-status" style="font-size:10px; color:var(--success); text-align:center; margin-top:4px;">☁</div>
   </div>
   <div class="sidebar-footer">
@@ -969,12 +1063,10 @@ label {
     <div class="toolbar">
       <div class="toolbar-row">
         <input type="text" id="search-input" placeholder="🔍 Rechercher..." style="width:220px; flex:0 0 auto;">
-        <button class="btn btn-ghost btn-sm" id="btn-toggle-adv-filters" title="Afficher/masquer les filtres détaillés">⚙ Filtres détaillés</button>
-        <button class="btn btn-ghost btn-sm" id="btn-reset-filters" title="Réinitialiser tous les filtres">✕ Reset</button>
         <span id="recipe-count-display" style="font-size:12px; color:var(--text-muted); margin-left:auto; white-space:nowrap;">0 / 0</span>
       </div>
       <div class="toolbar-row" style="justify-content:space-between;">
-        <div style="display:flex; gap:6px; align-items:center;">
+        <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
           <button class="btn btn-sm" id="btn-toggle-quick-filter" title="Afficher / masquer les filtres rapides">⏷ Filtre</button>
           <select id="sort-select" class="compact-select" style="width:auto; min-width:110px;">
             <option value="name-asc">Nom A → Z</option>
@@ -984,6 +1076,8 @@ label {
             <option value="time-asc">Temps ↑</option>
             <option value="time-desc">Temps ↓</option>
           </select>
+          <button class="btn btn-ghost btn-sm" id="btn-toggle-adv-filters" title="Afficher/masquer les filtres détaillés">⚙ Filtres détaillés</button>
+          <button class="btn btn-ghost btn-sm" id="btn-reset-filters" title="Réinitialiser tous les filtres">✕ Reset</button>
         </div>
         <button class="btn btn-primary btn-sm" id="btn-new-recipe-inline">＋ Ajouter</button>
       </div>
@@ -1079,10 +1173,18 @@ label {
     </div>
     <div class="notes-editor-wrapper">
       <div class="notes-toolbar">
+        <button type="button" class="note-btn" data-cmd="undo" title="Annuler (Ctrl+Z)">↶</button>
+        <button type="button" class="note-btn" data-cmd="redo" title="Rétablir (Ctrl+Y)">↷</button>
+        <span class="note-sep"></span>
         <button type="button" class="note-btn" data-cmd="bold" title="Gras (Ctrl+B)"><b>B</b></button>
         <button type="button" class="note-btn" data-cmd="italic" title="Italique (Ctrl+I)"><i>I</i></button>
         <button type="button" class="note-btn" data-cmd="underline" title="Souligné (Ctrl+U)"><u>U</u></button>
         <button type="button" class="note-btn" data-cmd="strikeThrough" title="Barré"><s>S</s></button>
+        <span class="note-sep"></span>
+        <label class="note-color-wrapper" title="Couleur du texte">
+          <span style="font-size:13px;">A</span>
+          <input type="color" id="note-color-picker" value="#e8f0fb">
+        </label>
         <span class="note-sep"></span>
         <button type="button" class="note-btn" data-cmd="insertUnorderedList" title="Liste à puces">• Liste</button>
         <button type="button" class="note-btn" data-cmd="insertOrderedList" title="Liste numérotée">1. Liste</button>
@@ -1173,25 +1275,6 @@ label {
           <button class="btn btn-primary" id="btn-copy-shared-rules">📋 Copier les règles Firestore</button>
           <button class="btn" id="btn-migrate-to-shared">⬆ Envoyer mes données vers l'espace partagé</button>
         </div>
-      </div>
-    </div>
-
-    <div class="data-section">
-      <h3>📥 Importer un fichier Excel</h3>
-      <p>Importe tes recettes depuis un fichier Excel (.xlsx / .xls). Si le fichier contient les feuilles <b>INGREDIENTS</b> et <b>SELECTION</b>, l'import intelligent est utilisé automatiquement. Sinon, tu pourras mapper les colonnes à la main.</p>
-      <input type="file" id="excel-file" accept=".xlsx,.xls" style="display:none;">
-      <button class="btn btn-primary" id="btn-import-excel">📁 Choisir un fichier Excel</button>
-      <div id="excel-mapping" style="display:none; margin-top:16px;"></div>
-    </div>
-
-    <div class="data-section">
-      <h3>💾 Sauvegarde & restauration</h3>
-      <p>Exporte toutes tes données (recettes, ingrédients, unités, types) en JSON, ou importe un fichier JSON existant.</p>
-      <div class="data-buttons">
-        <button class="btn btn-success" id="btn-export-json">⬇ Exporter en JSON</button>
-        <input type="file" id="import-json-file" accept=".json" style="display:none;">
-        <button class="btn" id="btn-import-json">⬆ Importer un JSON</button>
-        <button class="btn btn-danger" id="btn-reset-all">🗑 Tout effacer</button>
       </div>
     </div>
 
@@ -1339,6 +1422,28 @@ label {
       <div style="flex:1;"></div>
       <button class="btn" data-close-modal>Annuler</button>
       <button class="btn btn-primary" id="btn-save-new-ing">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal générique de renommage -->
+<div class="modal-overlay" id="rename-modal">
+  <div class="modal" style="max-width:420px;">
+    <div class="modal-header">
+      <span class="modal-title" id="rename-modal-title">Renommer</span>
+      <button class="modal-close" data-close-modal>×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label id="rename-modal-label">Nouveau nom</label>
+        <input type="text" id="rename-modal-input">
+      </div>
+      <div id="rename-modal-info" style="font-size:12px; color:var(--text-muted); margin-top:4px;"></div>
+    </div>
+    <div class="modal-footer">
+      <div style="flex:1;"></div>
+      <button class="btn" data-close-modal>Annuler</button>
+      <button class="btn btn-primary" id="btn-rename-modal-save">Enregistrer</button>
     </div>
   </div>
 </div>
@@ -1718,6 +1823,10 @@ function renderFirebaseUI() {
       }
     }
     sidebarUser.classList.add('active');
+    const nm = document.getElementById('user-menu-name');
+    const em = document.getElementById('user-menu-email');
+    if (nm) nm.textContent = fbUser.displayName || fbUser.email;
+    if (em) em.textContent = fbUser.email || '';
     renderSharedSection();
   } else {
     sidebarUser.classList.remove('active');
@@ -1787,6 +1896,31 @@ document.getElementById('btn-sign-in').onclick = async () => {
 document.getElementById('btn-sign-out').onclick = () => {
   if (fbAuth) fbAuth.signOut();
 };
+
+// Menu utilisateur dans la sidebar (mêmes actions)
+{
+  const msi = document.getElementById('menu-sign-out');
+  if (msi) msi.onclick = () => { if (fbAuth) fbAuth.signOut(); };
+  const mpc = document.getElementById('menu-push-cloud');
+  if (mpc) mpc.onclick = () => pushToCloud().then(() => toast('Envoyé vers le cloud', 'success'));
+  const mpl = document.getElementById('menu-pull-cloud');
+  if (mpl) mpl.onclick = () => {
+    if (!confirm('Cela va remplacer tes données locales par celles du cloud. Continuer ?')) return;
+    pullFromCloud();
+  };
+  // Toggle le menu au clic sur l'avatar (pour mobile où :hover n'existe pas)
+  const avatar = document.getElementById('sidebar-user-avatar');
+  if (avatar) {
+    avatar.onclick = e => {
+      e.stopPropagation();
+      document.getElementById('user-avatar-wrapper').classList.toggle('open');
+    };
+    document.addEventListener('click', e => {
+      const wrap = document.getElementById('user-avatar-wrapper');
+      if (wrap && !wrap.contains(e.target)) wrap.classList.remove('open');
+    });
+  }
+}
 
 document.getElementById('btn-push-cloud').onclick = () => {
   pushToCloud().then(() => toast('Envoyé vers le cloud', 'success'));
@@ -2244,12 +2378,8 @@ function createChipsInput(wrapper, options) {
       const div = document.createElement('div');
       div.className = 'autocomplete-item';
       const isSelected = selectedValues.includes(it.name);
-      if (isSelected) {
-        div.classList.add('selected');
-        div.innerHTML = '<span>✓ ' + escapeHtml(it.name) + '</span>';
-      } else {
-        div.textContent = it.name;
-      }
+      if (isSelected) div.classList.add('selected');
+      div.textContent = it.name;
       div.onmousedown = ev => ev.preventDefault();
       div.onclick = ev => {
         if (isSelected) {
@@ -2499,6 +2629,20 @@ let notesSaveTimer = null;
       if (ed) ed.dispatchEvent(new Event('input'));
     });
   });
+  // Color picker
+  const cp = document.getElementById('note-color-picker');
+  if (cp) {
+    // Empêcher la perte de focus quand on ouvre le color picker
+    cp.addEventListener('mousedown', e => e.stopPropagation());
+    const wrap = cp.closest('.note-color-wrapper');
+    if (wrap) wrap.addEventListener('mousedown', e => e.preventDefault());
+    cp.addEventListener('input', () => {
+      const ed = document.getElementById('notes-editor');
+      if (ed) ed.focus();
+      try { document.execCommand('foreColor', false, cp.value); } catch (e) { console.error(e); }
+      if (ed) ed.dispatchEvent(new Event('input'));
+    });
+  }
 }
 
 /* ========================================================================
@@ -2547,14 +2691,13 @@ function renderSeasonTab() {
         item.title = 'Retirer de ' + name;
         item.addEventListener('click', (e) => {
           e.stopPropagation();
-          // Retrait immédiat visuel
-          item.style.opacity = '0.3';
-          item.style.pointerEvents = 'none';
+          // Suppression instantanée du DOM
+          item.remove();
           // Modif state
           ing.seasonMonths = (ing.seasonMonths || []).filter(m => m !== monthNum);
           save();
-          // Force re-render dans le prochain frame pour garantir l'update DOM
-          requestAnimationFrame(() => rerenderAll());
+          // Re-render pour mettre à jour le compteur et les autres vues
+          rerenderAll();
         });
         list.appendChild(item);
       });
@@ -3188,6 +3331,33 @@ document.getElementById('btn-delete-recipe').onclick = () => {
 function closeAllModals() {
   document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('active'));
 }
+
+/* Modal générique de renommage */
+let pendingRenameCallback = null;
+function openRenameModal(title, currentValue, onSave) {
+  pendingRenameCallback = onSave;
+  document.getElementById('rename-modal-title').textContent = title;
+  const inp = document.getElementById('rename-modal-input');
+  inp.value = currentValue || '';
+  document.getElementById('rename-modal').classList.add('active');
+  setTimeout(() => { inp.focus(); inp.select(); }, 100);
+}
+
+{
+  const saveBtn = document.getElementById('btn-rename-modal-save');
+  const inp = document.getElementById('rename-modal-input');
+  const doSave = () => {
+    const v = (inp.value || '').trim();
+    if (!v) { toast('Le nom est requis', 'error'); return; }
+    document.getElementById('rename-modal').classList.remove('active');
+    if (pendingRenameCallback) pendingRenameCallback(v);
+    pendingRenameCallback = null;
+  };
+  if (saveBtn) saveBtn.onclick = doSave;
+  if (inp) inp.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); doSave(); }
+  });
+}
 document.querySelectorAll('[data-close-modal]').forEach(b => b.onclick = closeAllModals);
 document.querySelectorAll('.modal-overlay').forEach(m => {
   m.addEventListener('click', e => { if (e.target === m) closeAllModals(); });
@@ -3633,10 +3803,12 @@ function renderDataTab() {
     const editBtn = document.createElement('button');
     editBtn.className = 'btn btn-xs';
     editBtn.textContent = '✏';
-    editBtn.onclick = () => {
-      const nv = prompt('Renommer l\'unité :', u.name);
-      if (nv && nv.trim()) { u.name = nv.trim(); save(); renderDataTab(); renderRecipes(); }
-    };
+    editBtn.title = 'Renommer';
+    editBtn.onclick = () => openRenameModal('Renommer l\'unité', u.name, (nv) => {
+      u.name = nv.trim();
+      save();
+      rerenderAll();
+    });
     const delBtn = document.createElement('button');
     delBtn.className = 'btn btn-xs btn-danger';
     delBtn.textContent = '🗑';
@@ -3669,10 +3841,11 @@ function renderDataTab() {
     editBtn.className = 'btn btn-xs';
     editBtn.textContent = '✏';
     editBtn.title = 'Renommer';
-    editBtn.onclick = () => {
-      const nv = prompt('Renommer le type :', t.name);
-      if (nv && nv.trim()) { t.name = nv.trim(); save(); renderDataTab(); renderRecipes(); }
-    };
+    editBtn.onclick = () => openRenameModal('Renommer le type', t.name, (nv) => {
+      t.name = nv.trim();
+      save();
+      rerenderAll();
+    });
     const mergeBtn = document.createElement('button');
     mergeBtn.className = 'btn btn-xs';
     mergeBtn.textContent = '🔗';
@@ -3744,10 +3917,11 @@ function renderDataTab() {
         editBtn.className = 'btn btn-xs';
         editBtn.textContent = '✏';
         editBtn.title = 'Renommer';
-        editBtn.onclick = () => {
-          const nv = prompt('Renommer la famille :', f.name);
-          if (nv && nv.trim()) { f.name = nv.trim(); save(); renderDataTab(); renderRecipes(); }
-        };
+        editBtn.onclick = () => openRenameModal('Renommer la famille', f.name, (nv) => {
+          f.name = nv.trim();
+          save();
+          rerenderAll();
+        });
         const delBtn = document.createElement('button');
         delBtn.className = 'btn btn-xs btn-danger';
         delBtn.textContent = '🗑';
@@ -3795,93 +3969,91 @@ document.getElementById('btn-add-family').onclick = () => {
 /* ========================================================================
    EXPORT / IMPORT JSON
    ======================================================================== */
-document.getElementById('btn-export-json').onclick = () => {
-  const data = {
-    version: 1,
-    exportedAt: new Date().toISOString(),
-    recipes: state.recipes,
-    ingredients: state.ingredients,
-    units: state.units,
-    ingredientTypes: state.ingredientTypes,
-    mealTypes: state.mealTypes
+{
+  const btnExport = document.getElementById('btn-export-json');
+  if (btnExport) btnExport.onclick = () => {
+    const data = {
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      recipes: state.recipes,
+      ingredients: state.ingredients,
+      units: state.units,
+      ingredientTypes: state.ingredientTypes,
+      ingredientFamilies: state.ingredientFamilies,
+      mealTypes: state.mealTypes,
+      notes: state.notes || ''
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'recettes-' + new Date().toISOString().slice(0,10) + '.json';
+    a.click();
+    URL.revokeObjectURL(url);
+    toast('Export JSON téléchargé', 'success');
   };
-  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'recettes-' + new Date().toISOString().slice(0,10) + '.json';
-  a.click();
-  URL.revokeObjectURL(url);
-  toast('Export JSON téléchargé', 'success');
-};
 
-document.getElementById('btn-import-json').onclick = () => document.getElementById('import-json-file').click();
-document.getElementById('import-json-file').onchange = e => {
-  const file = e.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = ev => {
-    try {
-      const data = JSON.parse(ev.target.result);
-      if (!data.recipes) throw new Error('Format invalide');
-      if (!confirm('Remplacer toutes tes données actuelles par le contenu du fichier ?')) return;
-      state.recipes = data.recipes || [];
-      state.ingredients = data.ingredients || [];
-      state.units = data.units || [];
-      state.ingredientTypes = data.ingredientTypes || [];
-      state.mealTypes = data.mealTypes || [...DEFAULT_MEAL_TYPES];
-      state.selectedRecipeIds = [];
-      state.checkedShoppingItems = [];
-      save();
-      renderRecipes();
-      renderDataTab();
-      buildFilterBar();
-      toast('Import réussi : ' + state.recipes.length + ' recettes', 'success');
-    } catch (err) {
-      toast('Erreur d\'import : ' + err.message, 'error');
-    }
-  };
-  reader.readAsText(file);
-  e.target.value = '';
-};
-
-document.getElementById('btn-reset-all').onclick = () => {
-  if (!confirm('⚠️ ATTENTION : cela supprimera TOUTES tes données (recettes, ingrédients, unités, types). Continuer ?')) return;
-  if (!confirm('Vraiment sûr ? Cette action est irréversible.')) return;
-  localStorage.removeItem(STORAGE_KEY);
-  location.reload();
-};
-
-/* ========================================================================
-   IMPORT EXCEL
-   ======================================================================== */
-let excelWorkbookData = null;
-
-document.getElementById('btn-import-excel').onclick = () => document.getElementById('excel-file').click();
-document.getElementById('excel-file').onchange = e => {
-  const file = e.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = ev => {
-    try {
-      const wb = XLSX.read(ev.target.result, { type: 'binary' });
-      excelWorkbookData = wb;
-      // Détection du format spécifique LISTE_COURSES
-      const sheetNamesUpper = wb.SheetNames.map(n => n.toUpperCase().trim());
-      const hasIngredients = sheetNamesUpper.includes('INGREDIENTS') || sheetNamesUpper.includes('INGRÉDIENTS') || sheetNamesUpper.includes('INGRéDIENTS');
-      const hasSelection = sheetNamesUpper.includes('SELECTION') || sheetNamesUpper.includes('SÉLECTION');
-      if (hasIngredients && hasSelection) {
-        renderListeCoursesImport(wb);
-      } else {
-        renderExcelMapping(wb);
+  const btnImport = document.getElementById('btn-import-json');
+  if (btnImport) btnImport.onclick = () => document.getElementById('import-json-file').click();
+  const fileImport = document.getElementById('import-json-file');
+  if (fileImport) fileImport.onchange = e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      try {
+        const data = JSON.parse(ev.target.result);
+        if (!data.recipes) throw new Error('Format invalide');
+        if (!confirm('Remplacer toutes tes données actuelles par le contenu du fichier ?')) return;
+        state.recipes = data.recipes || [];
+        state.ingredients = data.ingredients || [];
+        state.units = data.units || [];
+        state.ingredientTypes = data.ingredientTypes || [];
+        state.mealTypes = data.mealTypes || [...DEFAULT_MEAL_TYPES];
+        state.selectedRecipeIds = [];
+        state.checkedShoppingItems = [];
+        save();
+        rerenderAll();
+        toast('Import réussi : ' + state.recipes.length + ' recettes', 'success');
+      } catch (err) {
+        toast('Erreur d\'import : ' + err.message, 'error');
       }
-    } catch (err) {
-      toast('Erreur Excel : ' + err.message, 'error');
-    }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
   };
-  reader.readAsBinaryString(file);
-  e.target.value = '';
-};
+
+  const btnResetAll = document.getElementById('btn-reset-all');
+  if (btnResetAll) btnResetAll.onclick = () => {
+    if (!confirm('⚠️ ATTENTION : cela supprimera TOUTES tes données (recettes, ingrédients, unités, types). Continuer ?')) return;
+    if (!confirm('Vraiment sûr ? Cette action est irréversible.')) return;
+    localStorage.removeItem(STORAGE_KEY);
+    location.reload();
+  };
+
+  const btnImportExcel = document.getElementById('btn-import-excel');
+  if (btnImportExcel) btnImportExcel.onclick = () => document.getElementById('excel-file').click();
+  const fileExcel = document.getElementById('excel-file');
+  if (fileExcel) fileExcel.onchange = e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      try {
+        const wb = XLSX.read(ev.target.result, { type: 'binary' });
+        const sheetNamesUpper = wb.SheetNames.map(n => n.toUpperCase().trim());
+        const hasIngredients = sheetNamesUpper.includes('INGREDIENTS') || sheetNamesUpper.includes('INGRÉDIENTS') || sheetNamesUpper.includes('INGRéDIENTS');
+        const hasSelection = sheetNamesUpper.includes('SELECTION') || sheetNamesUpper.includes('SÉLECTION');
+        if (hasIngredients && hasSelection) renderListeCoursesImport(wb);
+        else renderExcelMapping(wb);
+      } catch (err) {
+        toast('Erreur Excel : ' + err.message, 'error');
+      }
+    };
+    reader.readAsBinaryString(file);
+    e.target.value = '';
+  };
+}
 
 /* --- Import spécifique format LISTE_COURSES --- */
 function getSheetByName(wb, names) {
