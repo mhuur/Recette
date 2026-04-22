@@ -196,30 +196,73 @@ label {
   background: var(--bg-2);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 14px;
-  margin-bottom: 16px;
+  padding: 10px;
+  margin-bottom: 12px;
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
 }
 .toolbar-row {
   display: flex;
-  gap: 10px;
+  gap: 8px;
   flex-wrap: wrap;
   align-items: center;
 }
-.toolbar-row + .toolbar-row { margin-top: 10px; }
-.search-input { flex: 1; min-width: 200px; }
+.toolbar-row + .toolbar-row { margin-top: 8px; }
+.search-input { flex: 1; min-width: 160px; }
 .filter-group {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
   background: var(--surface);
-  padding: 6px 10px;
-  border-radius: 8px;
+  padding: 4px 8px;
+  border-radius: 6px;
   border: 1px solid var(--border);
-  font-size: 13px;
+  font-size: 12px;
 }
-.filter-group label { margin: 0; font-size: 12px; }
-.filter-group input, .filter-group select { width: auto; padding: 4px 8px; font-size: 13px; }
-.filter-group input[type="number"] { width: 60px; }
+.filter-group.compact {
+  padding: 3px 8px;
+}
+.filter-group.compact .chips-input-wrapper {
+  padding: 2px 4px;
+  min-height: 28px;
+  border: none;
+  background: transparent;
+}
+.filter-group.compact .chips-inner-input {
+  font-size: 12px;
+  padding: 2px;
+}
+.filter-group label { margin: 0; font-size: 11px; white-space: nowrap; }
+.filter-group input, .filter-group select { width: auto; padding: 3px 6px; font-size: 12px; }
+.filter-group input[type="number"] { width: 50px; }
+.compact-select { padding: 5px 8px !important; font-size: 12px; }
+.season-toggle-label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--text-muted);
+  cursor: pointer;
+  margin: 0;
+  padding: 4px 8px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  user-select: none;
+}
+.season-toggle-label input { width: auto; margin: 0; }
+.season-toggle-label:has(input:checked) {
+  background: var(--accent);
+  color: var(--bg);
+  border-color: var(--accent);
+}
+.toolbar-adv {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+}
 
 /* Recipe list */
 .recipe-list { display: flex; flex-direction: column; gap: 4px; }
@@ -784,6 +827,7 @@ label {
   <nav>
     <button class="tab-btn active" data-tab="recipes">Recettes <span class="count-badge" id="recipe-count">0</span></button>
     <button class="tab-btn" data-tab="shopping">Liste de courses <span class="count-badge" id="selected-badge">0</span></button>
+    <button class="tab-btn" data-tab="season">📅 Saison</button>
     <button class="tab-btn" data-tab="data">Données</button>
   </nav>
   <div class="sidebar-user" id="sidebar-user">
@@ -801,49 +845,64 @@ label {
   <section id="tab-recipes" class="tab active">
     <div class="toolbar">
       <div class="toolbar-row">
-        <input type="text" id="search-input" class="search-input" placeholder="🔍 Rechercher une recette, un ingrédient...">
-        <select id="sort-select" style="width:auto; min-width:160px;">
-          <option value="name-asc">Nom (A→Z)</option>
-          <option value="name-desc">Nom (Z→A)</option>
+        <input type="text" id="search-input" class="search-input" placeholder="🔍 Rechercher..." style="min-width:180px;">
+        <select id="sort-select" class="compact-select" style="width:auto; min-width:110px;">
+          <option value="name-asc">Nom A→Z</option>
+          <option value="name-desc">Nom Z→A</option>
           <option value="rating-desc">Note ↓</option>
           <option value="rating-asc">Note ↑</option>
-          <option value="time-asc">Temps total ↑</option>
-          <option value="time-desc">Temps total ↓</option>
+          <option value="time-asc">Temps ↑</option>
+          <option value="time-desc">Temps ↓</option>
         </select>
-        <div class="filter-group">
-          <label>Sélection :</label>
-          <div id="filter-selection-buttons" style="display:flex; gap:4px;"></div>
+        <div class="filter-group compact">
+          <label>Sélect. :</label>
+          <div id="filter-selection-buttons" style="display:flex; gap:3px;"></div>
         </div>
-        <button class="btn btn-ghost btn-sm" id="btn-reset-filters">✕ Réinitialiser</button>
-      </div>
-      <div class="toolbar-row">
-        <div class="filter-group" style="flex:1; min-width:250px;">
+        <div class="filter-group compact" style="width:150px;">
           <label>Notes :</label>
-          <div id="filter-rating-wrapper" style="flex:1;"></div>
+          <div id="filter-rating-wrapper" style="flex:1; min-width:0;"></div>
         </div>
-        <div class="filter-group">
-          <label>Prép. max (min) :</label>
-          <input type="number" id="filter-prep-max" min="0" value="">
+        <div class="filter-group compact">
+          <label title="Prép. max (min)">🔪</label>
+          <input type="number" id="filter-prep-max" min="0" value="" placeholder="max" style="width:50px;">
         </div>
-        <div class="filter-group">
-          <label>Cuisson max (min) :</label>
-          <input type="number" id="filter-cook-max" min="0" value="">
+        <div class="filter-group compact">
+          <label title="Cuisson max (min)">🔥</label>
+          <input type="number" id="filter-cook-max" min="0" value="" placeholder="max" style="width:50px;">
         </div>
+        <label class="season-toggle-label" title="Ne garder que les recettes de saison (mois actuel)">
+          <input type="checkbox" id="filter-season-toggle">
+          <span>📅 De saison</span>
+        </label>
+        <button class="btn btn-ghost btn-sm" id="btn-toggle-adv-filters" title="Afficher/masquer les filtres avancés">⚙ Filtres</button>
+        <button class="btn btn-ghost btn-sm" id="btn-reset-filters">✕ Reset</button>
       </div>
-      <div class="toolbar-row">
-        <div class="filter-group" style="flex:1; min-width:200px; flex-wrap:wrap;">
-          <label>Types :</label>
-          <div id="filter-meal-types" style="display:flex; flex-wrap:wrap; gap:4px;"></div>
+      <div class="toolbar-adv" id="toolbar-advanced" style="display:none;">
+        <div class="toolbar-row">
+          <div class="filter-group" style="flex:1; min-width:200px; flex-wrap:wrap;">
+            <label>Types :</label>
+            <div id="filter-meal-types" style="display:flex; flex-wrap:wrap; gap:4px;"></div>
+          </div>
         </div>
-      </div>
-      <div class="toolbar-row">
-        <div class="filter-group" style="flex:1; min-width:250px;">
-          <label>✅ Doit contenir :</label>
-          <div id="filter-include-wrapper" style="flex:1;"></div>
+        <div class="toolbar-row">
+          <div class="filter-group" style="flex:1; min-width:220px;">
+            <label>✅ Contient :</label>
+            <div id="filter-include-wrapper" style="flex:1;"></div>
+          </div>
+          <div class="filter-group" style="flex:1; min-width:220px;">
+            <label>❌ Sans :</label>
+            <div id="filter-exclude-wrapper" style="flex:1;"></div>
+          </div>
         </div>
-        <div class="filter-group" style="flex:1; min-width:250px;">
-          <label>❌ Sans :</label>
-          <div id="filter-exclude-wrapper" style="flex:1;"></div>
+        <div class="toolbar-row">
+          <div class="filter-group" style="flex:1; min-width:220px;">
+            <label>👪 Familles requises :</label>
+            <div id="filter-include-families-wrapper" style="flex:1;"></div>
+          </div>
+          <div class="filter-group" style="flex:1; min-width:220px;">
+            <label>🚫 Familles exclues :</label>
+            <div id="filter-exclude-families-wrapper" style="flex:1;"></div>
+          </div>
         </div>
       </div>
     </div>
@@ -867,6 +926,16 @@ label {
       </div>
     </div>
     <div id="shopping-container"></div>
+  </section>
+
+  <!-- Onglet Saison -->
+  <section id="tab-season" class="tab">
+    <div style="margin-bottom:16px; display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+      <h2 style="font-size:18px; font-weight:600; flex:1;">📅 Calendrier des ingrédients de saison</h2>
+      <div style="color:var(--text-muted); font-size:13px;" id="season-current-month"></div>
+    </div>
+    <p style="color:var(--text-muted); font-size:13px; margin-bottom:12px;">Pour chaque mois, renseigne les ingrédients qui sont de saison. Un ingrédient sans mois renseigné est considéré comme <b>intemporel</b>. Les ingrédients renseignés à certains mois sont <b>hors saison</b> pour tous les autres mois.</p>
+    <div id="season-months-grid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); gap:12px;"></div>
   </section>
 
   <!-- Onglet Données -->
@@ -980,6 +1049,16 @@ label {
     </div>
 
     <div class="data-section">
+      <h3>👪 Familles d'ingrédients <span id="family-count-badge" class="count-badge" style="background:var(--surface);">0</span></h3>
+      <p style="font-size:13px; color:var(--text-muted);">Un ingrédient peut appartenir à plusieurs familles (ex: "Poulet" → Viande + Volaille). Sert à filtrer les recettes par famille.</p>
+      <div id="families-list" class="data-list"></div>
+      <div style="margin-top:10px; display:flex; gap:8px;">
+        <input type="text" id="new-family" placeholder="Nouvelle famille...">
+        <button class="btn btn-primary" id="btn-add-family">Ajouter</button>
+      </div>
+    </div>
+
+    <div class="data-section">
       <h3>🍽 Types de plats <span id="meal-count-badge" class="count-badge" style="background:var(--surface);">0</span></h3>
       <div id="meals-list" class="data-list"></div>
       <div style="margin-top:10px; display:flex; gap:8px;">
@@ -1066,11 +1145,11 @@ label {
   </div>
 </div>
 
-<!-- Modal création ingrédient -->
+<!-- Modal création/édition ingrédient -->
 <div class="modal-overlay" id="ing-create-modal">
-  <div class="modal" style="max-width:500px;">
+  <div class="modal" style="max-width:580px;">
     <div class="modal-header">
-      <span class="modal-title">Nouvel ingrédient</span>
+      <span class="modal-title" id="ing-modal-title">Nouvel ingrédient</span>
       <button class="modal-close" data-close-modal>×</button>
     </div>
     <div class="modal-body">
@@ -1079,14 +1158,25 @@ label {
         <input type="text" id="new-ing-name">
       </div>
       <div class="form-group">
-        <label>Type</label>
+        <label>Type (catégorie / rayon)</label>
         <div id="new-ing-type-wrapper"></div>
       </div>
+      <div class="form-group">
+        <label>Familles (ex: Viande, Poisson, Végétal…)</label>
+        <div id="new-ing-families-wrapper"></div>
+      </div>
+      <div class="form-group">
+        <label>🗓 Mois de saison (vide = intemporel)</label>
+        <div id="new-ing-seasons" style="display:grid; grid-template-columns:repeat(6, 1fr); gap:4px;"></div>
+        <div style="font-size:12px; color:var(--text-muted); margin-top:6px;">💡 Laisse vide pour un ingrédient disponible toute l'année. Sinon, sélectionne les mois où il est de saison.</div>
+      </div>
+      <div id="ing-usage-info" style="font-size:12px; color:var(--text-muted); padding:8px 10px; background:var(--surface); border-radius:6px; display:none;"></div>
     </div>
     <div class="modal-footer">
+      <button class="btn btn-danger" id="btn-delete-ing" style="display:none;">Supprimer</button>
       <div style="flex:1;"></div>
       <button class="btn" data-close-modal>Annuler</button>
-      <button class="btn btn-primary" id="btn-save-new-ing">Créer</button>
+      <button class="btn btn-primary" id="btn-save-new-ing">Enregistrer</button>
     </div>
   </div>
 </div>
@@ -1153,6 +1243,10 @@ service cloud.firestore {
    🌊 MES RECETTES - Gestion des données et logique applicative
    ======================================================================== */
 
+const DEFAULT_FAMILIES = ['Végétal', 'Viande', 'Poisson', 'Œufs', 'Produits laitiers', 'Féculents', 'Autre'];
+
+const MONTHS_FR = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
+
 const DEFAULT_MEAL_TYPES = [
   'Aucun', 'Entrée', 'Plat principal', 'Dessert', 'Accompagnement', 'Apéritif',
   'Petit-déjeuner', 'Goûter', 'Sauce', 'Boisson', 'Salade', 'Soupe',
@@ -1174,6 +1268,7 @@ let state = {
   ingredients: [],
   units: [],
   ingredientTypes: [],
+  ingredientFamilies: [],
   mealTypes: [...DEFAULT_MEAL_TYPES],
   selectedRecipeIds: [],
   checkedShoppingItems: [],
@@ -1186,6 +1281,9 @@ let state = {
     mealTypes: [],
     includeIngredients: [],
     excludeIngredients: [],
+    includeFamilies: [],
+    excludeFamilies: [],
+    seasonOnly: false,
     selectionMode: 'all'
   }
 };
@@ -1337,17 +1435,27 @@ function applyCloudData(data) {
   state.ingredients = data.ingredients || [];
   state.units = data.units || [];
   state.ingredientTypes = data.ingredientTypes || [];
+  state.ingredientFamilies = data.ingredientFamilies || [];
+  if (state.ingredientFamilies.length === 0) {
+    state.ingredientFamilies = DEFAULT_FAMILIES.map(name => ({ id: uid(), name }));
+  }
   state.mealTypes = data.mealTypes && data.mealTypes.length ? data.mealTypes : [...DEFAULT_MEAL_TYPES];
   state.selectedRecipeIds = data.selectedRecipeIds || [];
   state.checkedShoppingItems = data.checkedShoppingItems || [];
   state.lastModified = data.lastModified || Date.now();
-  state.filters = currentFilters; // on garde les filtres locaux
+  state.filters = currentFilters;
+  // Migration des ingrédients
+  state.ingredients.forEach(i => {
+    if (!i.familyIds) i.familyIds = [];
+    if (!i.seasonMonths) i.seasonMonths = [];
+  });
   migrateRecipes();
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch {}
   renderRecipes();
   renderDataTab();
   buildFilterBar();
   if (document.getElementById('tab-shopping').classList.contains('active')) renderShopping();
+  if (document.getElementById('tab-season').classList.contains('active')) renderSeasonTab();
 }
 
 async function pushToCloud() {
@@ -1355,12 +1463,12 @@ async function pushToCloud() {
   fbSkipNextSnapshot = true;
   try {
     state.lastModified = Date.now();
-    // On n'envoie PAS les filtres (préférences UI locales)
     await fbDocRef.set({
       recipes: state.recipes,
       ingredients: state.ingredients,
       units: state.units,
       ingredientTypes: state.ingredientTypes,
+      ingredientFamilies: state.ingredientFamilies,
       mealTypes: state.mealTypes,
       selectedRecipeIds: state.selectedRecipeIds,
       checkedShoppingItems: state.checkedShoppingItems,
@@ -1684,7 +1792,21 @@ function load() {
       if (!state.mealTypes.some(m => normalizeText(m) === 'aucun')) {
         state.mealTypes.unshift('Aucun');
       }
-      if (!state.filters) state.filters = { search: '', sort: 'name-asc', ratingValues: [], prepMax: null, cookMax: null, mealTypes: [], includeIngredients: [], excludeIngredients: [], selectionMode: 'all' };
+      if (!state.filters) state.filters = { search: '', sort: 'name-asc', ratingValues: [], prepMax: null, cookMax: null, mealTypes: [], includeIngredients: [], excludeIngredients: [], includeFamilies: [], excludeFamilies: [], seasonOnly: false, selectionMode: 'all' };
+      // Migration : ajouter nouveaux champs filtres s'ils manquent
+      if (!state.filters.includeFamilies) state.filters.includeFamilies = [];
+      if (!state.filters.excludeFamilies) state.filters.excludeFamilies = [];
+      if (state.filters.seasonOnly === undefined) state.filters.seasonOnly = false;
+      // Migration ingredientFamilies
+      if (!state.ingredientFamilies) state.ingredientFamilies = [];
+      if (state.ingredientFamilies.length === 0) {
+        state.ingredientFamilies = DEFAULT_FAMILIES.map(name => ({ id: uid(), name }));
+      }
+      // Migration : ingrédients doivent avoir familyIds et seasonMonths
+      state.ingredients.forEach(i => {
+        if (!i.familyIds) i.familyIds = [];
+        if (!i.seasonMonths) i.seasonMonths = [];
+      });
       // Migration depuis les anciens formats de filtre note
       if (state.filters.ratingMin !== undefined || state.filters.ratingMax !== undefined || state.filters.includeUnrated !== undefined) {
         state.filters.ratingValues = [];
@@ -1704,6 +1826,7 @@ function load() {
       // Initialisation par défaut
       state.units = DEFAULT_UNITS.map(name => ({ id: uid(), name }));
       state.ingredientTypes = DEFAULT_ING_TYPES.map(name => ({ id: uid(), name }));
+      state.ingredientFamilies = DEFAULT_FAMILIES.map(name => ({ id: uid(), name }));
       save();
     }
   } catch (e) {
@@ -2067,6 +2190,32 @@ function findOrCreateMealType(name) {
   return name;
 }
 
+function findOrCreateFamily(name) {
+  name = name.trim();
+  if (!name) return null;
+  let f = state.ingredientFamilies.find(x => normalizeText(x.name) === normalizeText(name));
+  if (!f) {
+    f = { id: uid(), name };
+    state.ingredientFamilies.push(f);
+    save();
+  }
+  return f;
+}
+
+function getFamilyName(id) {
+  const f = state.ingredientFamilies.find(x => x.id === id);
+  return f ? f.name : '';
+}
+
+function getCurrentMonth() {
+  return new Date().getMonth() + 1; // 1-12
+}
+
+function isIngredientInSeason(ingredient, month) {
+  if (!ingredient.seasonMonths || ingredient.seasonMonths.length === 0) return true; // intemporel
+  return ingredient.seasonMonths.includes(month);
+}
+
 function getIngredientName(id) {
   const ing = state.ingredients.find(i => i.id === id);
   return ing ? ing.name : '?';
@@ -2094,8 +2243,85 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
     document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.id === 'tab-' + tabId));
     if (tabId === 'shopping') renderShopping();
     if (tabId === 'data') renderDataTab();
+    if (tabId === 'season') renderSeasonTab();
   });
 });
+
+/* ========================================================================
+   ONGLET SAISON
+   ======================================================================== */
+function renderSeasonTab() {
+  const currentMonth = getCurrentMonth();
+  const curEl = document.getElementById('season-current-month');
+  if (curEl) curEl.innerHTML = 'Mois actuel : <b style="color:var(--accent);">' + MONTHS_FR[currentMonth - 1] + '</b>';
+  const grid = document.getElementById('season-months-grid');
+  if (!grid) return;
+  grid.innerHTML = '';
+  MONTHS_FR.forEach((name, idx) => {
+    const monthNum = idx + 1;
+    const isCurrent = monthNum === currentMonth;
+    const card = document.createElement('div');
+    card.style.cssText = 'background:var(--bg-2); border:1px solid ' + (isCurrent ? 'var(--accent)' : 'var(--border)') + '; border-radius:10px; padding:12px;' + (isCurrent ? ' box-shadow:0 0 0 1px var(--accent);' : '');
+    const header = document.createElement('div');
+    header.style.cssText = 'display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;';
+    const title = document.createElement('div');
+    title.style.cssText = 'font-weight:600; font-size:15px; color:' + (isCurrent ? 'var(--accent)' : 'var(--text)') + ';';
+    title.textContent = (isCurrent ? '● ' : '') + name;
+    header.appendChild(title);
+    const ingredientsInMonth = state.ingredients.filter(i => (i.seasonMonths || []).includes(monthNum));
+    const countEl = document.createElement('span');
+    countEl.style.cssText = 'font-size:12px; color:var(--text-muted);';
+    countEl.textContent = ingredientsInMonth.length + ' ingrédient' + (ingredientsInMonth.length > 1 ? 's' : '');
+    header.appendChild(countEl);
+    card.appendChild(header);
+
+    // Liste des ingrédients
+    const list = document.createElement('div');
+    list.style.cssText = 'display:flex; flex-wrap:wrap; gap:4px; margin-bottom:10px; min-height:32px;';
+    if (ingredientsInMonth.length === 0) {
+      list.innerHTML = '<span style="color:var(--text-dim); font-size:12px; font-style:italic;">Aucun ingrédient renseigné</span>';
+    } else {
+      ingredientsInMonth.sort((a,b) => a.name.localeCompare(b.name, 'fr')).forEach(ing => {
+        const chip = document.createElement('span');
+        chip.className = 'chip';
+        chip.style.cursor = 'pointer';
+        chip.title = 'Retirer de ' + name;
+        chip.textContent = ing.name;
+        chip.onclick = () => {
+          ing.seasonMonths = (ing.seasonMonths || []).filter(m => m !== monthNum);
+          save();
+          renderSeasonTab();
+          renderDataTab();
+        };
+        list.appendChild(chip);
+      });
+    }
+    card.appendChild(list);
+
+    // Chip input pour ajouter
+    const addWrapper = document.createElement('div');
+    card.appendChild(addWrapper);
+    createChipsInput(addWrapper, {
+      getItems: () => state.ingredients.filter(i => !(i.seasonMonths || []).includes(monthNum)).map(i => ({ name: i.name, id: i.id })),
+      initialValues: [],
+      placeholder: 'Ajouter un ingrédient...',
+      onChange: names => {
+        names.forEach(n => {
+          const ing = state.ingredients.find(i => i.name === n);
+          if (ing) {
+            ing.seasonMonths = ing.seasonMonths || [];
+            if (!ing.seasonMonths.includes(monthNum)) ing.seasonMonths.push(monthNum);
+          }
+        });
+        save();
+        renderSeasonTab();
+        renderDataTab();
+      }
+    });
+
+    grid.appendChild(card);
+  });
+}
 
 /* ========================================================================
    RENDU LISTE DE RECETTES
@@ -2135,6 +2361,33 @@ function getFilteredRecipes() {
     if (f.excludeIngredients.length > 0) {
       const ids = (r.ingredients || []).map(i => i.ingredientId);
       if (f.excludeIngredients.some(iid => ids.includes(iid))) return false;
+    }
+    // Filtre familles : doit contenir au moins un ingrédient de chaque famille requise
+    if (f.includeFamilies && f.includeFamilies.length > 0) {
+      for (const fid of f.includeFamilies) {
+        const hasIt = (r.ingredients || []).some(i => {
+          const ing = state.ingredients.find(x => x.id === i.ingredientId);
+          return ing && (ing.familyIds || []).includes(fid);
+        });
+        if (!hasIt) return false;
+      }
+    }
+    // Filtre familles exclues : aucun ingrédient ne doit appartenir à une famille exclue
+    if (f.excludeFamilies && f.excludeFamilies.length > 0) {
+      const hasExcluded = (r.ingredients || []).some(i => {
+        const ing = state.ingredients.find(x => x.id === i.ingredientId);
+        return ing && (ing.familyIds || []).some(fid => f.excludeFamilies.includes(fid));
+      });
+      if (hasExcluded) return false;
+    }
+    // Filtre saisonnalité : tous les ingrédients doivent être de saison (ou intemporels)
+    if (f.seasonOnly) {
+      const month = getCurrentMonth();
+      const offSeason = (r.ingredients || []).some(i => {
+        const ing = state.ingredients.find(x => x.id === i.ingredientId);
+        return ing && !isIngredientInSeason(ing, month);
+      });
+      if (offSeason) return false;
     }
     // Filtre sélection
     if (f.selectionMode === 'checked' && !state.selectedRecipeIds.includes(r.id)) return false;
@@ -2418,11 +2671,46 @@ function addIngRow(existing = null) {
 }
 
 let pendingIngCreateCallback = null;
+let editingIngredientId = null;
 let newIngTypeCtrl = null;
+let newIngFamiliesCtrl = null;
+let selectedSeasonMonths = [];
 
 function openIngCreateModal(initialName, callback) {
+  // Mode création depuis recette
+  editingIngredientId = null;
   pendingIngCreateCallback = callback;
+  document.getElementById('ing-modal-title').textContent = 'Nouvel ingrédient';
+  document.getElementById('btn-delete-ing').style.display = 'none';
+  document.getElementById('ing-usage-info').style.display = 'none';
   document.getElementById('new-ing-name').value = initialName || '';
+  initIngredientModalControls('', [], []);
+  document.getElementById('ing-create-modal').classList.add('active');
+  setTimeout(() => document.getElementById('new-ing-name').focus(), 100);
+  return null;
+}
+
+function openIngEditModal(ingredient) {
+  // Mode édition depuis onglet Données
+  editingIngredientId = ingredient.id;
+  pendingIngCreateCallback = null;
+  document.getElementById('ing-modal-title').textContent = 'Modifier l\'ingrédient';
+  document.getElementById('btn-delete-ing').style.display = '';
+  const usage = state.recipes.filter(r => (r.ingredients||[]).some(i => i.ingredientId === ingredient.id)).length;
+  const usageEl = document.getElementById('ing-usage-info');
+  usageEl.style.display = '';
+  usageEl.textContent = 'Utilisé dans ' + usage + ' recette' + (usage > 1 ? 's' : '') + '.';
+  document.getElementById('new-ing-name').value = ingredient.name;
+  const typeName = ingredient.typeId ? getTypeName(ingredient.typeId) : '';
+  const familyNames = (ingredient.familyIds || []).map(fid => getFamilyName(fid)).filter(Boolean);
+  const months = ingredient.seasonMonths || [];
+  initIngredientModalControls(typeName === 'Autres' ? '' : typeName, familyNames, months);
+  document.getElementById('ing-create-modal').classList.add('active');
+  setTimeout(() => document.getElementById('new-ing-name').focus(), 100);
+}
+
+function initIngredientModalControls(typeText, familyValues, monthValues) {
+  // Contrôle type
   newIngTypeCtrl = createAutocomplete(
     document.getElementById('new-ing-type-wrapper'),
     {
@@ -2430,12 +2718,44 @@ function openIngCreateModal(initialName, callback) {
       getItems: () => state.ingredientTypes,
       onSelect: () => {},
       onCreate: (name) => findOrCreateType(name),
-      initialText: ''
+      initialText: typeText || ''
     }
   );
-  document.getElementById('ing-create-modal').classList.add('active');
-  setTimeout(() => document.getElementById('new-ing-name').focus(), 100);
-  return null; // On ne renvoie pas tout de suite, la création se fait via le bouton "Créer" du modal
+  // Contrôle familles
+  newIngFamiliesCtrl = createChipsInput(
+    document.getElementById('new-ing-families-wrapper'),
+    {
+      getItems: () => state.ingredientFamilies.map(f => ({ name: f.name })),
+      onCreate: (name) => findOrCreateFamily(name)?.name || null,
+      initialValues: familyValues || [],
+      placeholder: 'Famille...'
+    }
+  );
+  // Contrôle mois
+  selectedSeasonMonths = [...(monthValues || [])];
+  const cont = document.getElementById('new-ing-seasons');
+  cont.innerHTML = '';
+  MONTHS_FR.forEach((name, idx) => {
+    const monthNum = idx + 1;
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'btn btn-xs';
+    btn.textContent = name.slice(0, 3);
+    btn.title = name;
+    const isOn = selectedSeasonMonths.includes(monthNum);
+    btn.style.background = isOn ? 'var(--accent)' : 'var(--surface)';
+    btn.style.color = isOn ? 'var(--bg)' : 'var(--text-muted)';
+    btn.style.borderColor = isOn ? 'var(--accent)' : 'var(--border)';
+    btn.onclick = () => {
+      if (selectedSeasonMonths.includes(monthNum)) {
+        selectedSeasonMonths = selectedSeasonMonths.filter(m => m !== monthNum);
+      } else {
+        selectedSeasonMonths.push(monthNum);
+      }
+      initIngredientModalControls(newIngTypeCtrl.getValue(), newIngFamiliesCtrl.getValues(), selectedSeasonMonths);
+    };
+    cont.appendChild(btn);
+  });
 }
 
 document.getElementById('btn-save-new-ing').onclick = () => {
@@ -2443,10 +2763,57 @@ document.getElementById('btn-save-new-ing').onclick = () => {
   if (!name) { toast('Le nom est requis', 'error'); return; }
   const typeName = newIngTypeCtrl ? newIngTypeCtrl.getValue() : '';
   const type = typeName ? findOrCreateType(typeName) : null;
-  const ing = findOrCreateIngredient(name, type?.id);
+  const familyNames = newIngFamiliesCtrl ? newIngFamiliesCtrl.getValues() : [];
+  const familyIds = familyNames.map(n => findOrCreateFamily(n)?.id).filter(Boolean);
+  const months = [...selectedSeasonMonths].sort((a,b) => a-b);
+
+  let ing;
+  if (editingIngredientId) {
+    // Mode édition
+    ing = state.ingredients.find(i => i.id === editingIngredientId);
+    if (!ing) { toast('Ingrédient introuvable', 'error'); return; }
+    // Vérifier doublon de nom (sauf lui-même)
+    const dup = state.ingredients.find(i => i.id !== ing.id && normalizeText(i.name) === normalizeText(name));
+    if (dup) { toast('Un autre ingrédient porte déjà ce nom.', 'error'); return; }
+    ing.name = name;
+    ing.typeId = type?.id || null;
+    ing.familyIds = familyIds;
+    ing.seasonMonths = months;
+    toast('Ingrédient modifié', 'success');
+  } else {
+    // Mode création
+    ing = findOrCreateIngredient(name, type?.id);
+    ing.familyIds = familyIds;
+    ing.seasonMonths = months;
+    toast('Ingrédient créé', 'success');
+  }
+  save();
+  renderDataTab();
+  renderRecipes();
+  if (document.getElementById('tab-season').classList.contains('active')) renderSeasonTab();
   if (pendingIngCreateCallback) pendingIngCreateCallback(ing);
   pendingIngCreateCallback = null;
   document.getElementById('ing-create-modal').classList.remove('active');
+};
+
+document.getElementById('btn-delete-ing').onclick = () => {
+  if (!editingIngredientId) return;
+  const ing = state.ingredients.find(i => i.id === editingIngredientId);
+  if (!ing) return;
+  const usage = state.recipes.filter(r => (r.ingredients||[]).some(i => i.ingredientId === ing.id)).length;
+  const msg = usage > 0
+    ? 'Cet ingrédient est utilisé dans ' + usage + ' recette(s). Le supprimer le retirera aussi de ces recettes. Continuer ?'
+    : 'Supprimer « ' + ing.name + ' » ?';
+  if (!confirm(msg)) return;
+  state.ingredients = state.ingredients.filter(i => i.id !== ing.id);
+  state.recipes.forEach(r => {
+    r.ingredients = (r.ingredients || []).filter(i => i.ingredientId !== ing.id);
+  });
+  document.getElementById('ing-create-modal').classList.remove('active');
+  save();
+  renderDataTab();
+  renderRecipes();
+  toast('Ingrédient supprimé', 'success');
 };
 
 document.getElementById('recipe-rating').addEventListener('input', updateRatingPreview);
@@ -2525,10 +2892,10 @@ document.getElementById('btn-save-recipe').onclick = () => {
     state.recipes.push(recipe);
   }
 
+  closeAllModals();
   save();
   renderRecipes();
   buildFilterBar();
-  closeAllModals();
   toast(renamed ? 'Recette enregistrée (renommée : ' + finalName + ')' : 'Recette enregistrée', 'success');
 };
 
@@ -2537,10 +2904,10 @@ document.getElementById('btn-delete-recipe').onclick = () => {
   if (!confirm('Supprimer définitivement cette recette ?')) return;
   state.recipes = state.recipes.filter(r => r.id !== currentRecipeId);
   state.selectedRecipeIds = state.selectedRecipeIds.filter(id => id !== currentRecipeId);
+  closeAllModals();
   save();
   renderRecipes();
   buildFilterBar();
-  closeAllModals();
   toast('Recette supprimée', 'success');
 };
 
@@ -2585,16 +2952,15 @@ function buildFilterBar() {
     selCont.appendChild(btn);
   });
 
-  // Filtre Notes : chip input avec liste 1-10 + "Non noté"
-  const ratingItems = [];
-  ratingItems.push({ name: 'Non noté' });
-  for (let n = 1; n <= 10; n++) ratingItems.push({ name: String(n) });
+  // Filtre Notes : chip input avec liste "Non noté", 10, 9, ..., 1
+  const ratingItems = [{ name: 'Non noté' }];
+  for (let n = 10; n >= 1; n--) ratingItems.push({ name: String(n) });
   createChipsInput(
     document.getElementById('filter-rating-wrapper'),
     {
       getItems: () => ratingItems,
       initialValues: state.filters.ratingValues || [],
-      placeholder: 'Toutes les notes (cliquer pour filtrer)...',
+      placeholder: 'Toutes...',
       onChange: values => {
         state.filters.ratingValues = values;
         saveLocal();
@@ -2658,6 +3024,49 @@ function buildFilterBar() {
       }
     }
   );
+
+  // Filtres familles
+  createChipsInput(
+    document.getElementById('filter-include-families-wrapper'),
+    {
+      getItems: () => state.ingredientFamilies.map(f => ({ name: f.name, id: f.id })),
+      initialValues: (state.filters.includeFamilies || []).map(id => getFamilyName(id)).filter(Boolean),
+      placeholder: 'Famille requise...',
+      onChange: names => {
+        state.filters.includeFamilies = names
+          .map(n => state.ingredientFamilies.find(f => f.name === n)?.id)
+          .filter(Boolean);
+        saveLocal();
+        renderRecipes();
+      }
+    }
+  );
+  createChipsInput(
+    document.getElementById('filter-exclude-families-wrapper'),
+    {
+      getItems: () => state.ingredientFamilies.map(f => ({ name: f.name, id: f.id })),
+      initialValues: (state.filters.excludeFamilies || []).map(id => getFamilyName(id)).filter(Boolean),
+      placeholder: 'Famille interdite...',
+      onChange: names => {
+        state.filters.excludeFamilies = names
+          .map(n => state.ingredientFamilies.find(f => f.name === n)?.id)
+          .filter(Boolean);
+        saveLocal();
+        renderRecipes();
+      }
+    }
+  );
+
+  // Toggle Saison
+  const seasonToggle = document.getElementById('filter-season-toggle');
+  if (seasonToggle) {
+    seasonToggle.checked = !!state.filters.seasonOnly;
+    seasonToggle.onchange = e => {
+      state.filters.seasonOnly = e.target.checked;
+      saveLocal();
+      renderRecipes();
+    };
+  }
 }
 
 document.getElementById('search-input').addEventListener('input', e => {
@@ -2678,13 +3087,20 @@ document.getElementById('sort-select').addEventListener('change', e => {
   });
 });
 document.getElementById('btn-reset-filters').onclick = () => {
-  state.filters = { search: '', sort: 'name-asc', ratingValues: [], prepMax: null, cookMax: null, mealTypes: [], includeIngredients: [], excludeIngredients: [], selectionMode: 'all' };
+  state.filters = { search: '', sort: 'name-asc', ratingValues: [], prepMax: null, cookMax: null, mealTypes: [], includeIngredients: [], excludeIngredients: [], includeFamilies: [], excludeFamilies: [], seasonOnly: false, selectionMode: 'all' };
   document.getElementById('search-input').value = '';
   document.getElementById('sort-select').value = 'name-asc';
   ['filter-prep-max','filter-cook-max'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('filter-season-toggle').checked = false;
   saveLocal();
   buildFilterBar();
   renderRecipes();
+};
+
+// Toggle filtres avancés
+document.getElementById('btn-toggle-adv-filters').onclick = () => {
+  const adv = document.getElementById('toolbar-advanced');
+  adv.style.display = adv.style.display === 'none' ? '' : 'none';
 };
 
 /* ========================================================================
@@ -2895,16 +3311,26 @@ function renderDataTab() {
       const el = document.createElement('div');
       el.className = 'data-list-item';
       const usage = state.recipes.filter(r => (r.ingredients||[]).some(i => i.ingredientId === ing.id)).length;
-      el.innerHTML = '<span>' + escapeHtml(ing.name) + ' <span style="color:var(--text-dim); font-size:12px;">(' + getTypeName(ing.typeId) + ', utilisé dans ' + usage + ')</span></span>';
+      const families = (ing.familyIds || []).map(fid => getFamilyName(fid)).filter(Boolean);
+      const months = (ing.seasonMonths || []).map(m => MONTHS_FR[m-1].slice(0,3)).join(', ');
+      const meta = [
+        getTypeName(ing.typeId),
+        families.length > 0 ? 'familles: ' + families.join(', ') : null,
+        months ? '🗓 ' + months : null,
+        'utilisé dans ' + usage
+      ].filter(Boolean).join(' · ');
+      el.innerHTML = '<span>' + escapeHtml(ing.name) + ' <span style="color:var(--text-dim); font-size:12px;">(' + escapeHtml(meta) + ')</span></span>';
       const actions = document.createElement('span');
       actions.className = 'data-list-item-actions';
       const editBtn = document.createElement('button');
       editBtn.className = 'btn btn-xs';
       editBtn.textContent = '✏';
+      editBtn.title = 'Modifier';
       editBtn.onclick = () => editIngredient(ing);
       const delBtn = document.createElement('button');
       delBtn.className = 'btn btn-xs btn-danger';
       delBtn.textContent = '🗑';
+      delBtn.title = 'Supprimer';
       delBtn.onclick = () => {
         if (usage > 0) { if (!confirm('Cet ingrédient est utilisé dans ' + usage + ' recette(s). Le supprimer aussi de ces recettes ?')) return; }
         else if (!confirm('Supprimer « ' + ing.name + ' » ?')) return;
@@ -3027,26 +3453,55 @@ function renderDataTab() {
     el.appendChild(actions);
     mealList.appendChild(el);
   });
+
+  // Familles d'ingrédients
+  const famList = document.getElementById('families-list');
+  const famBadge = document.getElementById('family-count-badge');
+  if (famBadge) famBadge.textContent = state.ingredientFamilies.length;
+  if (famList) {
+    famList.innerHTML = '';
+    if (state.ingredientFamilies.length === 0) {
+      famList.innerHTML = '<div style="padding:14px; color:var(--text-dim); text-align:center;">Aucune famille</div>';
+    } else {
+      [...state.ingredientFamilies].sort((a,b) => a.name.localeCompare(b.name, 'fr')).forEach(f => {
+        const el = document.createElement('div');
+        el.className = 'data-list-item';
+        const usage = state.ingredients.filter(i => (i.familyIds || []).includes(f.id)).length;
+        el.innerHTML = '<span>' + escapeHtml(f.name) + ' <span style="color:var(--text-dim); font-size:12px;">(' + usage + ' ingrédients)</span></span>';
+        const actions = document.createElement('span');
+        actions.className = 'data-list-item-actions';
+        const editBtn = document.createElement('button');
+        editBtn.className = 'btn btn-xs';
+        editBtn.textContent = '✏';
+        editBtn.title = 'Renommer';
+        editBtn.onclick = () => {
+          const nv = prompt('Renommer la famille :', f.name);
+          if (nv && nv.trim()) { f.name = nv.trim(); save(); renderDataTab(); renderRecipes(); }
+        };
+        const delBtn = document.createElement('button');
+        delBtn.className = 'btn btn-xs btn-danger';
+        delBtn.textContent = '🗑';
+        delBtn.title = 'Supprimer';
+        delBtn.onclick = () => {
+          if (!confirm('Supprimer la famille « ' + f.name + ' » ?\nLes ingrédients qui y appartenaient n\'auront plus cette famille.')) return;
+          state.ingredientFamilies = state.ingredientFamilies.filter(x => x.id !== f.id);
+          state.ingredients.forEach(i => { i.familyIds = (i.familyIds || []).filter(fid => fid !== f.id); });
+          save();
+          renderDataTab();
+          renderRecipes();
+          buildFilterBar();
+        };
+        actions.appendChild(editBtn);
+        actions.appendChild(delBtn);
+        el.appendChild(actions);
+        famList.appendChild(el);
+      });
+    }
+  }
 }
 
 function editIngredient(ing) {
-  const newName = prompt('Nom de l\'ingrédient :', ing.name);
-  if (!newName || !newName.trim()) return;
-  const typeNames = state.ingredientTypes.map(t => t.name);
-  const currentTypeName = getTypeName(ing.typeId);
-  const newType = prompt('Type (existants : ' + typeNames.join(', ') + ') :', currentTypeName === 'Autres' ? '' : currentTypeName);
-  ing.name = newName.trim();
-  if (newType !== null) {
-    if (newType.trim()) {
-      const t = findOrCreateType(newType);
-      ing.typeId = t.id;
-    } else {
-      ing.typeId = null;
-    }
-  }
-  save();
-  renderDataTab();
-  renderRecipes();
+  openIngEditModal(ing);
 }
 
 document.getElementById('btn-add-meal-type').onclick = () => {
@@ -3054,6 +3509,15 @@ document.getElementById('btn-add-meal-type').onclick = () => {
   if (!v) return;
   findOrCreateMealType(v);
   document.getElementById('new-meal-type').value = '';
+  renderDataTab();
+  buildFilterBar();
+};
+
+document.getElementById('btn-add-family').onclick = () => {
+  const v = document.getElementById('new-family').value.trim();
+  if (!v) return;
+  findOrCreateFamily(v);
+  document.getElementById('new-family').value = '';
   renderDataTab();
   buildFilterBar();
 };
