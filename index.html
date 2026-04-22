@@ -129,9 +129,9 @@ body {
 .sidebar nav button.active .count-badge { background: rgba(255,255,255,0.25); }
 main {
   flex: 1;
-  padding: 16px 20px;
+  padding: 12px 16px;
   min-width: 0;
-  overflow-x: hidden;
+  min-height: 100vh;
 }
 .tab { display: none; }
 .tab.active { display: block; }
@@ -196,12 +196,12 @@ label {
   background: var(--bg-2);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 10px;
+  padding: 8px 10px;
   margin-bottom: 12px;
   position: sticky;
-  top: 0;
-  z-index: 20;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  top: -1px;
+  z-index: 30;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.35);
 }
 .toolbar-row {
   display: flex;
@@ -225,14 +225,23 @@ label {
   padding: 3px 8px;
 }
 .filter-group.compact .chips-input-wrapper {
-  padding: 2px 4px;
-  min-height: 28px;
+  padding: 1px 3px;
+  min-height: 24px;
   border: none;
   background: transparent;
+  gap: 3px;
 }
 .filter-group.compact .chips-inner-input {
   font-size: 12px;
-  padding: 2px;
+  padding: 1px 2px;
+  min-width: 60px;
+}
+.filter-group.compact .chip {
+  font-size: 11px;
+  padding: 1px 7px;
+}
+.filter-group.compact .autocomplete-dropdown {
+  font-size: 12px;
 }
 .filter-group label { margin: 0; font-size: 11px; white-space: nowrap; }
 .filter-group input, .filter-group select { width: auto; padding: 3px 6px; font-size: 12px; }
@@ -829,6 +838,7 @@ label {
     <button class="tab-btn" data-tab="shopping">Liste de courses <span class="count-badge" id="selected-badge">0</span></button>
     <button class="tab-btn" data-tab="season">📅 Saison</button>
     <button class="tab-btn" data-tab="data">Données</button>
+    <button class="tab-btn" data-tab="notes">📝 Notes & bugs</button>
   </nav>
   <div class="sidebar-user" id="sidebar-user">
     <div style="font-weight:500; color:var(--text);" id="sidebar-user-name">—</div>
@@ -845,7 +855,7 @@ label {
   <section id="tab-recipes" class="tab active">
     <div class="toolbar">
       <div class="toolbar-row">
-        <input type="text" id="search-input" class="search-input" placeholder="🔍 Rechercher..." style="min-width:180px;">
+        <input type="text" id="search-input" class="search-input" placeholder="🔍 Rechercher...">
         <select id="sort-select" class="compact-select" style="width:auto; min-width:110px;">
           <option value="name-asc">Nom A→Z</option>
           <option value="name-desc">Nom Z→A</option>
@@ -858,26 +868,29 @@ label {
           <label>Sélect. :</label>
           <div id="filter-selection-buttons" style="display:flex; gap:3px;"></div>
         </div>
-        <div class="filter-group compact" style="width:150px;">
-          <label>Notes :</label>
-          <div id="filter-rating-wrapper" style="flex:1; min-width:0;"></div>
-        </div>
-        <div class="filter-group compact">
-          <label title="Prép. max (min)">🔪</label>
-          <input type="number" id="filter-prep-max" min="0" value="" placeholder="max" style="width:50px;">
-        </div>
-        <div class="filter-group compact">
-          <label title="Cuisson max (min)">🔥</label>
-          <input type="number" id="filter-cook-max" min="0" value="" placeholder="max" style="width:50px;">
-        </div>
-        <label class="season-toggle-label" title="Ne garder que les recettes de saison (mois actuel)">
-          <input type="checkbox" id="filter-season-toggle">
-          <span>📅 De saison</span>
-        </label>
+        <span id="recipe-count-display" style="font-size:12px; color:var(--text-muted); margin-left:auto; white-space:nowrap;">0 / 0</span>
         <button class="btn btn-ghost btn-sm" id="btn-toggle-adv-filters" title="Afficher/masquer les filtres avancés">⚙ Filtres</button>
         <button class="btn btn-ghost btn-sm" id="btn-reset-filters">✕ Reset</button>
       </div>
       <div class="toolbar-adv" id="toolbar-advanced" style="display:none;">
+        <div class="toolbar-row">
+          <div class="filter-group compact" style="width:180px;">
+            <label>Notes :</label>
+            <div id="filter-rating-wrapper" style="flex:1; min-width:0;"></div>
+          </div>
+          <div class="filter-group compact">
+            <label title="Prép. max (min)">🔪 max</label>
+            <input type="number" id="filter-prep-max" min="0" value="" placeholder="min" style="width:55px;">
+          </div>
+          <div class="filter-group compact">
+            <label title="Cuisson max (min)">🔥 max</label>
+            <input type="number" id="filter-cook-max" min="0" value="" placeholder="min" style="width:55px;">
+          </div>
+          <label class="season-toggle-label" title="Ne garder que les recettes de saison (mois actuel)">
+            <input type="checkbox" id="filter-season-toggle">
+            <span>📅 De saison</span>
+          </label>
+        </div>
         <div class="toolbar-row">
           <div class="filter-group" style="flex:1; min-width:200px; flex-wrap:wrap;">
             <label>Types :</label>
@@ -936,6 +949,19 @@ label {
     </div>
     <p style="color:var(--text-muted); font-size:13px; margin-bottom:12px;">Pour chaque mois, renseigne les ingrédients qui sont de saison. Un ingrédient sans mois renseigné est considéré comme <b>intemporel</b>. Les ingrédients renseignés à certains mois sont <b>hors saison</b> pour tous les autres mois.</p>
     <div id="season-months-grid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); gap:12px;"></div>
+  </section>
+
+  <!-- Onglet Notes et bugs -->
+  <section id="tab-notes" class="tab">
+    <div style="margin-bottom:14px;">
+      <h2 style="font-size:18px; font-weight:600;">📝 Notes, idées d'amélioration et bugs</h2>
+      <p style="color:var(--text-muted); font-size:13px; margin-top:4px;">Espace libre pour noter tes idées, bugs à corriger, suggestions. Sauvegardé automatiquement (local + cloud si connecté).</p>
+    </div>
+    <textarea id="notes-textarea" rows="25" style="width:100%; min-height:500px; font-family:inherit; font-size:14px; resize:vertical;" placeholder="Commence à écrire tes notes ici..."></textarea>
+    <div style="margin-top:8px; display:flex; justify-content:space-between; align-items:center; font-size:12px; color:var(--text-muted);">
+      <span id="notes-status">💾 Sauvegardé automatiquement</span>
+      <span id="notes-wordcount">0 caractère</span>
+    </div>
   </section>
 
   <!-- Onglet Données -->
@@ -1272,6 +1298,7 @@ let state = {
   mealTypes: [...DEFAULT_MEAL_TYPES],
   selectedRecipeIds: [],
   checkedShoppingItems: [],
+  notes: '',
   filters: {
     search: '',
     sort: 'name-asc',
@@ -1289,6 +1316,19 @@ let state = {
 };
 
 function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
+
+function rerenderAll() {
+  // Re-render tous les onglets pertinents. Sûr à appeler après toute modification de state.
+  try { renderRecipes(); } catch (e) { console.error(e); }
+  try { buildFilterBar(); } catch (e) { console.error(e); }
+  try { renderDataTab(); } catch (e) { console.error(e); }
+  try {
+    if (document.getElementById('tab-shopping')?.classList.contains('active')) renderShopping();
+  } catch (e) { console.error(e); }
+  try {
+    if (document.getElementById('tab-season')?.classList.contains('active')) renderSeasonTab();
+  } catch (e) { console.error(e); }
+}
 
 function save() {
   // Sauvegarde locale immédiate + planifie synchro cloud (débouncée 5s)
@@ -1442,6 +1482,7 @@ function applyCloudData(data) {
   state.mealTypes = data.mealTypes && data.mealTypes.length ? data.mealTypes : [...DEFAULT_MEAL_TYPES];
   state.selectedRecipeIds = data.selectedRecipeIds || [];
   state.checkedShoppingItems = data.checkedShoppingItems || [];
+  state.notes = data.notes || '';
   state.lastModified = data.lastModified || Date.now();
   state.filters = currentFilters;
   // Migration des ingrédients
@@ -1456,6 +1497,7 @@ function applyCloudData(data) {
   buildFilterBar();
   if (document.getElementById('tab-shopping').classList.contains('active')) renderShopping();
   if (document.getElementById('tab-season').classList.contains('active')) renderSeasonTab();
+  if (document.getElementById('tab-notes').classList.contains('active')) initNotesTab();
 }
 
 async function pushToCloud() {
@@ -1472,6 +1514,7 @@ async function pushToCloud() {
       mealTypes: state.mealTypes,
       selectedRecipeIds: state.selectedRecipeIds,
       checkedShoppingItems: state.checkedShoppingItems,
+      notes: state.notes || '',
       lastModified: state.lastModified
     });
     setSyncStatus('☁ Synchronisé', 'success');
@@ -2244,8 +2287,40 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
     if (tabId === 'shopping') renderShopping();
     if (tabId === 'data') renderDataTab();
     if (tabId === 'season') renderSeasonTab();
+    if (tabId === 'notes') initNotesTab();
   });
 });
+
+function initNotesTab() {
+  const ta = document.getElementById('notes-textarea');
+  if (!ta) return;
+  ta.value = state.notes || '';
+  updateNotesWordcount();
+}
+
+function updateNotesWordcount() {
+  const ta = document.getElementById('notes-textarea');
+  const wc = document.getElementById('notes-wordcount');
+  if (ta && wc) wc.textContent = ta.value.length + ' caractère' + (ta.value.length > 1 ? 's' : '');
+}
+
+let notesSaveTimer = null;
+{
+  const ta = document.getElementById('notes-textarea');
+  if (ta) {
+    ta.addEventListener('input', () => {
+      state.notes = ta.value;
+      updateNotesWordcount();
+      const status = document.getElementById('notes-status');
+      if (status) { status.textContent = '✏ Modifications en cours...'; status.style.color = 'var(--text-muted)'; }
+      clearTimeout(notesSaveTimer);
+      notesSaveTimer = setTimeout(() => {
+        save();
+        if (status) { status.textContent = '💾 Sauvegardé'; status.style.color = 'var(--success)'; }
+      }, 600);
+    });
+  }
+}
 
 /* ========================================================================
    ONGLET SAISON
@@ -2287,22 +2362,29 @@ function renderSeasonTab() {
         chip.style.cursor = 'pointer';
         chip.title = 'Retirer de ' + name;
         chip.textContent = ing.name;
-        chip.onclick = () => {
+        chip.onclick = (e) => {
+          e.stopPropagation();
           ing.seasonMonths = (ing.seasonMonths || []).filter(m => m !== monthNum);
           save();
-          renderSeasonTab();
-          renderDataTab();
+          rerenderAll();
         };
         list.appendChild(chip);
       });
     }
     card.appendChild(list);
 
-    // Chip input pour ajouter
+    // Chip input pour ajouter (avec création possible)
     const addWrapper = document.createElement('div');
     card.appendChild(addWrapper);
     createChipsInput(addWrapper, {
-      getItems: () => state.ingredients.filter(i => !(i.seasonMonths || []).includes(monthNum)).map(i => ({ name: i.name, id: i.id })),
+      getItems: () => state.ingredients
+        .filter(i => !(i.seasonMonths || []).includes(monthNum))
+        .sort((a,b) => a.name.localeCompare(b.name, 'fr'))
+        .map(i => ({ name: i.name, id: i.id })),
+      onCreate: (name) => {
+        const ing = findOrCreateIngredient(name);
+        return ing.name;
+      },
       initialValues: [],
       placeholder: 'Ajouter un ingrédient...',
       onChange: names => {
@@ -2314,8 +2396,7 @@ function renderSeasonTab() {
           }
         });
         save();
-        renderSeasonTab();
-        renderDataTab();
+        rerenderAll();
       }
     });
 
@@ -2410,8 +2491,16 @@ function getFilteredRecipes() {
 function renderRecipes() {
   const container = document.getElementById('recipes-container');
   const recipes = getFilteredRecipes();
-  document.getElementById('recipe-count').textContent = state.recipes.length;
+  const total = state.recipes.length;
+  const filtered = recipes.length;
+  document.getElementById('recipe-count').textContent = total;
   document.getElementById('selected-badge').textContent = state.selectedRecipeIds.length;
+  const cntDisplay = document.getElementById('recipe-count-display');
+  if (cntDisplay) {
+    cntDisplay.textContent = filtered === total
+      ? total + ' recette' + (total > 1 ? 's' : '')
+      : filtered + ' / ' + total;
+  }
 
   if (recipes.length === 0) {
     container.innerHTML = '<div class="empty"><div class="empty-icon">🍳</div>' +
@@ -2787,13 +2876,11 @@ document.getElementById('btn-save-new-ing').onclick = () => {
     ing.seasonMonths = months;
     toast('Ingrédient créé', 'success');
   }
-  save();
-  renderDataTab();
-  renderRecipes();
-  if (document.getElementById('tab-season').classList.contains('active')) renderSeasonTab();
   if (pendingIngCreateCallback) pendingIngCreateCallback(ing);
   pendingIngCreateCallback = null;
   document.getElementById('ing-create-modal').classList.remove('active');
+  save();
+  rerenderAll();
 };
 
 document.getElementById('btn-delete-ing').onclick = () => {
@@ -2811,8 +2898,7 @@ document.getElementById('btn-delete-ing').onclick = () => {
   });
   document.getElementById('ing-create-modal').classList.remove('active');
   save();
-  renderDataTab();
-  renderRecipes();
+  rerenderAll();
   toast('Ingrédient supprimé', 'success');
 };
 
