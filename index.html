@@ -913,20 +913,19 @@ label {
       <p>Permet à plusieurs comptes Google d'accéder aux <b>mêmes</b> recettes (utile pour un couple, une famille, etc.). Chaque personne se connecte avec son propre compte mais voit les recettes communes.</p>
 
       <div style="background:var(--surface); padding:10px 12px; border-radius:8px; margin:10px 0;">
+        <div class="form-group" style="margin-bottom:12px;">
+          <label>Nom de l'espace partagé</label>
+          <input type="text" id="shared-space-name" placeholder="ex: famille-mhuur" style="font-family:monospace;">
+          <div style="font-size:12px; color:var(--text-muted); margin-top:4px;">💡 Les deux comptes doivent utiliser <b>exactement le même nom</b>. Choisis-le d'abord, puis active le mode ci-dessous.</div>
+        </div>
         <label style="display:flex; align-items:center; gap:10px; margin:0; cursor:pointer;">
           <input type="checkbox" id="toggle-shared-mode" style="width:auto;">
           <span style="color:var(--text); font-weight:500;">Activer le mode partagé</span>
         </label>
-        <div style="font-size:12px; color:var(--text-muted); margin-top:6px;">Quand c'est activé, l'app lit/écrit dans un espace commun au lieu de ton espace personnel.</div>
+        <div style="font-size:12px; color:var(--text-muted); margin-top:6px;">Quand c'est activé, l'app lit/écrit dans l'espace commun ci-dessus au lieu de ton espace personnel.</div>
       </div>
 
       <div id="shared-mode-details" style="display:none;">
-        <div class="form-group">
-          <label>Nom de l'espace partagé</label>
-          <input type="text" id="shared-space-name" placeholder="ex: famille-mhuur" style="font-family:monospace;">
-          <div style="font-size:12px; color:var(--text-muted); margin-top:4px;">💡 Les deux comptes doivent utiliser <b>exactement le même nom</b>.</div>
-        </div>
-
         <div class="form-group">
           <label>UIDs des comptes autorisés</label>
           <ul id="shared-uids-list" style="list-style:none; padding:0; margin-bottom:8px;"></ul>
