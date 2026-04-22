@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>🍳 Mes Recettes</title>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
 <style>
 :root {
   --bg: #0a1628;
@@ -34,63 +37,101 @@ body {
   background-attachment: fixed;
   color: var(--text);
   min-height: 100vh;
-  font-size: 15px;
+  font-size: 14px;
   line-height: 1.5;
 }
-header {
+
+/* Layout avec sidebar */
+.app-layout {
+  display: flex;
+  min-height: 100vh;
+}
+.sidebar {
+  width: 220px;
   background: var(--bg-2);
-  border-bottom: 1px solid var(--border);
-  padding: 16px 20px;
+  border-right: 1px solid var(--border);
+  padding: 20px 14px;
   position: sticky;
   top: 0;
+  height: 100vh;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  overflow-y: auto;
   z-index: 50;
-  box-shadow: var(--shadow);
 }
-.header-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 12px;
-  max-width: 1400px;
-  margin: 0 auto;
+.sidebar h1 {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  padding: 0 8px;
 }
-h1 { font-size: 22px; font-weight: 700; letter-spacing: -0.01em; }
-h1 .wave { color: var(--primary); }
-nav {
+.sidebar h1 .wave { color: var(--primary); }
+.sidebar nav {
   display: flex;
+  flex-direction: column;
   gap: 4px;
-  background: var(--surface);
-  padding: 4px;
-  border-radius: var(--radius);
-  border: 1px solid var(--border);
+  padding: 0;
+  background: transparent;
+  border: none;
+  border-radius: 0;
 }
-nav button {
+.sidebar nav button {
   background: transparent;
   color: var(--text-muted);
   border: none;
-  padding: 8px 16px;
+  padding: 10px 14px;
   border-radius: 8px;
   cursor: pointer;
   font-size: 14px;
   font-weight: 500;
   transition: all 0.15s;
   font-family: inherit;
+  text-align: left;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
-nav button:hover { color: var(--text); background: var(--surface-2); }
-nav button.active { background: var(--primary); color: white; }
+.sidebar nav button:hover { color: var(--text); background: var(--surface); }
+.sidebar nav button.active { background: var(--primary); color: white; }
+.sidebar-footer {
+  margin-top: auto;
+  padding: 8px;
+  font-size: 12px;
+  color: var(--text-dim);
+  border-top: 1px solid var(--border);
+  padding-top: 14px;
+}
+.sidebar-user {
+  font-size: 12px;
+  color: var(--text-muted);
+  padding: 8px;
+  background: var(--surface);
+  border-radius: 8px;
+  display: none;
+}
+.sidebar-user.active { display: block; }
+.sidebar-user .user-email {
+  font-size: 11px;
+  color: var(--text-dim);
+  word-break: break-all;
+  margin-top: 2px;
+}
+.sidebar-user .sync-status { color: var(--success); font-size: 11px; margin-top: 4px; }
 .count-badge {
   display: inline-block;
-  background: rgba(255,255,255,0.2);
+  background: rgba(255,255,255,0.15);
   padding: 1px 7px;
   border-radius: 10px;
-  font-size: 12px;
-  margin-left: 6px;
+  font-size: 11px;
 }
+.sidebar nav button.active .count-badge { background: rgba(255,255,255,0.25); }
 main {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 20px;
+  flex: 1;
+  padding: 16px 20px;
+  min-width: 0;
+  overflow-x: hidden;
 }
 .tab { display: none; }
 .tab.active { display: block; }
@@ -181,11 +222,11 @@ label {
 .filter-group input[type="number"] { width: 60px; }
 
 /* Recipe list */
-.recipe-list { display: flex; flex-direction: column; gap: 10px; }
+.recipe-list { display: flex; flex-direction: column; gap: 4px; }
 .recipe-card {
   background: var(--bg-2);
   border: 1px solid var(--border);
-  border-radius: var(--radius);
+  border-radius: 8px;
   overflow: hidden;
   transition: border-color 0.15s;
 }
@@ -195,8 +236,8 @@ label {
 .recipe-header {
   display: flex;
   align-items: center;
-  padding: 12px 14px;
-  gap: 12px;
+  padding: 7px 10px;
+  gap: 10px;
   cursor: pointer;
   user-select: none;
 }
@@ -204,48 +245,49 @@ label {
   flex-shrink: 0;
 }
 .recipe-checkbox input {
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
   cursor: pointer;
   accent-color: var(--primary);
+  display: block;
 }
 .recipe-main {
   flex: 1;
   min-width: 0;
   display: flex;
   flex-wrap: wrap;
-  gap: 6px 14px;
+  gap: 4px 12px;
   align-items: center;
 }
 .recipe-title {
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 600;
   color: var(--text);
   word-wrap: break-word;
   flex-shrink: 0;
-  margin-right: 4px;
+  margin-right: 2px;
 }
 .recipe-meta {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px 12px;
-  font-size: 13px;
+  gap: 3px 10px;
+  font-size: 12px;
   color: var(--text-muted);
   align-items: center;
 }
 .meta-item {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 3px;
 }
-.rating-stars { color: var(--star); font-size: 12px; }
-.meal-tags { display: flex; flex-wrap: wrap; gap: 4px; }
+.rating-stars { color: var(--star); font-size: 11px; }
+.meal-tags { display: flex; flex-wrap: wrap; gap: 3px; }
 .meal-tag {
   background: var(--surface);
   color: var(--text-muted);
-  padding: 2px 8px;
+  padding: 1px 7px;
   border-radius: 10px;
-  font-size: 11px;
+  font-size: 10px;
   border: 1px solid var(--border);
 }
 .recipe-actions {
@@ -255,17 +297,18 @@ label {
 }
 .recipe-expand {
   color: var(--text-dim);
-  font-size: 18px;
+  font-size: 14px;
   transition: transform 0.2s;
   flex-shrink: 0;
 }
 .recipe-card.expanded .recipe-expand { transform: rotate(90deg); }
 .recipe-body {
   display: none;
-  padding: 0 14px 14px;
+  padding: 0 12px 10px;
   border-top: 1px solid var(--border);
-  padding-top: 14px;
+  padding-top: 10px;
   margin-top: 0;
+  font-size: 13px;
 }
 .recipe-card.expanded .recipe-body { display: block; }
 .ingredients-list {
@@ -444,23 +487,28 @@ label {
 .chip {
   background: var(--primary);
   color: white;
-  padding: 3px 9px;
+  padding: 3px 10px;
   border-radius: 12px;
   font-size: 12px;
   display: inline-flex;
   align-items: center;
   gap: 5px;
-}
-.chip-remove {
-  background: none;
-  border: none;
-  color: white;
   cursor: pointer;
+  transition: background 0.15s, opacity 0.15s;
+  user-select: none;
+}
+.chip::after {
+  content: '×';
   font-size: 14px;
   line-height: 1;
-  opacity: 0.8;
+  opacity: 0.7;
 }
-.chip-remove:hover { opacity: 1; }
+.chip:hover {
+  background: var(--danger);
+}
+.chip:hover::after {
+  opacity: 1;
+}
 .chips-inner-input {
   flex: 1;
   min-width: 100px;
@@ -697,11 +745,27 @@ label {
 ::-webkit-scrollbar-thumb:hover { background: var(--border-light); }
 
 /* Mobile */
-@media (max-width: 640px) {
+@media (max-width: 768px) {
+  body { font-size: 14px; }
+  .app-layout { flex-direction: column; }
+  .sidebar {
+    width: 100%;
+    height: auto;
+    position: sticky;
+    top: 0;
+    padding: 10px 14px;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .sidebar h1 { font-size: 18px; padding: 0; margin-right: auto; }
+  .sidebar nav { flex-direction: row; gap: 2px; }
+  .sidebar nav button { padding: 6px 10px; font-size: 13px; }
+  .sidebar-footer, .sidebar-user { display: none; }
   main { padding: 12px; }
-  .header-top { flex-direction: column; align-items: stretch; }
-  nav { justify-content: space-around; }
-  nav button { flex: 1; padding: 8px 10px; font-size: 13px; }
   .recipe-header { flex-wrap: wrap; }
   .ing-row { grid-template-columns: 1fr; }
   .form-grid { grid-template-columns: 1fr; }
@@ -714,16 +778,23 @@ label {
 </head>
 <body>
 
-<header>
-  <div class="header-top">
-    <h1><span class="wave">🌊</span> Mes Recettes</h1>
-    <nav>
-      <button class="tab-btn active" data-tab="recipes">Recettes <span class="count-badge" id="recipe-count">0</span></button>
-      <button class="tab-btn" data-tab="shopping">Liste de courses <span class="count-badge" id="selected-badge">0</span></button>
-      <button class="tab-btn" data-tab="data">Données</button>
-    </nav>
+<div class="app-layout">
+<aside class="sidebar">
+  <h1><span class="wave">🌊</span> Mes Recettes</h1>
+  <nav>
+    <button class="tab-btn active" data-tab="recipes">Recettes <span class="count-badge" id="recipe-count">0</span></button>
+    <button class="tab-btn" data-tab="shopping">Liste de courses <span class="count-badge" id="selected-badge">0</span></button>
+    <button class="tab-btn" data-tab="data">Données</button>
+  </nav>
+  <div class="sidebar-user" id="sidebar-user">
+    <div style="font-weight:500; color:var(--text);" id="sidebar-user-name">—</div>
+    <div class="user-email" id="sidebar-user-email"></div>
+    <div class="sync-status" id="sidebar-sync-status">☁ Synchronisé</div>
   </div>
-</header>
+  <div class="sidebar-footer">
+    Stockage local + Cloud
+  </div>
+</aside>
 
 <main>
   <!-- Onglet Recettes -->
@@ -799,6 +870,38 @@ label {
   <!-- Onglet Données -->
   <section id="tab-data" class="tab">
     <div class="data-section">
+      <h3>☁ Synchronisation Cloud (Firebase)</h3>
+      <p>Connecte-toi avec ton compte Google pour synchroniser tes recettes entre tous tes appareils (ordinateur, téléphone, tablette).</p>
+      <div id="firebase-not-configured">
+        <p style="color:var(--warning); font-size:13px;">⚠ Firebase n'est pas encore configuré.</p>
+        <button class="btn btn-primary" id="btn-setup-firebase">⚙ Configurer Firebase</button>
+      </div>
+      <div id="firebase-configured" style="display:none;">
+        <div id="firebase-signed-out">
+          <button class="btn btn-primary" id="btn-sign-in">🔑 Se connecter avec Google</button>
+          <button class="btn btn-ghost btn-sm" id="btn-edit-firebase">⚙ Modifier la config</button>
+        </div>
+        <div id="firebase-signed-in" style="display:none;">
+          <div style="background:var(--surface); padding:10px 12px; border-radius:8px; margin-bottom:10px;">
+            <div style="display:flex; align-items:center; gap:10px;">
+              <div id="firebase-user-avatar" style="width:36px; height:36px; border-radius:50%; background:var(--primary); display:flex; align-items:center; justify-content:center; font-weight:600; color:white;">?</div>
+              <div style="flex:1;">
+                <div id="firebase-user-name" style="font-weight:500;">—</div>
+                <div id="firebase-user-email" style="font-size:12px; color:var(--text-muted);">—</div>
+                <div id="firebase-sync-status" style="font-size:12px; color:var(--success); margin-top:2px;">☁ Synchronisé</div>
+              </div>
+            </div>
+          </div>
+          <div class="data-buttons">
+            <button class="btn btn-sm" id="btn-push-cloud">⬆ Forcer l'envoi vers le cloud</button>
+            <button class="btn btn-sm" id="btn-pull-cloud">⬇ Forcer le téléchargement</button>
+            <button class="btn btn-sm btn-danger" id="btn-sign-out">Déconnexion</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="data-section">
       <h3>📥 Importer un fichier Excel</h3>
       <p>Importe tes recettes depuis un fichier Excel (.xlsx / .xls). Si le fichier contient les feuilles <b>INGREDIENTS</b> et <b>SELECTION</b>, l'import intelligent est utilisé automatiquement. Sinon, tu pourras mapper les colonnes à la main.</p>
       <input type="file" id="excel-file" accept=".xlsx,.xls" style="display:none;">
@@ -842,6 +945,7 @@ label {
     </div>
   </section>
 </main>
+</div>
 
 <button class="fab" id="btn-new-recipe" title="Nouvelle recette">+</button>
 
@@ -943,6 +1047,61 @@ label {
   </div>
 </div>
 
+<!-- Modal config Firebase -->
+<div class="modal-overlay" id="firebase-modal">
+  <div class="modal" style="max-width:640px;">
+    <div class="modal-header">
+      <span class="modal-title">⚙ Configurer Firebase</span>
+      <button class="modal-close" data-close-modal>×</button>
+    </div>
+    <div class="modal-body">
+      <details style="margin-bottom:14px;">
+        <summary style="cursor:pointer; color:var(--accent); font-weight:500;">📖 Étapes pour créer ta config Firebase (cliquer pour voir)</summary>
+        <div style="background:var(--surface); padding:12px; border-radius:8px; font-size:13px; line-height:1.7; color:var(--text-muted); margin-top:10px;">
+          <ol style="padding-left:20px; margin:0;">
+            <li>Va sur <a href="https://console.firebase.google.com/" target="_blank" style="color:var(--primary);">console.firebase.google.com</a> et connecte-toi avec ton compte Google</li>
+            <li>Clique <b>Ajouter un projet</b> (ou "Add project") → donne-lui un nom (ex: <i>mes-recettes</i>) → Désactive Google Analytics → Créer</li>
+            <li>Une fois dans le projet : clique sur <b>l'icône &lt;/&gt; (Web)</b> au milieu de la page pour ajouter une application web. Donne-lui un surnom (ex: <i>recettes-web</i>) → Enregistrer</li>
+            <li>Firebase affiche un bloc de code <code>firebaseConfig = {...}</code> — <b>copie tout l'objet</b> (de <code>{</code> à <code>}</code>) et colle-le dans la zone ci-dessous</li>
+            <li>Dans le menu à gauche, va dans <b>Build → Authentication</b> → <b>Get started</b> → onglet <b>Sign-in method</b> → <b>Google</b> → activer → Enregistrer</li>
+            <li>Dans <b>Authentication → Settings → Authorized domains</b>, vérifie que <b>mhuur.github.io</b> est listé (sinon ajoute-le)</li>
+            <li>Dans le menu à gauche, va dans <b>Build → Firestore Database</b> → <b>Create database</b> → choisis un emplacement (europe-west3 p. ex.) → <b>Start in production mode</b> → Créer</li>
+            <li>Dans l'onglet <b>Rules</b> de Firestore, remplace tout par les règles ci-dessous, puis <b>Publier</b> :
+            <pre style="background:var(--bg); padding:8px; border-radius:6px; margin-top:6px; overflow-x:auto; font-size:11px; color:var(--text);">rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{userId}/{document=**} {
+      allow read, write: if request.auth != null 
+                         && request.auth.uid == userId;
+    }
+  }
+}</pre>
+            </li>
+          </ol>
+        </div>
+      </details>
+      <div class="form-group">
+        <label>Configuration Firebase (objet JavaScript)</label>
+        <textarea id="firebase-config-input" rows="10" style="font-family:monospace; font-size:12px; resize:vertical;" placeholder='{
+  apiKey: "AIzaSy...",
+  authDomain: "mes-recettes.firebaseapp.com",
+  projectId: "mes-recettes",
+  storageBucket: "...",
+  messagingSenderId: "...",
+  appId: "..."
+}'></textarea>
+        <div style="font-size:12px; color:var(--text-muted); margin-top:6px;">💡 Tu peux coller soit l'objet entier <code>{ apiKey: ..., ... }</code>, soit du JSON.</div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-danger" id="btn-remove-firebase" style="display:none;">Supprimer la config</button>
+      <div style="flex:1;"></div>
+      <button class="btn" data-close-modal>Annuler</button>
+      <button class="btn btn-primary" id="btn-save-firebase-config">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -995,7 +1154,300 @@ function save() {
   } catch (e) {
     toast('Erreur de sauvegarde : ' + e.message, 'error');
   }
+  // Synchro Firebase debouncée
+  fbSchedulePush();
 }
+
+/* ========================================================================
+   FIREBASE - Synchronisation Cloud
+   ======================================================================== */
+const FB_CONFIG_KEY = 'mhuur_firebase_config_v1';
+let fbApp = null, fbAuth = null, fbDb = null, fbUser = null, fbDocRef = null;
+let fbUnsubscribe = null, fbSaveTimer = null, fbSkipNextSnapshot = false;
+
+function parseFirebaseConfig(raw) {
+  if (!raw || !raw.trim()) return null;
+  let cleaned = raw.trim();
+  // Retirer "const firebaseConfig = " ou "firebaseConfig = " si présent
+  cleaned = cleaned.replace(/^(const|let|var)?\s*firebaseConfig\s*=\s*/, '');
+  cleaned = cleaned.replace(/;?\s*$/, '');
+  // Essayer JSON d'abord
+  try { return JSON.parse(cleaned); } catch {}
+  // Sinon essayer comme objet JS (clés non-quotées)
+  try {
+    // eslint-disable-next-line no-new-func
+    return (new Function('return (' + cleaned + ')'))();
+  } catch (e) {
+    throw new Error('Config invalide. Colle l\'objet { apiKey: "...", ... } entier.');
+  }
+}
+
+function getStoredFirebaseConfig() {
+  try {
+    const raw = localStorage.getItem(FB_CONFIG_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch { return null; }
+}
+
+function setStoredFirebaseConfig(config) {
+  if (config) localStorage.setItem(FB_CONFIG_KEY, JSON.stringify(config));
+  else localStorage.removeItem(FB_CONFIG_KEY);
+}
+
+function initFirebase() {
+  const config = getStoredFirebaseConfig();
+  if (!config) {
+    document.getElementById('firebase-not-configured').style.display = '';
+    document.getElementById('firebase-configured').style.display = 'none';
+    return;
+  }
+  document.getElementById('firebase-not-configured').style.display = 'none';
+  document.getElementById('firebase-configured').style.display = '';
+
+  try {
+    if (!fbApp) {
+      fbApp = firebase.initializeApp(config);
+      fbAuth = firebase.auth();
+      fbDb = firebase.firestore();
+      // Persistence locale pour garder la session entre visites
+      fbAuth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+
+      fbAuth.onAuthStateChanged(user => {
+        fbUser = user;
+        renderFirebaseUI();
+        if (user) {
+          fbDocRef = fbDb.collection('users').doc(user.uid).collection('app').doc('data');
+          onFirebaseSignIn();
+        } else {
+          if (fbUnsubscribe) { fbUnsubscribe(); fbUnsubscribe = null; }
+          fbDocRef = null;
+        }
+      });
+    }
+  } catch (e) {
+    toast('Erreur Firebase : ' + e.message, 'error');
+    console.error(e);
+  }
+}
+
+async function onFirebaseSignIn() {
+  if (!fbDocRef) return;
+  setSyncStatus('⏳ Chargement...', 'muted');
+  try {
+    const snap = await fbDocRef.get();
+    if (snap.exists) {
+      const cloudData = snap.data();
+      const cloudCount = (cloudData.recipes || []).length;
+      const localCount = state.recipes.length;
+      // Si le cloud a des données et local aussi, demander
+      if (cloudCount > 0 && localCount > 0 && cloudData.lastModified !== state.lastModified) {
+        const choice = confirm(
+          'Le cloud contient ' + cloudCount + ' recette(s), local : ' + localCount + ' recette(s).\n\n' +
+          'OK = charger la version du CLOUD (écrase le local)\n' +
+          'Annuler = envoyer le LOCAL vers le cloud (écrase le cloud)'
+        );
+        if (choice) applyCloudData(cloudData);
+        else await pushToCloud();
+      } else if (cloudCount > 0) {
+        applyCloudData(cloudData);
+      } else {
+        await pushToCloud();
+      }
+    } else {
+      await pushToCloud();
+    }
+    // Abonnement temps réel pour les autres appareils
+    fbUnsubscribe = fbDocRef.onSnapshot(snap => {
+      if (fbSkipNextSnapshot) { fbSkipNextSnapshot = false; return; }
+      if (snap.metadata.hasPendingWrites) return;
+      if (snap.exists) {
+        const data = snap.data();
+        if (data.lastModified && data.lastModified !== state.lastModified) {
+          applyCloudData(data);
+          setSyncStatus('☁ Mise à jour depuis un autre appareil', 'success');
+        }
+      }
+    }, err => {
+      console.error('Snapshot error:', err);
+      setSyncStatus('⚠ Erreur de synchro', 'error');
+    });
+    setSyncStatus('☁ Synchronisé', 'success');
+  } catch (e) {
+    console.error(e);
+    setSyncStatus('⚠ ' + e.message, 'error');
+    toast('Erreur synchro : ' + e.message, 'error');
+  }
+}
+
+function applyCloudData(data) {
+  state.recipes = data.recipes || [];
+  state.ingredients = data.ingredients || [];
+  state.units = data.units || [];
+  state.ingredientTypes = data.ingredientTypes || [];
+  state.mealTypes = data.mealTypes && data.mealTypes.length ? data.mealTypes : [...DEFAULT_MEAL_TYPES];
+  state.selectedRecipeIds = data.selectedRecipeIds || [];
+  state.checkedShoppingItems = data.checkedShoppingItems || [];
+  state.lastModified = data.lastModified || Date.now();
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch {}
+  renderRecipes();
+  renderDataTab();
+  buildFilterBar();
+  if (document.getElementById('tab-shopping').classList.contains('active')) renderShopping();
+}
+
+function fbSchedulePush() {
+  if (!fbDocRef) return;
+  clearTimeout(fbSaveTimer);
+  setSyncStatus('⏳ Enregistrement...', 'muted');
+  fbSaveTimer = setTimeout(() => pushToCloud(), 1500);
+}
+
+async function pushToCloud() {
+  if (!fbDocRef) return;
+  fbSkipNextSnapshot = true;
+  try {
+    state.lastModified = Date.now();
+    await fbDocRef.set({
+      recipes: state.recipes,
+      ingredients: state.ingredients,
+      units: state.units,
+      ingredientTypes: state.ingredientTypes,
+      mealTypes: state.mealTypes,
+      selectedRecipeIds: state.selectedRecipeIds,
+      checkedShoppingItems: state.checkedShoppingItems,
+      lastModified: state.lastModified
+    });
+    setSyncStatus('☁ Synchronisé', 'success');
+  } catch (e) {
+    console.error(e);
+    setSyncStatus('⚠ Échec : ' + e.message, 'error');
+    toast('Échec synchro : ' + e.message, 'error');
+  }
+}
+
+async function pullFromCloud() {
+  if (!fbDocRef) return;
+  try {
+    const snap = await fbDocRef.get();
+    if (snap.exists) {
+      applyCloudData(snap.data());
+      toast('Données rechargées depuis le cloud', 'success');
+    } else {
+      toast('Aucune donnée dans le cloud', 'error');
+    }
+  } catch (e) {
+    toast('Erreur : ' + e.message, 'error');
+  }
+}
+
+function setSyncStatus(text, kind) {
+  const el = document.getElementById('firebase-sync-status');
+  const sb = document.getElementById('sidebar-sync-status');
+  const color = kind === 'success' ? 'var(--success)' : kind === 'error' ? 'var(--danger)' : 'var(--text-muted)';
+  if (el) { el.textContent = text; el.style.color = color; }
+  if (sb) { sb.textContent = text; sb.style.color = color; }
+}
+
+function renderFirebaseUI() {
+  const hasConfig = !!getStoredFirebaseConfig();
+  document.getElementById('firebase-not-configured').style.display = hasConfig ? 'none' : '';
+  document.getElementById('firebase-configured').style.display = hasConfig ? '' : 'none';
+  if (!hasConfig) return;
+
+  const signedIn = !!fbUser;
+  document.getElementById('firebase-signed-in').style.display = signedIn ? '' : 'none';
+  document.getElementById('firebase-signed-out').style.display = signedIn ? 'none' : '';
+
+  const sidebarUser = document.getElementById('sidebar-user');
+  if (signedIn) {
+    document.getElementById('firebase-user-name').textContent = fbUser.displayName || fbUser.email;
+    document.getElementById('firebase-user-email').textContent = fbUser.email;
+    const avatarEl = document.getElementById('firebase-user-avatar');
+    if (fbUser.photoURL) {
+      avatarEl.style.background = 'url(' + fbUser.photoURL + ') center/cover';
+      avatarEl.textContent = '';
+    } else {
+      avatarEl.style.background = 'var(--primary)';
+      avatarEl.textContent = (fbUser.displayName || fbUser.email || '?').charAt(0).toUpperCase();
+    }
+    sidebarUser.classList.add('active');
+    document.getElementById('sidebar-user-name').textContent = (fbUser.displayName || fbUser.email || '').split(' ')[0];
+    document.getElementById('sidebar-user-email').textContent = fbUser.email || '';
+  } else {
+    sidebarUser.classList.remove('active');
+  }
+}
+
+document.getElementById('btn-setup-firebase').onclick = () => openFirebaseModal();
+document.getElementById('btn-edit-firebase').onclick = () => openFirebaseModal();
+
+function openFirebaseModal() {
+  const existing = getStoredFirebaseConfig();
+  document.getElementById('firebase-config-input').value = existing ? JSON.stringify(existing, null, 2) : '';
+  document.getElementById('btn-remove-firebase').style.display = existing ? '' : 'none';
+  document.getElementById('firebase-modal').classList.add('active');
+}
+
+document.getElementById('btn-save-firebase-config').onclick = () => {
+  const raw = document.getElementById('firebase-config-input').value;
+  try {
+    const config = parseFirebaseConfig(raw);
+    if (!config || !config.apiKey || !config.projectId) {
+      toast('Config incomplète (apiKey et projectId requis)', 'error');
+      return;
+    }
+    const wasConfigured = !!getStoredFirebaseConfig();
+    setStoredFirebaseConfig(config);
+    closeAllModals();
+    if (wasConfigured) {
+      toast('Config modifiée. Rechargement...', 'success');
+      setTimeout(() => location.reload(), 800);
+    } else {
+      toast('Config enregistrée', 'success');
+      initFirebase();
+    }
+  } catch (e) {
+    toast(e.message, 'error');
+  }
+};
+
+document.getElementById('btn-remove-firebase').onclick = () => {
+  if (!confirm('Supprimer la config Firebase ? La synchro cloud sera désactivée (tes données locales restent intactes).')) return;
+  if (fbUser && fbAuth) fbAuth.signOut();
+  setStoredFirebaseConfig(null);
+  closeAllModals();
+  toast('Config supprimée. Rechargement...', 'success');
+  setTimeout(() => location.reload(), 800);
+};
+
+document.getElementById('btn-sign-in').onclick = async () => {
+  if (!fbAuth) return;
+  try {
+    const provider = new firebase.auth.GoogleAuthProvider();
+    await fbAuth.signInWithPopup(provider);
+  } catch (e) {
+    if (e.code === 'auth/popup-blocked' || e.code === 'auth/popup-closed-by-user') {
+      toast('Popup bloquée. Autorise les popups et réessaie.', 'error');
+    } else if (e.code === 'auth/unauthorized-domain') {
+      toast('Ce domaine n\'est pas autorisé dans Firebase. Ajoute-le dans Auth → Settings → Authorized domains.', 'error');
+    } else {
+      toast('Erreur : ' + e.message, 'error');
+    }
+  }
+};
+
+document.getElementById('btn-sign-out').onclick = () => {
+  if (fbAuth) fbAuth.signOut();
+};
+
+document.getElementById('btn-push-cloud').onclick = () => {
+  pushToCloud().then(() => toast('Envoyé vers le cloud', 'success'));
+};
+
+document.getElementById('btn-pull-cloud').onclick = () => {
+  if (!confirm('Cela va remplacer tes données locales par celles du cloud. Continuer ?')) return;
+  pullFromCloud();
+};
 
 function load() {
   try {
@@ -1187,24 +1639,22 @@ function createChipsInput(wrapper, options) {
 
   let selectedValues = [...initialValues];
   let dropdown = null;
+  let lastInputEl = null;
 
   function render() {
     container.innerHTML = '';
     selectedValues.forEach(val => {
       const chip = document.createElement('span');
       chip.className = 'chip';
+      chip.title = 'Cliquer pour retirer';
       chip.textContent = val;
-      const rm = document.createElement('button');
-      rm.type = 'button';
-      rm.className = 'chip-remove';
-      rm.textContent = '×';
-      rm.onclick = e => {
+      // Le chip entier est cliquable pour retirer
+      chip.onclick = e => {
         e.stopPropagation();
         selectedValues = selectedValues.filter(v => v !== val);
         render();
         if (onChange) onChange(selectedValues);
       };
-      chip.appendChild(rm);
       container.appendChild(chip);
     });
     const input = document.createElement('input');
@@ -1212,6 +1662,7 @@ function createChipsInput(wrapper, options) {
     input.className = 'chips-inner-input';
     input.placeholder = selectedValues.length === 0 ? placeholder : '';
     container.appendChild(input);
+    lastInputEl = input;
 
     input.addEventListener('focus', showDropdown);
     input.addEventListener('input', showDropdown);
@@ -1246,10 +1697,27 @@ function createChipsInput(wrapper, options) {
         const div = document.createElement('div');
         div.className = 'autocomplete-item';
         div.textContent = it.name;
-        div.onclick = () => {
+        // Ctrl/Cmd+click : ajouter sans fermer la liste
+        div.onmousedown = ev => {
+          ev.preventDefault(); // éviter le blur de l'input
+        };
+        div.onclick = ev => {
           selectedValues.push(it.name);
-          render();
-          if (onChange) onChange(selectedValues);
+          if (ev.ctrlKey || ev.metaKey) {
+            // Garder ouvert : re-render mais garder focus + dropdown
+            const prevValue = input.value;
+            render();
+            if (onChange) onChange(selectedValues);
+            if (lastInputEl) {
+              lastInputEl.value = prevValue;
+              lastInputEl.focus();
+              // Re-ouvrir dropdown après le render
+              setTimeout(() => lastInputEl.dispatchEvent(new Event('input')), 0);
+            }
+          } else {
+            render();
+            if (onChange) onChange(selectedValues);
+          }
         };
         dropdown.appendChild(div);
       });
@@ -1258,6 +1726,7 @@ function createChipsInput(wrapper, options) {
         const c = document.createElement('div');
         c.className = 'autocomplete-create';
         c.textContent = '+ Créer « ' + input.value + ' »';
+        c.onmousedown = ev => { ev.preventDefault(); };
         c.onclick = () => {
           const nm = onCreate(input.value.trim());
           if (nm) {
@@ -1274,12 +1743,19 @@ function createChipsInput(wrapper, options) {
         e.textContent = 'Aucun élément disponible';
         dropdown.appendChild(e);
       }
+      // Aide discrète pour Ctrl+click
+      if (filtered.length > 0) {
+        const hint = document.createElement('div');
+        hint.style.cssText = 'padding:5px 10px; font-size:10px; color:var(--text-dim); text-align:center; border-top:1px solid var(--border); background:var(--bg-2);';
+        hint.textContent = 'Astuce : Ctrl+clic pour sélectionner plusieurs sans fermer';
+        dropdown.appendChild(hint);
+      }
     }
   }
 
   container.addEventListener('click', e => {
     if (e.target === container) {
-      const inp = container.querySelector('input');
+      const inp = container.querySelector('input.chips-inner-input');
       if (inp) inp.focus();
     }
   });
@@ -1815,10 +2291,12 @@ document.getElementById('btn-new-recipe').onclick = () => openRecipeModal();
 let includeCtrl = null, excludeCtrl = null;
 
 function buildFilterBar() {
-  // Meal types buttons
+  // Meal types buttons - triés alphabétiquement
   const mtCont = document.getElementById('filter-meal-types');
   mtCont.innerHTML = '';
-  state.mealTypes.forEach(mt => {
+  const collator = new Intl.Collator('fr', { sensitivity: 'base' });
+  const sortedMealTypes = [...state.mealTypes].sort(collator.compare);
+  sortedMealTypes.forEach(mt => {
     const btn = document.createElement('button');
     btn.className = 'btn btn-xs';
     btn.textContent = mt;
@@ -2860,6 +3338,7 @@ load();
 document.getElementById('sort-select').value = state.filters.sort || 'name-asc';
 buildFilterBar();
 renderRecipes();
+initFirebase();
 </script>
 </body>
 </html>
