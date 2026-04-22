@@ -891,12 +891,55 @@ label {
                 <div id="firebase-sync-status" style="font-size:12px; color:var(--success); margin-top:2px;">☁ Synchronisé</div>
               </div>
             </div>
+            <div style="margin-top:10px; padding-top:10px; border-top:1px solid var(--border); font-size:12px;">
+              <div style="color:var(--text-muted); margin-bottom:4px;">Ton identifiant Firebase (UID) :</div>
+              <div style="display:flex; gap:6px; align-items:center;">
+                <code id="firebase-user-uid" style="flex:1; background:var(--bg); padding:6px 8px; border-radius:6px; font-size:11px; word-break:break-all; color:var(--accent);">—</code>
+                <button class="btn btn-xs" id="btn-copy-uid">📋 Copier</button>
+              </div>
+            </div>
           </div>
           <div class="data-buttons">
             <button class="btn btn-sm" id="btn-push-cloud">⬆ Forcer l'envoi vers le cloud</button>
             <button class="btn btn-sm" id="btn-pull-cloud">⬇ Forcer le téléchargement</button>
             <button class="btn btn-sm btn-danger" id="btn-sign-out">Déconnexion</button>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="data-section" id="share-section" style="display:none;">
+      <h3>🔗 Partage avec d'autres comptes Google</h3>
+      <p>Permet à plusieurs comptes Google d'accéder aux <b>mêmes</b> recettes (utile pour un couple, une famille, etc.). Chaque personne se connecte avec son propre compte mais voit les recettes communes.</p>
+
+      <div style="background:var(--surface); padding:10px 12px; border-radius:8px; margin:10px 0;">
+        <label style="display:flex; align-items:center; gap:10px; margin:0; cursor:pointer;">
+          <input type="checkbox" id="toggle-shared-mode" style="width:auto;">
+          <span style="color:var(--text); font-weight:500;">Activer le mode partagé</span>
+        </label>
+        <div style="font-size:12px; color:var(--text-muted); margin-top:6px;">Quand c'est activé, l'app lit/écrit dans un espace commun au lieu de ton espace personnel.</div>
+      </div>
+
+      <div id="shared-mode-details" style="display:none;">
+        <div class="form-group">
+          <label>Nom de l'espace partagé</label>
+          <input type="text" id="shared-space-name" placeholder="ex: famille-mhuur" style="font-family:monospace;">
+          <div style="font-size:12px; color:var(--text-muted); margin-top:4px;">💡 Les deux comptes doivent utiliser <b>exactement le même nom</b>.</div>
+        </div>
+
+        <div class="form-group">
+          <label>UIDs des comptes autorisés</label>
+          <ul id="shared-uids-list" style="list-style:none; padding:0; margin-bottom:8px;"></ul>
+          <div style="display:flex; gap:6px;">
+            <input type="text" id="new-uid-input" placeholder="Coller l'UID d'un autre compte..." style="font-family:monospace; font-size:12px;">
+            <button class="btn btn-sm" id="btn-add-uid">+ Ajouter</button>
+          </div>
+          <div style="font-size:12px; color:var(--text-muted); margin-top:6px;">💡 Ton UID y est ajouté automatiquement. Pour obtenir l'UID de l'autre personne : qu'elle se connecte une fois à l'app depuis son propre compte Google, son UID apparaîtra dans <a href="https://console.firebase.google.com/" target="_blank" style="color:var(--primary);">Firebase Console → Authentication → Users</a>.</div>
+        </div>
+
+        <div class="data-buttons" style="margin-top:10px;">
+          <button class="btn btn-primary" id="btn-copy-shared-rules">📋 Copier les règles Firestore</button>
+          <button class="btn" id="btn-migrate-to-shared">⬆ Envoyer mes données vers l'espace partagé</button>
         </div>
       </div>
     </div>
@@ -1216,7 +1259,7 @@ function initFirebase() {
         fbUser = user;
         renderFirebaseUI();
         if (user) {
-          fbDocRef = fbDb.collection('users').doc(user.uid).collection('app').doc('data');
+          fbDocRef = getFirebaseDocRef(user);
           onFirebaseSignIn();
         } else {
           if (fbUnsubscribe) { fbUnsubscribe(); fbUnsubscribe = null; }
@@ -1362,6 +1405,7 @@ function renderFirebaseUI() {
   if (signedIn) {
     document.getElementById('firebase-user-name').textContent = fbUser.displayName || fbUser.email;
     document.getElementById('firebase-user-email').textContent = fbUser.email;
+    document.getElementById('firebase-user-uid').textContent = fbUser.uid;
     const avatarEl = document.getElementById('firebase-user-avatar');
     if (fbUser.photoURL) {
       avatarEl.style.background = 'url(' + fbUser.photoURL + ') center/cover';
@@ -1373,8 +1417,10 @@ function renderFirebaseUI() {
     sidebarUser.classList.add('active');
     document.getElementById('sidebar-user-name').textContent = (fbUser.displayName || fbUser.email || '').split(' ')[0];
     document.getElementById('sidebar-user-email').textContent = fbUser.email || '';
+    renderSharedSection();
   } else {
     sidebarUser.classList.remove('active');
+    document.getElementById('share-section').style.display = 'none';
   }
 }
 
@@ -1447,6 +1493,166 @@ document.getElementById('btn-push-cloud').onclick = () => {
 document.getElementById('btn-pull-cloud').onclick = () => {
   if (!confirm('Cela va remplacer tes données locales par celles du cloud. Continuer ?')) return;
   pullFromCloud();
+};
+
+/* ========================================================================
+   MODE PARTAGÉ (plusieurs comptes Google, mêmes recettes)
+   ======================================================================== */
+const SHARED_MODE_KEY = 'mhuur_shared_mode_v1';
+const SHARED_SPACE_KEY = 'mhuur_shared_space_v1';
+const SHARED_UIDS_KEY = 'mhuur_shared_uids_v1';
+
+function getSharedMode() { return localStorage.getItem(SHARED_MODE_KEY) === '1'; }
+function setSharedModeValue(v) { localStorage.setItem(SHARED_MODE_KEY, v ? '1' : '0'); }
+function getSharedSpace() { return localStorage.getItem(SHARED_SPACE_KEY) || ''; }
+function setSharedSpace(v) { localStorage.setItem(SHARED_SPACE_KEY, v); }
+function getSharedUids() {
+  try { return JSON.parse(localStorage.getItem(SHARED_UIDS_KEY) || '[]'); } catch { return []; }
+}
+function setSharedUids(arr) { localStorage.setItem(SHARED_UIDS_KEY, JSON.stringify(arr)); }
+
+function getFirebaseDocRef(user) {
+  if (getSharedMode() && getSharedSpace()) {
+    return fbDb.collection('sharedData').doc(getSharedSpace());
+  }
+  return fbDb.collection('users').doc(user.uid).collection('app').doc('data');
+}
+
+function renderSharedSection() {
+  if (!fbUser) {
+    document.getElementById('share-section').style.display = 'none';
+    return;
+  }
+  document.getElementById('share-section').style.display = '';
+
+  const on = getSharedMode();
+  document.getElementById('toggle-shared-mode').checked = on;
+  document.getElementById('shared-mode-details').style.display = on ? '' : 'none';
+  document.getElementById('shared-space-name').value = getSharedSpace();
+
+  // UIDs list : s'assurer que le sien y est
+  const uids = getSharedUids();
+  if (fbUser && !uids.includes(fbUser.uid)) {
+    uids.unshift(fbUser.uid);
+    setSharedUids(uids);
+  }
+  const list = document.getElementById('shared-uids-list');
+  list.innerHTML = '';
+  uids.forEach(uid => {
+    const li = document.createElement('li');
+    li.style.cssText = 'display:flex; align-items:center; gap:6px; padding:6px 10px; background:var(--bg); border-radius:6px; margin-bottom:4px; font-size:12px;';
+    const isMine = fbUser && uid === fbUser.uid;
+    li.innerHTML = '<code style="flex:1; color:var(--accent); word-break:break-all;">' + escapeHtml(uid) + '</code>' +
+      (isMine ? '<span style="font-size:11px; color:var(--text-muted);">(toi)</span>' : '');
+    const rm = document.createElement('button');
+    rm.className = 'btn btn-xs btn-danger';
+    rm.textContent = '×';
+    rm.onclick = () => {
+      if (isMine) { toast('Tu ne peux pas retirer ton propre UID.', 'error'); return; }
+      setSharedUids(uids.filter(x => x !== uid));
+      renderSharedSection();
+    };
+    li.appendChild(rm);
+    list.appendChild(li);
+  });
+}
+
+document.getElementById('toggle-shared-mode').onchange = async (e) => {
+  const on = e.target.checked;
+  if (on) {
+    const space = document.getElementById('shared-space-name').value.trim() || getSharedSpace();
+    if (!space) {
+      toast('Entre d\'abord un nom d\'espace partagé.', 'error');
+      e.target.checked = false;
+      return;
+    }
+    if (!confirm('Activer le mode partagé ?\n\nL\'app va se reconnecter à l\'espace « ' + space + ' ». Assure-toi que :\n1. Les règles Firestore autorisent ton UID pour cet espace\n2. L\'espace porte le même nom pour tous les comptes\n\nContinuer ?')) {
+      e.target.checked = false;
+      return;
+    }
+    setSharedSpace(space);
+  }
+  setSharedModeValue(on);
+  renderSharedSection();
+  // Reconnecter au bon chemin
+  if (fbUser && fbDb) {
+    if (fbUnsubscribe) { fbUnsubscribe(); fbUnsubscribe = null; }
+    fbDocRef = getFirebaseDocRef(fbUser);
+    await onFirebaseSignIn();
+    toast(on ? 'Mode partagé activé' : 'Mode personnel activé', 'success');
+  }
+};
+
+document.getElementById('shared-space-name').addEventListener('blur', (e) => {
+  setSharedSpace(e.target.value.trim());
+});
+
+document.getElementById('btn-add-uid').onclick = () => {
+  const input = document.getElementById('new-uid-input');
+  const uid = input.value.trim();
+  if (!uid) return;
+  if (uid.length < 10) { toast('UID invalide (trop court)', 'error'); return; }
+  const uids = getSharedUids();
+  if (uids.includes(uid)) { toast('Cet UID est déjà dans la liste.', 'error'); return; }
+  uids.push(uid);
+  setSharedUids(uids);
+  input.value = '';
+  renderSharedSection();
+  toast('UID ajouté. N\'oublie pas de mettre à jour les règles Firestore !', 'success');
+};
+
+document.getElementById('btn-copy-shared-rules').onclick = async () => {
+  const uids = getSharedUids();
+  const space = getSharedSpace();
+  if (uids.length === 0) { toast('Aucun UID dans la liste.', 'error'); return; }
+  const uidList = uids.map(u => "        '" + u + "'").join(',\n');
+  const rules = `rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Espace personnel : chacun voit ses données
+    match /users/{userId}/{document=**} {
+      allow read, write: if request.auth != null
+                         && request.auth.uid == userId;
+    }
+    // Espace partagé : UIDs autorisés
+    match /sharedData/{spaceId} {
+      allow read, write: if request.auth != null
+                         && request.auth.uid in [
+${uidList}
+                         ];
+    }
+  }
+}`;
+  try {
+    await navigator.clipboard.writeText(rules);
+    toast('Règles copiées ! Colle-les dans Firestore → Rules puis Publier.', 'success');
+  } catch {
+    // Fallback : montrer dans une alerte
+    prompt('Copie ces règles manuellement (Ctrl+C) :', rules);
+  }
+};
+
+document.getElementById('btn-migrate-to-shared').onclick = async () => {
+  if (!fbUser || !fbDb) { toast('Connecte-toi d\'abord.', 'error'); return; }
+  if (!getSharedMode()) { toast('Active d\'abord le mode partagé.', 'error'); return; }
+  if (!getSharedSpace()) { toast('Renseigne un nom d\'espace partagé.', 'error'); return; }
+  if (!confirm('Envoyer toutes tes données locales actuelles vers l\'espace partagé « ' + getSharedSpace() + ' » ?\n\nSi l\'espace contient déjà des données, elles seront écrasées.')) return;
+  try {
+    await pushToCloud();
+    toast('Données envoyées vers l\'espace partagé !', 'success');
+  } catch (e) {
+    toast('Échec : ' + e.message, 'error');
+  }
+};
+
+document.getElementById('btn-copy-uid').onclick = async () => {
+  if (!fbUser) return;
+  try {
+    await navigator.clipboard.writeText(fbUser.uid);
+    toast('UID copié !', 'success');
+  } catch {
+    prompt('Copie ton UID manuellement (Ctrl+C) :', fbUser.uid);
+  }
 };
 
 function load() {
