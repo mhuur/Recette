@@ -810,13 +810,16 @@ label {
           <option value="time-asc">Temps total ↑</option>
           <option value="time-desc">Temps total ↓</option>
         </select>
+        <div class="filter-group">
+          <label>Sélection :</label>
+          <div id="filter-selection-buttons" style="display:flex; gap:4px;"></div>
+        </div>
+        <button class="btn btn-ghost btn-sm" id="btn-reset-filters">✕ Réinitialiser</button>
       </div>
       <div class="toolbar-row">
-        <div class="filter-group">
-          <label>Note min :</label>
-          <input type="number" id="filter-rating-min" min="0" max="10" step="0.5" value="">
-          <label>max :</label>
-          <input type="number" id="filter-rating-max" min="0" max="10" step="0.5" value="">
+        <div class="filter-group" style="flex-wrap:wrap;">
+          <label>Notes :</label>
+          <div id="filter-rating-buttons" style="display:flex; flex-wrap:wrap; gap:3px;"></div>
         </div>
         <div class="filter-group">
           <label>Prép. max (min) :</label>
@@ -826,10 +829,9 @@ label {
           <label>Cuisson max (min) :</label>
           <input type="number" id="filter-cook-max" min="0" value="">
         </div>
-        <button class="btn btn-ghost btn-sm" id="btn-reset-filters">✕ Réinitialiser</button>
       </div>
       <div class="toolbar-row">
-        <div class="filter-group" style="flex:1; min-width:200px;">
+        <div class="filter-group" style="flex:1; min-width:200px; flex-wrap:wrap;">
           <label>Types :</label>
           <div id="filter-meal-types" style="display:flex; flex-wrap:wrap; gap:4px;"></div>
         </div>
@@ -1152,7 +1154,7 @@ service cloud.firestore {
    ======================================================================== */
 
 const DEFAULT_MEAL_TYPES = [
-  'Entrée', 'Plat principal', 'Dessert', 'Accompagnement', 'Apéritif',
+  'Aucun', 'Entrée', 'Plat principal', 'Dessert', 'Accompagnement', 'Apéritif',
   'Petit-déjeuner', 'Goûter', 'Sauce', 'Boisson', 'Salade', 'Soupe',
   'Pâtes', 'Viande', 'Poisson', 'Végétarien', 'Végan'
 ];
@@ -1178,26 +1180,34 @@ let state = {
   filters: {
     search: '',
     sort: 'name-asc',
-    ratingMin: null,
-    ratingMax: null,
+    ratingValues: [],
+    includeUnrated: true,
     prepMax: null,
     cookMax: null,
     mealTypes: [],
     includeIngredients: [],
-    excludeIngredients: []
+    excludeIngredients: [],
+    selectionMode: 'all'
   }
 };
 
 function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
 
 function save() {
+  // Sauvegarde locale immédiate + planifie synchro cloud (débouncée 5s)
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   } catch (e) {
     toast('Erreur de sauvegarde : ' + e.message, 'error');
   }
-  // Synchro Firebase debouncée
   fbSchedulePush();
+}
+
+function saveLocal() {
+  // Sauvegarde locale uniquement — pas de sync cloud (pour les changements UI/filtres)
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  } catch (e) {}
 }
 
 /* ========================================================================
@@ -1322,6 +1332,8 @@ async function onFirebaseSignIn() {
 }
 
 function applyCloudData(data) {
+  // Préserver les filtres locaux (UI) car ils ne sont pas synchronisés
+  const currentFilters = state.filters;
   state.recipes = data.recipes || [];
   state.ingredients = data.ingredients || [];
   state.units = data.units || [];
@@ -1330,6 +1342,7 @@ function applyCloudData(data) {
   state.selectedRecipeIds = data.selectedRecipeIds || [];
   state.checkedShoppingItems = data.checkedShoppingItems || [];
   state.lastModified = data.lastModified || Date.now();
+  state.filters = currentFilters; // on garde les filtres locaux
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch {}
   renderRecipes();
   renderDataTab();
@@ -1337,18 +1350,12 @@ function applyCloudData(data) {
   if (document.getElementById('tab-shopping').classList.contains('active')) renderShopping();
 }
 
-function fbSchedulePush() {
-  if (!fbDocRef) return;
-  clearTimeout(fbSaveTimer);
-  setSyncStatus('⏳ Enregistrement...', 'muted');
-  fbSaveTimer = setTimeout(() => pushToCloud(), 1500);
-}
-
 async function pushToCloud() {
   if (!fbDocRef) return;
   fbSkipNextSnapshot = true;
   try {
     state.lastModified = Date.now();
+    // On n'envoie PAS les filtres (préférences UI locales)
     await fbDocRef.set({
       recipes: state.recipes,
       ingredients: state.ingredients,
@@ -1661,7 +1668,19 @@ function load() {
       const loaded = JSON.parse(raw);
       state = { ...state, ...loaded };
       if (!state.mealTypes || state.mealTypes.length === 0) state.mealTypes = [...DEFAULT_MEAL_TYPES];
-      if (!state.filters) state.filters = { search: '', sort: 'name-asc', ratingMin: null, ratingMax: null, prepMax: null, cookMax: null, mealTypes: [], includeIngredients: [], excludeIngredients: [] };
+      // S'assurer que "Aucun" existe toujours
+      if (!state.mealTypes.some(m => normalizeText(m) === 'aucun')) {
+        state.mealTypes.unshift('Aucun');
+      }
+      if (!state.filters) state.filters = { search: '', sort: 'name-asc', ratingValues: [], includeUnrated: true, prepMax: null, cookMax: null, mealTypes: [], includeIngredients: [], excludeIngredients: [], selectionMode: 'all' };
+      // Migration depuis l'ancien format de filtre note
+      if (state.filters.ratingMin !== undefined || state.filters.ratingMax !== undefined) {
+        state.filters.ratingValues = [];
+        state.filters.includeUnrated = true;
+        delete state.filters.ratingMin;
+        delete state.filters.ratingMax;
+      }
+      if (state.filters.selectionMode === undefined) state.filters.selectionMode = 'all';
       if (!state.selectedRecipeIds) state.selectedRecipeIds = [];
       if (!state.checkedShoppingItems) state.checkedShoppingItems = [];
     } else {
@@ -1840,135 +1859,145 @@ function createChipsInput(wrapper, options) {
 
   const container = document.createElement('div');
   container.className = 'chips-input-wrapper';
+  container.style.position = 'relative';
   wrapper.appendChild(container);
 
   let selectedValues = [...initialValues];
   let dropdown = null;
-  let lastInputEl = null;
 
-  function render() {
-    container.innerHTML = '';
+  // Input persistant (jamais recréé) pour garder le focus au Ctrl+clic
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.className = 'chips-inner-input';
+
+  function renderChips() {
+    // Retire tous les chips mais conserve l'input
+    Array.from(container.querySelectorAll('.chip')).forEach(c => c.remove());
     selectedValues.forEach(val => {
       const chip = document.createElement('span');
       chip.className = 'chip';
       chip.title = 'Cliquer pour retirer';
       chip.textContent = val;
-      // Le chip entier est cliquable pour retirer
       chip.onclick = e => {
         e.stopPropagation();
         selectedValues = selectedValues.filter(v => v !== val);
-        render();
+        renderChips();
+        updatePlaceholder();
         if (onChange) onChange(selectedValues);
       };
-      container.appendChild(chip);
+      container.insertBefore(chip, input);
     });
-    const input = document.createElement('input');
-    input.type = 'text';
-    input.className = 'chips-inner-input';
+  }
+
+  function updatePlaceholder() {
     input.placeholder = selectedValues.length === 0 ? placeholder : '';
-    container.appendChild(input);
-    lastInputEl = input;
+  }
 
-    input.addEventListener('focus', showDropdown);
-    input.addEventListener('input', showDropdown);
-    input.addEventListener('blur', () => setTimeout(hideDropdown, 180));
-    input.addEventListener('keydown', e => {
-      if (e.key === 'Backspace' && !input.value && selectedValues.length > 0) {
-        selectedValues.pop();
-        render();
+  function hideDropdown() {
+    if (dropdown) { dropdown.remove(); dropdown = null; }
+  }
+
+  function showDropdown() {
+    hideDropdown();
+    const q = normalizeText(input.value);
+    const all = getItems().filter(it => !selectedValues.includes(it.name));
+    const filtered = q ? all.filter(it => normalizeText(it.name).includes(q)) : all;
+    dropdown = document.createElement('div');
+    dropdown.className = 'autocomplete-dropdown active';
+    container.appendChild(dropdown);
+
+    filtered.slice(0, 50).forEach(it => {
+      const div = document.createElement('div');
+      div.className = 'autocomplete-item';
+      div.textContent = it.name;
+      // onmousedown : empêche le blur de l'input avant que onclick ne se déclenche
+      div.onmousedown = ev => ev.preventDefault();
+      div.onclick = ev => {
+        selectedValues.push(it.name);
+        renderChips();
+        updatePlaceholder();
         if (onChange) onChange(selectedValues);
-      } else if (e.key === 'Enter' && input.value.trim()) {
-        e.preventDefault();
-        const first = dropdown?.querySelector('.autocomplete-item, .autocomplete-create');
-        if (first) first.click();
-      }
+        if (ev.ctrlKey || ev.metaKey) {
+          // Ctrl+clic : garde l'input et le dropdown ouverts
+          input.focus();
+          showDropdown();
+        } else {
+          hideDropdown();
+          input.value = '';
+          input.focus();
+        }
+      };
+      dropdown.appendChild(div);
     });
 
-    function hideDropdown() {
-      if (dropdown) { dropdown.remove(); dropdown = null; }
+    if (q && onCreate && !filtered.some(it => normalizeText(it.name) === q) && !selectedValues.some(v => normalizeText(v) === q)) {
+      const c = document.createElement('div');
+      c.className = 'autocomplete-create';
+      c.textContent = '+ Créer « ' + input.value + ' »';
+      c.onmousedown = ev => ev.preventDefault();
+      c.onclick = () => {
+        const nm = onCreate(input.value.trim());
+        if (nm) {
+          selectedValues.push(nm);
+          renderChips();
+          input.value = '';
+          updatePlaceholder();
+          if (onChange) onChange(selectedValues);
+          hideDropdown();
+          input.focus();
+        }
+      };
+      dropdown.appendChild(c);
     }
 
-    function showDropdown() {
-      hideDropdown();
-      const q = normalizeText(input.value);
-      const all = getItems().filter(it => !selectedValues.includes(it.name));
-      const filtered = q ? all.filter(it => normalizeText(it.name).includes(q)) : all;
-      dropdown = document.createElement('div');
-      dropdown.className = 'autocomplete-dropdown active';
-      container.style.position = 'relative';
-      container.appendChild(dropdown);
-
-      filtered.slice(0, 30).forEach(it => {
-        const div = document.createElement('div');
-        div.className = 'autocomplete-item';
-        div.textContent = it.name;
-        // Ctrl/Cmd+click : ajouter sans fermer la liste
-        div.onmousedown = ev => {
-          ev.preventDefault(); // éviter le blur de l'input
-        };
-        div.onclick = ev => {
-          selectedValues.push(it.name);
-          if (ev.ctrlKey || ev.metaKey) {
-            // Garder ouvert : re-render mais garder focus + dropdown
-            const prevValue = input.value;
-            render();
-            if (onChange) onChange(selectedValues);
-            if (lastInputEl) {
-              lastInputEl.value = prevValue;
-              lastInputEl.focus();
-              // Re-ouvrir dropdown après le render
-              setTimeout(() => lastInputEl.dispatchEvent(new Event('input')), 0);
-            }
-          } else {
-            render();
-            if (onChange) onChange(selectedValues);
-          }
-        };
-        dropdown.appendChild(div);
-      });
-
-      if (q && onCreate && !filtered.some(it => normalizeText(it.name) === q) && !selectedValues.some(v => normalizeText(v) === q)) {
-        const c = document.createElement('div');
-        c.className = 'autocomplete-create';
-        c.textContent = '+ Créer « ' + input.value + ' »';
-        c.onmousedown = ev => { ev.preventDefault(); };
-        c.onclick = () => {
-          const nm = onCreate(input.value.trim());
-          if (nm) {
-            selectedValues.push(nm);
-            render();
-            if (onChange) onChange(selectedValues);
-          }
-        };
-        dropdown.appendChild(c);
-      }
-      if (filtered.length === 0 && !q && !onCreate) {
-        const e = document.createElement('div');
-        e.className = 'autocomplete-empty';
-        e.textContent = 'Aucun élément disponible';
-        dropdown.appendChild(e);
-      }
-      // Aide discrète pour Ctrl+click
-      if (filtered.length > 0) {
-        const hint = document.createElement('div');
-        hint.style.cssText = 'padding:5px 10px; font-size:10px; color:var(--text-dim); text-align:center; border-top:1px solid var(--border); background:var(--bg-2);';
-        hint.textContent = 'Astuce : Ctrl+clic pour sélectionner plusieurs sans fermer';
-        dropdown.appendChild(hint);
-      }
+    if (filtered.length === 0 && !q && !onCreate) {
+      const e = document.createElement('div');
+      e.className = 'autocomplete-empty';
+      e.textContent = 'Aucun élément disponible';
+      dropdown.appendChild(e);
+    }
+    if (filtered.length > 0) {
+      const hint = document.createElement('div');
+      hint.style.cssText = 'padding:5px 10px; font-size:10px; color:var(--text-dim); text-align:center; border-top:1px solid var(--border); background:var(--bg-2); position:sticky; bottom:0;';
+      hint.textContent = '💡 Ctrl+clic pour en enchaîner plusieurs';
+      dropdown.appendChild(hint);
     }
   }
 
-  container.addEventListener('click', e => {
-    if (e.target === container) {
-      const inp = container.querySelector('input.chips-inner-input');
-      if (inp) inp.focus();
+  input.addEventListener('focus', showDropdown);
+  input.addEventListener('input', showDropdown);
+  input.addEventListener('blur', () => setTimeout(hideDropdown, 200));
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Backspace' && !input.value && selectedValues.length > 0) {
+      selectedValues.pop();
+      renderChips();
+      updatePlaceholder();
+      if (onChange) onChange(selectedValues);
+    } else if (e.key === 'Enter' && input.value.trim()) {
+      e.preventDefault();
+      const first = dropdown?.querySelector('.autocomplete-item, .autocomplete-create');
+      if (first) first.click();
+    } else if (e.key === 'Escape') {
+      hideDropdown();
+      input.blur();
     }
   });
 
-  render();
+  container.addEventListener('click', e => {
+    if (e.target === container) input.focus();
+  });
+
+  container.appendChild(input);
+  renderChips();
+  updatePlaceholder();
+
   return {
     getValues: () => [...selectedValues],
-    setValues: v => { selectedValues = [...v]; render(); }
+    setValues: v => {
+      selectedValues = [...v];
+      renderChips();
+      updatePlaceholder();
+    }
   };
 }
 
@@ -2064,11 +2093,16 @@ function getFilteredRecipes() {
       const inMeal = (r.mealTypes || []).some(m => normalizeText(m).includes(q));
       if (!inName && !inIng && !inMeal) return false;
     }
-    if (f.ratingMin != null && f.ratingMin !== '' && !isNaN(f.ratingMin)) {
-      if (r.rating == null || r.rating < f.ratingMin) return false;
-    }
-    if (f.ratingMax != null && f.ratingMax !== '' && !isNaN(f.ratingMax)) {
-      if (r.rating == null || r.rating > f.ratingMax) return false;
+    // Filtre notes : si liste non vide OU si includeUnrated désactivé
+    const hasRatingFilter = (f.ratingValues && f.ratingValues.length > 0) || !f.includeUnrated;
+    if (hasRatingFilter) {
+      const rating = r.rating;
+      const isUnrated = rating == null || rating === '';
+      if (isUnrated) {
+        if (!f.includeUnrated) return false;
+      } else {
+        if (f.ratingValues && f.ratingValues.length > 0 && !f.ratingValues.includes(Math.round(rating))) return false;
+      }
     }
     if (f.prepMax != null && f.prepMax !== '' && !isNaN(f.prepMax)) {
       if ((r.prepTime || 0) > f.prepMax) return false;
@@ -2088,6 +2122,9 @@ function getFilteredRecipes() {
       const ids = (r.ingredients || []).map(i => i.ingredientId);
       if (f.excludeIngredients.some(iid => ids.includes(iid))) return false;
     }
+    // Filtre sélection
+    if (f.selectionMode === 'checked' && !state.selectedRecipeIds.includes(r.id)) return false;
+    if (f.selectionMode === 'unchecked' && state.selectedRecipeIds.includes(r.id)) return false;
     return true;
   });
 
@@ -2265,14 +2302,26 @@ function openRecipeModal(recipe = null) {
   document.getElementById('origin-other-value').value = recipe?.origin?.other || '';
   updateOriginFieldsVisibility();
 
-  // Meal types
+  // Meal types - "Aucun" par défaut si vide, retiré automatiquement si autre ajouté
+  const initialMealTypes = (recipe?.mealTypes && recipe.mealTypes.length > 0) ? recipe.mealTypes : ['Aucun'];
   mealTypesWrapperCtrl = createChipsInput(
     document.getElementById('recipe-meal-types-wrapper'),
     {
-      getItems: () => state.mealTypes.map(m => ({ name: m })),
+      getItems: () => [...state.mealTypes].sort((a,b) => a.localeCompare(b, 'fr')).map(m => ({ name: m })),
       onCreate: name => findOrCreateMealType(name),
-      initialValues: recipe?.mealTypes || [],
-      placeholder: 'Type de plat...'
+      initialValues: initialMealTypes,
+      placeholder: 'Type de plat...',
+      onChange: values => {
+        // Si d'autres types sont présents, retirer "Aucun"
+        if (values.length > 1 && values.some(v => normalizeText(v) === 'aucun')) {
+          const filtered = values.filter(v => normalizeText(v) !== 'aucun');
+          mealTypesWrapperCtrl.setValues(filtered);
+        }
+        // Si tout a été retiré, remettre "Aucun"
+        if (values.length === 0) {
+          mealTypesWrapperCtrl.setValues(['Aucun']);
+        }
+      }
     }
   );
 
@@ -2496,10 +2545,87 @@ document.getElementById('btn-new-recipe').onclick = () => openRecipeModal();
 let includeCtrl = null, excludeCtrl = null;
 
 function buildFilterBar() {
-  // Meal types buttons - triés alphabétiquement
+  const collator = new Intl.Collator('fr', { sensitivity: 'base' });
+
+  // Filtre Sélection : tous / cochées / non cochées
+  const selCont = document.getElementById('filter-selection-buttons');
+  selCont.innerHTML = '';
+  [
+    { value: 'all', label: 'Toutes' },
+    { value: 'checked', label: '✓ Cochées' },
+    { value: 'unchecked', label: '○ Non cochées' }
+  ].forEach(opt => {
+    const btn = document.createElement('button');
+    btn.className = 'btn btn-xs';
+    btn.textContent = opt.label;
+    const isActive = state.filters.selectionMode === opt.value;
+    btn.style.background = isActive ? 'var(--primary)' : 'var(--surface)';
+    btn.style.color = isActive ? 'white' : 'var(--text-muted)';
+    btn.style.borderColor = isActive ? 'var(--primary)' : 'var(--border)';
+    btn.onclick = () => {
+      state.filters.selectionMode = opt.value;
+      saveLocal();
+      buildFilterBar();
+      renderRecipes();
+    };
+    selCont.appendChild(btn);
+  });
+
+  // Filtre Notes : boutons 1-10 + "Non noté"
+  const rateCont = document.getElementById('filter-rating-buttons');
+  rateCont.innerHTML = '';
+  for (let n = 1; n <= 10; n++) {
+    const btn = document.createElement('button');
+    btn.className = 'btn btn-xs';
+    btn.textContent = n;
+    btn.title = 'Clic = cette note seule · Ctrl+clic = ajouter/retirer';
+    btn.style.minWidth = '28px';
+    const isActive = state.filters.ratingValues && state.filters.ratingValues.includes(n);
+    btn.style.background = isActive ? 'var(--primary)' : 'var(--surface)';
+    btn.style.color = isActive ? 'white' : 'var(--text-muted)';
+    btn.style.borderColor = isActive ? 'var(--primary)' : 'var(--border)';
+    btn.onclick = e => {
+      if (e.ctrlKey || e.metaKey) {
+        // Toggle de cette note
+        if (state.filters.ratingValues.includes(n)) {
+          state.filters.ratingValues = state.filters.ratingValues.filter(x => x !== n);
+        } else {
+          state.filters.ratingValues.push(n);
+        }
+      } else {
+        // Clic simple = remplacer la sélection par juste cette note (ou tout désactiver si déjà active seule)
+        if (state.filters.ratingValues.length === 1 && state.filters.ratingValues[0] === n) {
+          state.filters.ratingValues = [];
+        } else {
+          state.filters.ratingValues = [n];
+        }
+      }
+      saveLocal();
+      buildFilterBar();
+      renderRecipes();
+    };
+    rateCont.appendChild(btn);
+  }
+  // Bouton "Non noté"
+  const unratedBtn = document.createElement('button');
+  unratedBtn.className = 'btn btn-xs';
+  unratedBtn.textContent = 'Non noté';
+  unratedBtn.title = 'Afficher les recettes sans note';
+  const unratedActive = state.filters.includeUnrated;
+  unratedBtn.style.background = unratedActive ? 'var(--accent)' : 'var(--surface)';
+  unratedBtn.style.color = unratedActive ? 'var(--bg)' : 'var(--text-muted)';
+  unratedBtn.style.borderColor = unratedActive ? 'var(--accent)' : 'var(--border)';
+  unratedBtn.onclick = () => {
+    state.filters.includeUnrated = !state.filters.includeUnrated;
+    saveLocal();
+    buildFilterBar();
+    renderRecipes();
+  };
+  rateCont.appendChild(unratedBtn);
+
+  // Meal types : triés alphabétiquement
   const mtCont = document.getElementById('filter-meal-types');
   mtCont.innerHTML = '';
-  const collator = new Intl.Collator('fr', { sensitivity: 'base' });
   const sortedMealTypes = [...state.mealTypes].sort(collator.compare);
   sortedMealTypes.forEach(mt => {
     const btn = document.createElement('button');
@@ -2514,7 +2640,7 @@ function buildFilterBar() {
       } else {
         state.filters.mealTypes.push(mt);
       }
-      save();
+      saveLocal();
       buildFilterBar();
       renderRecipes();
     };
@@ -2532,7 +2658,7 @@ function buildFilterBar() {
         state.filters.includeIngredients = names
           .map(n => state.ingredients.find(i => i.name === n)?.id)
           .filter(Boolean);
-        save();
+        saveLocal();
         renderRecipes();
       }
     }
@@ -2547,7 +2673,7 @@ function buildFilterBar() {
         state.filters.excludeIngredients = names
           .map(n => state.ingredients.find(i => i.name === n)?.id)
           .filter(Boolean);
-        save();
+        saveLocal();
         renderRecipes();
       }
     }
@@ -2560,24 +2686,23 @@ document.getElementById('search-input').addEventListener('input', e => {
 });
 document.getElementById('sort-select').addEventListener('change', e => {
   state.filters.sort = e.target.value;
-  save();
+  saveLocal();
   renderRecipes();
 });
-['filter-rating-min','filter-rating-max','filter-prep-max','filter-cook-max'].forEach(id => {
+['filter-prep-max','filter-cook-max'].forEach(id => {
   document.getElementById(id).addEventListener('input', e => {
-    const key = id.replace('filter-','').replace(/-(.)/g, (_,c) => c.toUpperCase());
-    const map = { ratingMin: 'ratingMin', ratingMax: 'ratingMax', prepMax: 'prepMax', cookMax: 'cookMax' };
-    const stateKey = map[key] || key;
+    const stateKey = id === 'filter-prep-max' ? 'prepMax' : 'cookMax';
     state.filters[stateKey] = e.target.value === '' ? null : parseFloat(e.target.value);
+    saveLocal();
     renderRecipes();
   });
 });
 document.getElementById('btn-reset-filters').onclick = () => {
-  state.filters = { search: '', sort: 'name-asc', ratingMin: null, ratingMax: null, prepMax: null, cookMax: null, mealTypes: [], includeIngredients: [], excludeIngredients: [] };
+  state.filters = { search: '', sort: 'name-asc', ratingValues: [], includeUnrated: true, prepMax: null, cookMax: null, mealTypes: [], includeIngredients: [], excludeIngredients: [], selectionMode: 'all' };
   document.getElementById('search-input').value = '';
   document.getElementById('sort-select').value = 'name-asc';
-  ['filter-rating-min','filter-rating-max','filter-prep-max','filter-cook-max'].forEach(id => document.getElementById(id).value = '');
-  save();
+  ['filter-prep-max','filter-cook-max'].forEach(id => document.getElementById(id).value = '');
+  saveLocal();
   buildFilterBar();
   renderRecipes();
 };
@@ -2747,6 +2872,37 @@ document.getElementById('btn-clear-selection').onclick = () => {
 /* ========================================================================
    ONGLET DONNÉES
    ======================================================================== */
+function openMergeTypeDialog(sourceType) {
+  const others = state.ingredientTypes.filter(t => t.id !== sourceType.id).sort((a,b) => a.name.localeCompare(b.name, 'fr'));
+  if (others.length === 0) {
+    toast('Aucun autre type disponible pour fusionner.', 'error');
+    return;
+  }
+  const usage = state.ingredients.filter(i => i.typeId === sourceType.id).length;
+  const list = others.map((t,i) => (i+1) + '. ' + t.name).join('\n');
+  const choice = prompt(
+    'Fusionner « ' + sourceType.name + ' » (' + usage + ' ingrédients) vers quel autre type ?\n\n' +
+    'Tape le numéro du type cible :\n\n' + list
+  );
+  if (!choice) return;
+  const idx = parseInt(choice.trim()) - 1;
+  if (isNaN(idx) || idx < 0 || idx >= others.length) {
+    toast('Numéro invalide.', 'error');
+    return;
+  }
+  const target = others[idx];
+  if (!confirm('Fusionner « ' + sourceType.name + ' » → « ' + target.name + ' » ?\n\n' +
+               usage + ' ingrédient(s) seront réaffectés. Le type « ' + sourceType.name + ' » sera supprimé.')) return;
+  // Réaffecter tous les ingrédients
+  state.ingredients.forEach(i => { if (i.typeId === sourceType.id) i.typeId = target.id; });
+  // Supprimer le type source
+  state.ingredientTypes = state.ingredientTypes.filter(x => x.id !== sourceType.id);
+  save();
+  renderDataTab();
+  renderRecipes();
+  toast(usage + ' ingrédient(s) réaffecté(s) à « ' + target.name + ' »', 'success');
+}
+
 function renderDataTab() {
   // Ingrédients
   const ingList = document.getElementById('ingredients-list');
@@ -2836,21 +2992,29 @@ function renderDataTab() {
     const editBtn = document.createElement('button');
     editBtn.className = 'btn btn-xs';
     editBtn.textContent = '✏';
+    editBtn.title = 'Renommer';
     editBtn.onclick = () => {
       const nv = prompt('Renommer le type :', t.name);
-      if (nv && nv.trim()) { t.name = nv.trim(); save(); renderDataTab(); }
+      if (nv && nv.trim()) { t.name = nv.trim(); save(); renderDataTab(); renderRecipes(); }
     };
+    const mergeBtn = document.createElement('button');
+    mergeBtn.className = 'btn btn-xs';
+    mergeBtn.textContent = '🔗';
+    mergeBtn.title = 'Fusionner avec un autre type';
+    mergeBtn.onclick = () => openMergeTypeDialog(t);
     const delBtn = document.createElement('button');
     delBtn.className = 'btn btn-xs btn-danger';
     delBtn.textContent = '🗑';
+    delBtn.title = 'Supprimer';
     delBtn.onclick = () => {
-      if (!confirm('Supprimer le type « ' + t.name + ' » ?')) return;
+      if (!confirm('Supprimer le type « ' + t.name + ' » ?\nLes ingrédients qui l\'utilisent n\'auront plus de type.')) return;
       state.ingredientTypes = state.ingredientTypes.filter(x => x.id !== t.id);
       state.ingredients.forEach(i => { if (i.typeId === t.id) i.typeId = null; });
       save();
       renderDataTab();
     };
     actions.appendChild(editBtn);
+    actions.appendChild(mergeBtn);
     actions.appendChild(delBtn);
     el.appendChild(actions);
     typeList.appendChild(el);
