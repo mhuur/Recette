@@ -817,9 +817,9 @@ label {
         <button class="btn btn-ghost btn-sm" id="btn-reset-filters">✕ Réinitialiser</button>
       </div>
       <div class="toolbar-row">
-        <div class="filter-group" style="flex-wrap:wrap;">
+        <div class="filter-group" style="flex:1; min-width:250px;">
           <label>Notes :</label>
-          <div id="filter-rating-buttons" style="display:flex; flex-wrap:wrap; gap:3px;"></div>
+          <div id="filter-rating-wrapper" style="flex:1;"></div>
         </div>
         <div class="filter-group">
           <label>Prép. max (min) :</label>
@@ -1181,7 +1181,6 @@ let state = {
     search: '',
     sort: 'name-asc',
     ratingValues: [],
-    includeUnrated: true,
     prepMax: null,
     cookMax: null,
     mealTypes: [],
@@ -1343,6 +1342,7 @@ function applyCloudData(data) {
   state.checkedShoppingItems = data.checkedShoppingItems || [];
   state.lastModified = data.lastModified || Date.now();
   state.filters = currentFilters; // on garde les filtres locaux
+  migrateRecipes();
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch {}
   renderRecipes();
   renderDataTab();
@@ -1661,6 +1661,18 @@ document.getElementById('btn-copy-uid').onclick = async () => {
   }
 };
 
+function migrateRecipes() {
+  // Toutes les recettes sans type ou avec liste vide → "Aucun"
+  let migrated = 0;
+  state.recipes.forEach(r => {
+    if (!r.mealTypes || !Array.isArray(r.mealTypes) || r.mealTypes.length === 0) {
+      r.mealTypes = ['Aucun'];
+      migrated++;
+    }
+  });
+  return migrated;
+}
+
 function load() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -1672,17 +1684,22 @@ function load() {
       if (!state.mealTypes.some(m => normalizeText(m) === 'aucun')) {
         state.mealTypes.unshift('Aucun');
       }
-      if (!state.filters) state.filters = { search: '', sort: 'name-asc', ratingValues: [], includeUnrated: true, prepMax: null, cookMax: null, mealTypes: [], includeIngredients: [], excludeIngredients: [], selectionMode: 'all' };
-      // Migration depuis l'ancien format de filtre note
-      if (state.filters.ratingMin !== undefined || state.filters.ratingMax !== undefined) {
+      if (!state.filters) state.filters = { search: '', sort: 'name-asc', ratingValues: [], prepMax: null, cookMax: null, mealTypes: [], includeIngredients: [], excludeIngredients: [], selectionMode: 'all' };
+      // Migration depuis les anciens formats de filtre note
+      if (state.filters.ratingMin !== undefined || state.filters.ratingMax !== undefined || state.filters.includeUnrated !== undefined) {
         state.filters.ratingValues = [];
-        state.filters.includeUnrated = true;
         delete state.filters.ratingMin;
         delete state.filters.ratingMax;
+        delete state.filters.includeUnrated;
+      }
+      // ratingValues doit être en chaînes (migration depuis nombres)
+      if (state.filters.ratingValues && state.filters.ratingValues.some(v => typeof v === 'number')) {
+        state.filters.ratingValues = state.filters.ratingValues.map(v => String(v));
       }
       if (state.filters.selectionMode === undefined) state.filters.selectionMode = 'all';
       if (!state.selectedRecipeIds) state.selectedRecipeIds = [];
       if (!state.checkedShoppingItems) state.checkedShoppingItems = [];
+      migrateRecipes();
     } else {
       // Initialisation par défaut
       state.units = DEFAULT_UNITS.map(name => ({ id: uid(), name }));
@@ -2093,16 +2110,13 @@ function getFilteredRecipes() {
       const inMeal = (r.mealTypes || []).some(m => normalizeText(m).includes(q));
       if (!inName && !inIng && !inMeal) return false;
     }
-    // Filtre notes : si liste non vide OU si includeUnrated désactivé
-    const hasRatingFilter = (f.ratingValues && f.ratingValues.length > 0) || !f.includeUnrated;
-    if (hasRatingFilter) {
+    // Filtre notes : si la liste est non vide, ne garder que les recettes dont la note matche
+    // (incluant "Non noté" pour les recettes sans note)
+    if (f.ratingValues && f.ratingValues.length > 0) {
       const rating = r.rating;
       const isUnrated = rating == null || rating === '';
-      if (isUnrated) {
-        if (!f.includeUnrated) return false;
-      } else {
-        if (f.ratingValues && f.ratingValues.length > 0 && !f.ratingValues.includes(Math.round(rating))) return false;
-      }
+      const label = isUnrated ? 'Non noté' : String(Math.round(rating));
+      if (!f.ratingValues.includes(label)) return false;
     }
     if (f.prepMax != null && f.prepMax !== '' && !isNaN(f.prepMax)) {
       if ((r.prepTime || 0) > f.prepMax) return false;
@@ -2571,57 +2585,23 @@ function buildFilterBar() {
     selCont.appendChild(btn);
   });
 
-  // Filtre Notes : boutons 1-10 + "Non noté"
-  const rateCont = document.getElementById('filter-rating-buttons');
-  rateCont.innerHTML = '';
-  for (let n = 1; n <= 10; n++) {
-    const btn = document.createElement('button');
-    btn.className = 'btn btn-xs';
-    btn.textContent = n;
-    btn.title = 'Clic = cette note seule · Ctrl+clic = ajouter/retirer';
-    btn.style.minWidth = '28px';
-    const isActive = state.filters.ratingValues && state.filters.ratingValues.includes(n);
-    btn.style.background = isActive ? 'var(--primary)' : 'var(--surface)';
-    btn.style.color = isActive ? 'white' : 'var(--text-muted)';
-    btn.style.borderColor = isActive ? 'var(--primary)' : 'var(--border)';
-    btn.onclick = e => {
-      if (e.ctrlKey || e.metaKey) {
-        // Toggle de cette note
-        if (state.filters.ratingValues.includes(n)) {
-          state.filters.ratingValues = state.filters.ratingValues.filter(x => x !== n);
-        } else {
-          state.filters.ratingValues.push(n);
-        }
-      } else {
-        // Clic simple = remplacer la sélection par juste cette note (ou tout désactiver si déjà active seule)
-        if (state.filters.ratingValues.length === 1 && state.filters.ratingValues[0] === n) {
-          state.filters.ratingValues = [];
-        } else {
-          state.filters.ratingValues = [n];
-        }
+  // Filtre Notes : chip input avec liste 1-10 + "Non noté"
+  const ratingItems = [];
+  ratingItems.push({ name: 'Non noté' });
+  for (let n = 1; n <= 10; n++) ratingItems.push({ name: String(n) });
+  createChipsInput(
+    document.getElementById('filter-rating-wrapper'),
+    {
+      getItems: () => ratingItems,
+      initialValues: state.filters.ratingValues || [],
+      placeholder: 'Toutes les notes (cliquer pour filtrer)...',
+      onChange: values => {
+        state.filters.ratingValues = values;
+        saveLocal();
+        renderRecipes();
       }
-      saveLocal();
-      buildFilterBar();
-      renderRecipes();
-    };
-    rateCont.appendChild(btn);
-  }
-  // Bouton "Non noté"
-  const unratedBtn = document.createElement('button');
-  unratedBtn.className = 'btn btn-xs';
-  unratedBtn.textContent = 'Non noté';
-  unratedBtn.title = 'Afficher les recettes sans note';
-  const unratedActive = state.filters.includeUnrated;
-  unratedBtn.style.background = unratedActive ? 'var(--accent)' : 'var(--surface)';
-  unratedBtn.style.color = unratedActive ? 'var(--bg)' : 'var(--text-muted)';
-  unratedBtn.style.borderColor = unratedActive ? 'var(--accent)' : 'var(--border)';
-  unratedBtn.onclick = () => {
-    state.filters.includeUnrated = !state.filters.includeUnrated;
-    saveLocal();
-    buildFilterBar();
-    renderRecipes();
-  };
-  rateCont.appendChild(unratedBtn);
+    }
+  );
 
   // Meal types : triés alphabétiquement
   const mtCont = document.getElementById('filter-meal-types');
@@ -2698,7 +2678,7 @@ document.getElementById('sort-select').addEventListener('change', e => {
   });
 });
 document.getElementById('btn-reset-filters').onclick = () => {
-  state.filters = { search: '', sort: 'name-asc', ratingValues: [], includeUnrated: true, prepMax: null, cookMax: null, mealTypes: [], includeIngredients: [], excludeIngredients: [], selectionMode: 'all' };
+  state.filters = { search: '', sort: 'name-asc', ratingValues: [], prepMax: null, cookMax: null, mealTypes: [], includeIngredients: [], excludeIngredients: [], selectionMode: 'all' };
   document.getElementById('search-input').value = '';
   document.getElementById('sort-select').value = 'name-asc';
   ['filter-prep-max','filter-cook-max'].forEach(id => document.getElementById(id).value = '');
