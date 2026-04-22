@@ -59,8 +59,10 @@ body {
   flex-direction: column;
   gap: 20px;
   overflow-y: auto;
+  overflow-x: hidden;
   z-index: 50;
 }
+html, body { overflow-x: hidden; }
 .sidebar h1 {
   font-size: 20px;
   font-weight: 700;
@@ -118,28 +120,31 @@ body {
 
 .user-avatar-wrapper {
   position: relative;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 .user-menu {
   display: none;
-  position: absolute;
-  left: calc(100% + 8px);
-  top: 0;
   background: var(--bg-2);
-  border: 1px solid var(--border-light);
-  border-radius: 10px;
-  box-shadow: var(--shadow);
-  padding: 8px;
-  min-width: 220px;
-  z-index: 60;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 6px;
+  margin-top: 8px;
+  width: 100%;
+  flex-direction: column;
+  gap: 2px;
 }
-.user-avatar-wrapper:hover .user-menu,
 .user-avatar-wrapper.open .user-menu {
-  display: block;
+  display: flex;
 }
 .user-menu-header {
-  padding: 8px 10px;
+  padding: 6px 8px;
   border-bottom: 1px solid var(--border);
-  margin-bottom: 6px;
+  margin-bottom: 4px;
+  font-size: 11px;
+  word-break: break-word;
 }
 .user-menu-item {
   display: block;
@@ -148,11 +153,14 @@ body {
   background: transparent;
   color: var(--text);
   border: none;
-  padding: 8px 10px;
-  border-radius: 6px;
-  font-size: 13px;
+  padding: 6px 8px;
+  border-radius: 5px;
+  font-size: 12px;
   cursor: pointer;
   font-family: inherit;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .user-menu-item:hover {
   background: var(--surface);
@@ -535,6 +543,10 @@ label {
   background: var(--primary);
   color: white;
   font-weight: 500;
+  border-radius: 14px;
+  margin: 3px 6px;
+  padding: 5px 12px;
+  border: none;
   position: relative;
 }
 .autocomplete-item.selected:hover {
@@ -542,7 +554,7 @@ label {
 }
 .autocomplete-item.selected::before {
   content: '✓ ';
-  margin-right: 4px;
+  margin-right: 3px;
 }
 .autocomplete-create {
   padding: 9px 12px;
@@ -942,27 +954,28 @@ label {
   background: var(--border);
   margin: 0 4px;
 }
-.note-color-wrapper {
+.note-color-palette {
   display: inline-flex;
+  gap: 2px;
   align-items: center;
-  gap: 3px;
-  padding: 4px 6px;
-  border-radius: 4px;
+  padding: 0 2px;
+}
+.note-color-swatch {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,0.15);
   cursor: pointer;
-  color: var(--text-muted);
-  margin: 0;
-}
-.note-color-wrapper:hover {
-  background: var(--surface-2);
-  color: var(--text);
-}
-.note-color-wrapper input[type="color"] {
-  width: 22px;
-  height: 20px;
   padding: 0;
-  border: none;
-  background: transparent;
-  cursor: pointer;
+  font-size: 10px;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.note-color-swatch:hover {
+  transform: scale(1.15);
+  border-color: white;
 }
 .notes-editor {
   min-height: 500px;
@@ -1181,10 +1194,18 @@ label {
         <button type="button" class="note-btn" data-cmd="underline" title="Souligné (Ctrl+U)"><u>U</u></button>
         <button type="button" class="note-btn" data-cmd="strikeThrough" title="Barré"><s>S</s></button>
         <span class="note-sep"></span>
-        <label class="note-color-wrapper" title="Couleur du texte">
-          <span style="font-size:13px;">A</span>
-          <input type="color" id="note-color-picker" value="#e8f0fb">
-        </label>
+        <span class="note-color-palette" title="Couleur du texte">
+          <button type="button" class="note-color-swatch" data-color="auto" style="background:var(--bg); border:1px dashed var(--border-light);" title="Défaut">A</button>
+          <button type="button" class="note-color-swatch" data-color="#e8f0fb" style="background:#e8f0fb;" title="Blanc"></button>
+          <button type="button" class="note-color-swatch" data-color="#ef4444" style="background:#ef4444;" title="Rouge"></button>
+          <button type="button" class="note-color-swatch" data-color="#f59e0b" style="background:#f59e0b;" title="Orange"></button>
+          <button type="button" class="note-color-swatch" data-color="#fbbf24" style="background:#fbbf24;" title="Jaune"></button>
+          <button type="button" class="note-color-swatch" data-color="#22c55e" style="background:#22c55e;" title="Vert"></button>
+          <button type="button" class="note-color-swatch" data-color="#4a9eff" style="background:#4a9eff;" title="Bleu"></button>
+          <button type="button" class="note-color-swatch" data-color="#5eead4" style="background:#5eead4;" title="Cyan"></button>
+          <button type="button" class="note-color-swatch" data-color="#a855f7" style="background:#a855f7;" title="Violet"></button>
+          <button type="button" class="note-color-swatch" data-color="#ec4899" style="background:#ec4899;" title="Rose"></button>
+        </span>
         <span class="note-sep"></span>
         <button type="button" class="note-btn" data-cmd="insertUnorderedList" title="Liste à puces">• Liste</button>
         <button type="button" class="note-btn" data-cmd="insertOrderedList" title="Liste numérotée">1. Liste</button>
@@ -1690,6 +1711,9 @@ async function onFirebaseSignIn() {
     fbUnsubscribe = fbDocRef.onSnapshot(snap => {
       if (fbSkipNextSnapshot) { fbSkipNextSnapshot = false; return; }
       if (snap.metadata.hasPendingWrites) return;
+      // IMPORTANT : ignorer les snapshots si on a des modifs locales en attente
+      // (évite d'écraser les modifs non encore envoyées au cloud)
+      if (fbSaveTimer) return;
       if (snap.exists) {
         const data = snap.data();
         if (data.lastModified && data.lastModified !== state.lastModified) {
@@ -2362,7 +2386,18 @@ function createChipsInput(wrapper, options) {
   }
 
   function hideDropdown() {
-    if (dropdown) { dropdown.remove(); dropdown = null; }
+    if (dropdown) {
+      dropdown.remove();
+      dropdown = null;
+    }
+  }
+
+  function positionDropdown() {
+    if (!dropdown) return;
+    const rect = input.getBoundingClientRect();
+    dropdown.style.top = (rect.bottom + 2) + 'px';
+    dropdown.style.left = rect.left + 'px';
+    dropdown.style.width = Math.max(rect.width, 180) + 'px';
   }
 
   function showDropdown() {
@@ -2372,7 +2407,10 @@ function createChipsInput(wrapper, options) {
     const filtered = q ? all.filter(it => normalizeText(it.name).includes(q)) : all;
     dropdown = document.createElement('div');
     dropdown.className = 'autocomplete-dropdown active';
-    container.appendChild(dropdown);
+    dropdown.style.position = 'fixed';
+    dropdown.style.zIndex = '1000';
+    document.body.appendChild(dropdown);
+    positionDropdown();
 
     filtered.slice(0, 100).forEach(it => {
       const div = document.createElement('div');
@@ -2455,6 +2493,9 @@ function createChipsInput(wrapper, options) {
       input.blur();
     }
   });
+  // Reposition dropdown on scroll/resize
+  window.addEventListener('scroll', () => { if (dropdown) positionDropdown(); }, true);
+  window.addEventListener('resize', () => { if (dropdown) positionDropdown(); });
 
   container.addEventListener('click', e => {
     if (e.target === container) input.focus();
@@ -2598,51 +2639,126 @@ function updateNotesWordcount() {
 }
 
 let notesSaveTimer = null;
+let notesUndoStack = [];
+let notesRedoStack = [];
+let notesLastSnapshot = '';
+let notesWordTimer = null;
+
+function maybeTakeNotesSnapshot(ed) {
+  const current = ed.innerHTML;
+  if (current === notesLastSnapshot) return;
+  const txt = ed.textContent || '';
+  const last = txt.slice(-1);
+  // Prendre un snapshot si le dernier caractère est un séparateur de mot/phrase
+  // (ou après 1.5s d'inactivité en fallback)
+  if (/[\s.,!?;:\-—\n]/.test(last)) {
+    notesUndoStack.push(notesLastSnapshot);
+    if (notesUndoStack.length > 100) notesUndoStack.shift();
+    notesRedoStack = [];
+    notesLastSnapshot = current;
+    clearTimeout(notesWordTimer);
+  } else {
+    clearTimeout(notesWordTimer);
+    notesWordTimer = setTimeout(() => {
+      notesUndoStack.push(notesLastSnapshot);
+      if (notesUndoStack.length > 100) notesUndoStack.shift();
+      notesRedoStack = [];
+      notesLastSnapshot = ed.innerHTML;
+    }, 1500);
+  }
+}
+
+function notesUndo() {
+  const ed = document.getElementById('notes-editor');
+  if (!ed) return;
+  if (notesUndoStack.length === 0) { toast('Rien à annuler', 'error'); return; }
+  notesRedoStack.push(ed.innerHTML);
+  const prev = notesUndoStack.pop();
+  ed.innerHTML = prev;
+  notesLastSnapshot = prev;
+  state.notes = prev;
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch {}
+  fbSchedulePush();
+  updateNotesWordcount();
+}
+
+function notesRedo() {
+  const ed = document.getElementById('notes-editor');
+  if (!ed) return;
+  if (notesRedoStack.length === 0) { toast('Rien à rétablir', 'error'); return; }
+  notesUndoStack.push(ed.innerHTML);
+  const next = notesRedoStack.pop();
+  ed.innerHTML = next;
+  notesLastSnapshot = next;
+  state.notes = next;
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch {}
+  fbSchedulePush();
+  updateNotesWordcount();
+}
+
 {
   const ed = document.getElementById('notes-editor');
   if (ed) {
     ed.addEventListener('input', () => {
       state.notes = ed.innerHTML;
+      // Sauvegarde localStorage IMMÉDIATE (jamais perdre les notes)
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch {}
       updateNotesWordcount();
+      maybeTakeNotesSnapshot(ed);
       const status = document.getElementById('notes-status');
       if (status) { status.textContent = '✏ Modifications en cours...'; status.style.color = 'var(--text-muted)'; }
       clearTimeout(notesSaveTimer);
       notesSaveTimer = setTimeout(() => {
-        save();
+        fbSchedulePush();
         if (status) { status.textContent = '💾 Sauvegardé'; status.style.color = 'var(--success)'; }
       }, 600);
     });
-    // Raccourcis clavier gérés nativement par le navigateur pour Ctrl+B/I/U
+    // Ctrl+Z / Ctrl+Y custom pour undo par mot
+    ed.addEventListener('keydown', e => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
+        e.preventDefault();
+        notesUndo();
+      } else if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.key === 'z' && e.shiftKey))) {
+        e.preventDefault();
+        notesRedo();
+      }
+    });
   }
 
   // Toolbar : boutons de formatage
   document.querySelectorAll('.notes-toolbar .note-btn').forEach(btn => {
-    btn.addEventListener('mousedown', e => e.preventDefault()); // éviter la perte de focus
+    btn.addEventListener('mousedown', e => e.preventDefault());
     btn.addEventListener('click', () => {
       const cmd = btn.dataset.cmd;
       const arg = btn.dataset.arg || null;
       if (!cmd) return;
       const ed = document.getElementById('notes-editor');
       if (ed) ed.focus();
+      if (cmd === 'undo') { notesUndo(); return; }
+      if (cmd === 'redo') { notesRedo(); return; }
       try { document.execCommand(cmd, false, arg); } catch (e) { console.error(e); }
-      // Déclencher save via l'événement input
       if (ed) ed.dispatchEvent(new Event('input'));
     });
   });
-  // Color picker
-  const cp = document.getElementById('note-color-picker');
-  if (cp) {
-    // Empêcher la perte de focus quand on ouvre le color picker
-    cp.addEventListener('mousedown', e => e.stopPropagation());
-    const wrap = cp.closest('.note-color-wrapper');
-    if (wrap) wrap.addEventListener('mousedown', e => e.preventDefault());
-    cp.addEventListener('input', () => {
+
+  // Palette de couleurs prédéfinies
+  document.querySelectorAll('.note-color-swatch').forEach(sw => {
+    sw.addEventListener('mousedown', e => e.preventDefault());
+    sw.addEventListener('click', () => {
+      const color = sw.dataset.color;
       const ed = document.getElementById('notes-editor');
       if (ed) ed.focus();
-      try { document.execCommand('foreColor', false, cp.value); } catch (e) { console.error(e); }
+      try {
+        if (color === 'auto') {
+          // Restaurer la couleur par défaut
+          document.execCommand('foreColor', false, '#e8f0fb');
+        } else {
+          document.execCommand('foreColor', false, color);
+        }
+      } catch (e) { console.error(e); }
       if (ed) ed.dispatchEvent(new Event('input'));
     });
-  }
+  });
 }
 
 /* ========================================================================
