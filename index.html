@@ -297,6 +297,19 @@ label {
   padding: 5px 8px;
   font-size: 12px;
 }
+/* Dropdown compact même attaché au body (fixed) */
+.autocomplete-dropdown.compact-dropdown {
+  font-size: 12px;
+}
+.autocomplete-dropdown.compact-dropdown .autocomplete-item {
+  padding: 5px 10px;
+  font-size: 12px;
+}
+.autocomplete-dropdown.compact-dropdown .autocomplete-item.selected {
+  padding: 3px 10px;
+  font-size: 11px;
+  margin: 2px 5px;
+}
 .filter-group label { margin: 0; font-size: 11px; white-space: nowrap; }
 .filter-group input, .filter-group select { width: auto; padding: 3px 6px; font-size: 12px; }
 .filter-group input[type="number"] { width: 50px; }
@@ -550,7 +563,8 @@ label {
   position: relative;
 }
 .autocomplete-item.selected:hover {
-  background: var(--danger);
+  background: var(--primary-dark);
+  opacity: 0.7;
 }
 .autocomplete-item.selected::before {
   content: '✓ ';
@@ -627,7 +641,8 @@ label {
   opacity: 0.7;
 }
 .chip:hover {
-  background: var(--danger);
+  background: var(--primary-dark);
+  opacity: 0.7;
 }
 .chip:hover::after {
   opacity: 1;
@@ -901,7 +916,7 @@ label {
   border-radius: 6px;
   font-size: 12px;
   cursor: pointer;
-  transition: background 0.15s;
+  transition: background 0.15s, opacity 0.15s;
   word-break: break-word;
   display: flex;
   align-items: center;
@@ -909,7 +924,8 @@ label {
   justify-content: space-between;
 }
 .season-item:hover {
-  background: var(--danger);
+  background: var(--primary-dark);
+  opacity: 0.7;
 }
 .season-item::after {
   content: '×';
@@ -960,22 +976,64 @@ label {
   align-items: center;
   padding: 0 2px;
 }
-.note-color-swatch {
+.note-color-menu-wrapper {
+  position: relative;
+  display: inline-block;
+}
+.note-color-popup {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background: var(--bg-2);
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+  padding: 10px;
+  box-shadow: var(--shadow);
+  z-index: 200;
+  margin-top: 4px;
+  min-width: 220px;
+}
+.note-color-menu-wrapper.open .note-color-popup {
+  display: block;
+}
+.note-color-section-title {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+  margin-top: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.note-color-grid {
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  gap: 3px;
+}
+.note-color-cell {
   width: 18px;
   height: 18px;
-  border-radius: 50%;
-  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 3px;
   cursor: pointer;
+  border: 1px solid rgba(255,255,255,0.1);
   padding: 0;
+  transition: transform 0.1s;
+}
+.note-color-cell:hover {
+  transform: scale(1.2);
+  border-color: white;
+  border-width: 2px;
+  z-index: 1;
+  position: relative;
+}
+.note-color-auto {
+  background: transparent;
+  border: 1px dashed var(--border-light);
+  color: var(--text-muted);
   font-size: 10px;
-  color: var(--text);
   display: flex;
   align-items: center;
   justify-content: center;
-}
-.note-color-swatch:hover {
-  transform: scale(1.15);
-  border-color: white;
 }
 .notes-editor {
   min-height: 500px;
@@ -1194,18 +1252,10 @@ label {
         <button type="button" class="note-btn" data-cmd="underline" title="Souligné (Ctrl+U)"><u>U</u></button>
         <button type="button" class="note-btn" data-cmd="strikeThrough" title="Barré"><s>S</s></button>
         <span class="note-sep"></span>
-        <span class="note-color-palette" title="Couleur du texte">
-          <button type="button" class="note-color-swatch" data-color="auto" style="background:var(--bg); border:1px dashed var(--border-light);" title="Défaut">A</button>
-          <button type="button" class="note-color-swatch" data-color="#e8f0fb" style="background:#e8f0fb;" title="Blanc"></button>
-          <button type="button" class="note-color-swatch" data-color="#ef4444" style="background:#ef4444;" title="Rouge"></button>
-          <button type="button" class="note-color-swatch" data-color="#f59e0b" style="background:#f59e0b;" title="Orange"></button>
-          <button type="button" class="note-color-swatch" data-color="#fbbf24" style="background:#fbbf24;" title="Jaune"></button>
-          <button type="button" class="note-color-swatch" data-color="#22c55e" style="background:#22c55e;" title="Vert"></button>
-          <button type="button" class="note-color-swatch" data-color="#4a9eff" style="background:#4a9eff;" title="Bleu"></button>
-          <button type="button" class="note-color-swatch" data-color="#5eead4" style="background:#5eead4;" title="Cyan"></button>
-          <button type="button" class="note-color-swatch" data-color="#a855f7" style="background:#a855f7;" title="Violet"></button>
-          <button type="button" class="note-color-swatch" data-color="#ec4899" style="background:#ec4899;" title="Rose"></button>
-        </span>
+        <div class="note-color-menu-wrapper">
+          <button type="button" class="note-btn" id="note-color-btn" title="Couleur du texte"><span id="note-color-indicator" style="border-bottom:3px solid #e8f0fb; padding:0 2px; display:inline-block;">A</span>▾</button>
+          <div class="note-color-popup" id="note-color-popup"></div>
+        </div>
         <span class="note-sep"></span>
         <button type="button" class="note-btn" data-cmd="insertUnorderedList" title="Liste à puces">• Liste</button>
         <button type="button" class="note-btn" data-cmd="insertOrderedList" title="Liste numérotée">1. Liste</button>
@@ -1594,6 +1644,7 @@ function rerenderAll() {
 
 function save() {
   // Sauvegarde locale immédiate + planifie synchro cloud (débouncée 5s)
+  state.lastModified = Date.now();
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   } catch (e) {
@@ -1688,10 +1739,19 @@ async function onFirebaseSignIn() {
     const snap = await fbDocRef.get();
     if (snap.exists) {
       const cloudData = snap.data();
+      const cloudMod = cloudData.lastModified || 0;
+      const localMod = state.lastModified || 0;
       const cloudCount = (cloudData.recipes || []).length;
       const localCount = state.recipes.length;
-      // Si le cloud a des données et local aussi, demander
-      if (cloudCount > 0 && localCount > 0 && cloudData.lastModified !== state.lastModified) {
+
+      if (localMod > cloudMod && localCount > 0) {
+        // Local est plus récent : on push au cloud (pas de prompt car pas de conflit)
+        await pushToCloud();
+      } else if (cloudMod > localMod && cloudCount > 0) {
+        // Cloud est plus récent : on charge
+        applyCloudData(cloudData);
+      } else if (cloudCount > 0 && localCount > 0 && cloudMod !== localMod) {
+        // Cas rare : timestamps différents mais impossible de trancher → demander
         const choice = confirm(
           'Le cloud contient ' + cloudCount + ' recette(s), local : ' + localCount + ' recette(s).\n\n' +
           'OK = charger la version du CLOUD (écrase le local)\n' +
@@ -1711,12 +1771,13 @@ async function onFirebaseSignIn() {
     fbUnsubscribe = fbDocRef.onSnapshot(snap => {
       if (fbSkipNextSnapshot) { fbSkipNextSnapshot = false; return; }
       if (snap.metadata.hasPendingWrites) return;
-      // IMPORTANT : ignorer les snapshots si on a des modifs locales en attente
-      // (évite d'écraser les modifs non encore envoyées au cloud)
-      if (fbSaveTimer) return;
+      if (fbSaveTimer) return; // modifs locales en attente
       if (snap.exists) {
         const data = snap.data();
-        if (data.lastModified && data.lastModified !== state.lastModified) {
+        const cloudMod = data.lastModified || 0;
+        const localMod = state.lastModified || 0;
+        // Ne charger que si cloud est plus récent
+        if (cloudMod > localMod) {
           applyCloudData(data);
           setSyncStatus('☁ Mise à jour depuis un autre appareil', 'success');
         }
@@ -1765,9 +1826,21 @@ function applyCloudData(data) {
   if (document.getElementById('tab-notes').classList.contains('active')) initNotesTab();
 }
 
+function fbSchedulePush() {
+  if (!fbDocRef) return;
+  clearTimeout(fbSaveTimer);
+  setSyncStatus('💾 Modifs non enregistrées...', 'muted');
+  fbSaveTimer = setTimeout(() => {
+    fbSaveTimer = null; // IMPORTANT: reset pour débloquer les snapshots cloud
+    pushToCloud();
+  }, 5000);
+}
+
 async function pushToCloud() {
   if (!fbDocRef) return;
   fbSkipNextSnapshot = true;
+  // Reset aussi ici au cas où pushToCloud est appelé directement (pas via scheduler)
+  fbSaveTimer = null;
   try {
     state.lastModified = Date.now();
     await fbDocRef.set({
@@ -2407,6 +2480,10 @@ function createChipsInput(wrapper, options) {
     const filtered = q ? all.filter(it => normalizeText(it.name).includes(q)) : all;
     dropdown = document.createElement('div');
     dropdown.className = 'autocomplete-dropdown active';
+    // Détecter si l'input est dans un contexte compact (filter-group.compact)
+    if (input.closest('.filter-group.compact')) {
+      dropdown.classList.add('compact-dropdown');
+    }
     dropdown.style.position = 'fixed';
     dropdown.style.zIndex = '1000';
     document.body.appendChild(dropdown);
@@ -2420,8 +2497,8 @@ function createChipsInput(wrapper, options) {
       div.textContent = it.name;
       div.onmousedown = ev => ev.preventDefault();
       div.onclick = ev => {
-        if (isSelected) {
-          // Toggle : retirer
+        // Toggle : ajouter ou retirer, mais garder le dropdown ouvert
+        if (selectedValues.includes(it.name)) {
           selectedValues = selectedValues.filter(v => v !== it.name);
         } else {
           selectedValues.push(it.name);
@@ -2429,14 +2506,9 @@ function createChipsInput(wrapper, options) {
         renderChips();
         updatePlaceholder();
         if (onChange) onChange(selectedValues);
-        if (ev.ctrlKey || ev.metaKey) {
-          input.focus();
-          showDropdown();
-        } else {
-          hideDropdown();
-          input.value = '';
-          input.focus();
-        }
+        // Re-render le dropdown (pour mettre à jour ✓) et garder le focus
+        input.focus();
+        showDropdown();
       };
       dropdown.appendChild(div);
     });
@@ -2454,8 +2526,8 @@ function createChipsInput(wrapper, options) {
           input.value = '';
           updatePlaceholder();
           if (onChange) onChange(selectedValues);
-          hideDropdown();
           input.focus();
+          showDropdown();
         }
       };
       dropdown.appendChild(c);
@@ -2466,12 +2538,6 @@ function createChipsInput(wrapper, options) {
       e.className = 'autocomplete-empty';
       e.textContent = 'Aucun élément disponible';
       dropdown.appendChild(e);
-    }
-    if (filtered.length > 0) {
-      const hint = document.createElement('div');
-      hint.style.cssText = 'padding:5px 10px; font-size:10px; color:var(--text-dim); text-align:center; border-top:1px solid var(--border); background:var(--bg-2); position:sticky; bottom:0;';
-      hint.textContent = '💡 Ctrl+clic pour en enchaîner plusieurs · Clic sur ✓ pour retirer';
-      dropdown.appendChild(hint);
     }
   }
 
@@ -2741,24 +2807,76 @@ function notesRedo() {
     });
   });
 
-  // Palette de couleurs prédéfinies
-  document.querySelectorAll('.note-color-swatch').forEach(sw => {
-    sw.addEventListener('mousedown', e => e.preventDefault());
-    sw.addEventListener('click', () => {
-      const color = sw.dataset.color;
-      const ed = document.getElementById('notes-editor');
-      if (ed) ed.focus();
-      try {
-        if (color === 'auto') {
-          // Restaurer la couleur par défaut
-          document.execCommand('foreColor', false, '#e8f0fb');
-        } else {
-          document.execCommand('foreColor', false, color);
-        }
-      } catch (e) { console.error(e); }
-      if (ed) ed.dispatchEvent(new Event('input'));
-    });
-  });
+  // Palette de couleurs : popup type forum
+  {
+    const btn = document.getElementById('note-color-btn');
+    const popup = document.getElementById('note-color-popup');
+    const wrap = btn ? btn.closest('.note-color-menu-wrapper') : null;
+    const indicator = document.getElementById('note-color-indicator');
+    if (btn && popup && wrap) {
+      // Palette 10 colonnes × 4 lignes (style Word/Office)
+      const colors = [
+        // Ligne 1 : noirs / gris / blanc
+        '#000000','#1f2937','#374151','#4b5563','#6b7280','#9ca3af','#d1d5db','#e5e7eb','#f3f4f6','#ffffff',
+        // Ligne 2 : rouges / oranges / jaunes
+        '#7f1d1d','#b91c1c','#dc2626','#ef4444','#f87171','#f97316','#fb923c','#f59e0b','#fbbf24','#fde047',
+        // Ligne 3 : verts / cyans / bleus
+        '#14532d','#166534','#15803d','#22c55e','#4ade80','#14b8a6','#5eead4','#0ea5e9','#3b82f6','#4a9eff',
+        // Ligne 4 : indigos / violets / roses
+        '#1e3a8a','#312e81','#4c1d95','#7c3aed','#a855f7','#c084fc','#db2777','#ec4899','#f472b6','#fbcfe8'
+      ];
+      // Construire la grille
+      const titleStd = document.createElement('div');
+      titleStd.className = 'note-color-section-title';
+      titleStd.textContent = 'Couleurs';
+      popup.appendChild(titleStd);
+      const grid = document.createElement('div');
+      grid.className = 'note-color-grid';
+      colors.forEach(c => {
+        const cell = document.createElement('button');
+        cell.type = 'button';
+        cell.className = 'note-color-cell';
+        cell.style.background = c;
+        cell.dataset.color = c;
+        cell.title = c;
+        cell.onmousedown = e => e.preventDefault();
+        cell.onclick = () => {
+          applyNoteColor(c);
+          wrap.classList.remove('open');
+        };
+        grid.appendChild(cell);
+      });
+      popup.appendChild(grid);
+      // Auto (couleur par défaut)
+      const autoBtn = document.createElement('button');
+      autoBtn.type = 'button';
+      autoBtn.style.cssText = 'width:100%; padding:5px; background:transparent; border:1px dashed var(--border-light); color:var(--text-muted); font-size:11px; cursor:pointer; border-radius:4px; margin-top:8px;';
+      autoBtn.textContent = 'Couleur par défaut';
+      autoBtn.onmousedown = e => e.preventDefault();
+      autoBtn.onclick = () => {
+        applyNoteColor('#e8f0fb');
+        wrap.classList.remove('open');
+      };
+      popup.appendChild(autoBtn);
+
+      function applyNoteColor(color) {
+        const ed = document.getElementById('notes-editor');
+        if (ed) ed.focus();
+        try { document.execCommand('foreColor', false, color); } catch (e) { console.error(e); }
+        if (indicator) indicator.style.borderBottomColor = color;
+        if (ed) ed.dispatchEvent(new Event('input'));
+      }
+
+      btn.onmousedown = e => e.preventDefault();
+      btn.onclick = e => {
+        e.stopPropagation();
+        wrap.classList.toggle('open');
+      };
+      document.addEventListener('click', e => {
+        if (!wrap.contains(e.target)) wrap.classList.remove('open');
+      });
+    }
+  }
 }
 
 /* ========================================================================
@@ -3777,6 +3895,8 @@ function buildGroupEl(title, items, allChecked = false) {
       } else {
         state.checkedShoppingItems = state.checkedShoppingItems.filter(k => k !== it.key);
       }
+      // Retrait DOM immédiat pour ressenti instantané
+      li.remove();
       save();
       renderShopping();
     };
@@ -3890,13 +4010,13 @@ function renderDataTab() {
       delBtn.onclick = () => {
         if (usage > 0) { if (!confirm('Cet ingrédient est utilisé dans ' + usage + ' recette(s). Le supprimer aussi de ces recettes ?')) return; }
         else if (!confirm('Supprimer « ' + ing.name + ' » ?')) return;
+        el.remove();
         state.ingredients = state.ingredients.filter(i => i.id !== ing.id);
         state.recipes.forEach(r => {
           r.ingredients = (r.ingredients||[]).filter(i => i.ingredientId !== ing.id);
         });
         save();
-        renderDataTab();
-        renderRecipes();
+        rerenderAll();
       };
       actions.appendChild(editBtn);
       actions.appendChild(delBtn);
@@ -3930,11 +4050,11 @@ function renderDataTab() {
     delBtn.textContent = '🗑';
     delBtn.onclick = () => {
       if (!confirm('Supprimer l\'unité « ' + u.name + ' » ? Les ingrédients l\'utilisant n\'auront plus d\'unité.')) return;
+      el.remove(); // retrait immédiat
       state.units = state.units.filter(x => x.id !== u.id);
       state.recipes.forEach(r => (r.ingredients||[]).forEach(i => { if (i.unitId === u.id) i.unitId = null; }));
       save();
-      renderDataTab();
-      renderRecipes();
+      rerenderAll();
     };
     actions.appendChild(editBtn);
     actions.appendChild(delBtn);
@@ -3973,10 +4093,11 @@ function renderDataTab() {
     delBtn.title = 'Supprimer';
     delBtn.onclick = () => {
       if (!confirm('Supprimer le type « ' + t.name + ' » ?\nLes ingrédients qui l\'utilisent n\'auront plus de type.')) return;
+      el.remove();
       state.ingredientTypes = state.ingredientTypes.filter(x => x.id !== t.id);
       state.ingredients.forEach(i => { if (i.typeId === t.id) i.typeId = null; });
       save();
-      renderDataTab();
+      rerenderAll();
     };
     actions.appendChild(editBtn);
     actions.appendChild(mergeBtn);
@@ -3999,12 +4120,11 @@ function renderDataTab() {
     delBtn.textContent = '🗑';
     delBtn.onclick = () => {
       if (!confirm('Supprimer « ' + m + ' » des types de plats ?')) return;
+      el.remove();
       state.mealTypes = state.mealTypes.filter(x => x !== m);
       state.recipes.forEach(r => { r.mealTypes = (r.mealTypes||[]).filter(x => x !== m); });
       save();
-      renderDataTab();
-      buildFilterBar();
-      renderRecipes();
+      rerenderAll();
     };
     const actions = document.createElement('span');
     actions.className = 'data-list-item-actions';
@@ -4044,12 +4164,11 @@ function renderDataTab() {
         delBtn.title = 'Supprimer';
         delBtn.onclick = () => {
           if (!confirm('Supprimer la famille « ' + f.name + ' » ?\nLes ingrédients qui y appartenaient n\'auront plus cette famille.')) return;
+          el.remove();
           state.ingredientFamilies = state.ingredientFamilies.filter(x => x.id !== f.id);
           state.ingredients.forEach(i => { i.familyIds = (i.familyIds || []).filter(fid => fid !== f.id); });
           save();
-          renderDataTab();
-          renderRecipes();
-          buildFilterBar();
+          rerenderAll();
         };
         actions.appendChild(editBtn);
         actions.appendChild(delBtn);
