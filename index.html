@@ -110,15 +110,11 @@ body {
   background: var(--surface);
   border-radius: 8px;
   display: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
 }
-.sidebar-user.active { display: block; }
-.sidebar-user .user-email {
-  font-size: 11px;
-  color: var(--text-dim);
-  word-break: break-all;
-  margin-top: 2px;
-}
-.sidebar-user .sync-status { color: var(--success); font-size: 11px; margin-top: 4px; }
+.sidebar-user.active { display: flex; }
 .count-badge {
   display: inline-block;
   background: rgba(255,255,255,0.15);
@@ -126,6 +122,7 @@ body {
   border-radius: 10px;
   font-size: 11px;
 }
+.count-badge.hide-if-zero[data-value="0"] { display: none; }
 .sidebar nav button.active .count-badge { background: rgba(255,255,255,0.25); }
 main {
   flex: 1;
@@ -485,6 +482,12 @@ label {
 }
 .autocomplete-item:last-child { border-bottom: none; }
 .autocomplete-item:hover, .autocomplete-item.highlighted { background: var(--surface-2); }
+.autocomplete-item.selected {
+  background: rgba(74, 158, 255, 0.15);
+  color: var(--accent);
+  font-weight: 500;
+}
+.autocomplete-item.selected:hover { background: rgba(239, 68, 68, 0.15); color: var(--danger); }
 .autocomplete-create {
   padding: 9px 12px;
   color: var(--accent);
@@ -768,27 +771,139 @@ label {
 .rating-input input { width: 70px; }
 .rating-stars-display { color: var(--star); font-size: 14px; }
 
-/* FAB */
-.fab {
-  position: fixed;
-  bottom: 24px;
-  right: 24px;
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
-  background: var(--primary);
-  color: white;
-  border: none;
-  font-size: 28px;
-  cursor: pointer;
-  box-shadow: 0 4px 16px rgba(74, 158, 255, 0.5);
-  z-index: 40;
+.quick-filter-chk {
   display: flex;
   align-items: center;
-  justify-content: center;
-  transition: transform 0.15s;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text);
+  cursor: pointer;
+  user-select: none;
+  margin: 0;
 }
-.fab:hover { transform: scale(1.05); background: var(--primary-dark); }
+.quick-filter-chk input { width: auto; margin: 0; cursor: pointer; }
+
+/* Onglet Saison : colonnes avec scroll horizontal */
+.season-grid {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  overflow-y: visible;
+  padding-bottom: 10px;
+  scrollbar-width: thin;
+}
+.season-col {
+  flex: 0 0 220px;
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.season-col.current {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+.season-col-header {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--text);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.season-col.current .season-col-header { color: var(--accent); }
+.season-col-items {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-height: 40px;
+}
+.season-item {
+  background: var(--primary);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.15s;
+  word-break: break-word;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  justify-content: space-between;
+}
+.season-item:hover {
+  background: var(--danger);
+}
+.season-item::after {
+  content: '×';
+  opacity: 0.7;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+/* Notes editor (rich text) */
+.notes-editor-wrapper {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.notes-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  padding: 6px 8px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  align-items: center;
+}
+.note-btn {
+  background: transparent;
+  color: var(--text-muted);
+  border: 1px solid transparent;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  min-width: 30px;
+  text-align: center;
+}
+.note-btn:hover { background: var(--surface-2); color: var(--text); }
+.note-btn:active { background: var(--primary); color: white; }
+.note-sep {
+  width: 1px;
+  height: 20px;
+  background: var(--border);
+  margin: 0 4px;
+}
+.notes-editor {
+  min-height: 500px;
+  padding: 14px;
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.6;
+  outline: none;
+  overflow-y: auto;
+  max-height: 70vh;
+}
+.notes-editor:empty::before {
+  content: attr(placeholder);
+  color: var(--text-dim);
+  font-style: italic;
+}
+.notes-editor h1, .notes-editor h2 { margin-top: 14px; margin-bottom: 8px; color: var(--accent); }
+.notes-editor ul, .notes-editor ol { padding-left: 24px; margin: 8px 0; }
+.notes-editor p { margin: 6px 0; }
+
+/* FAB (désactivé : remplacé par bouton Ajouter inline) */
+.fab {
+  display: none;
+}
 
 /* Scrollbar */
 ::-webkit-scrollbar { width: 10px; height: 10px; }
@@ -832,18 +947,16 @@ label {
 
 <div class="app-layout">
 <aside class="sidebar">
-  <h1><span class="wave">🌊</span> Mes Recettes</h1>
   <nav>
     <button class="tab-btn active" data-tab="recipes">Recettes <span class="count-badge" id="recipe-count">0</span></button>
-    <button class="tab-btn" data-tab="shopping">Liste de courses <span class="count-badge" id="selected-badge">0</span></button>
-    <button class="tab-btn" data-tab="season">📅 Saison</button>
+    <button class="tab-btn" data-tab="shopping">Liste de courses <span class="count-badge hide-if-zero" id="selected-badge">0</span></button>
+    <button class="tab-btn" data-tab="season">Saison</button>
     <button class="tab-btn" data-tab="data">Données</button>
-    <button class="tab-btn" data-tab="notes">📝 Notes & bugs</button>
+    <button class="tab-btn" data-tab="notes">Notes & bugs</button>
   </nav>
   <div class="sidebar-user" id="sidebar-user">
-    <div style="font-weight:500; color:var(--text);" id="sidebar-user-name">—</div>
-    <div class="user-email" id="sidebar-user-email"></div>
-    <div class="sync-status" id="sidebar-sync-status">☁ Synchronisé</div>
+    <div id="sidebar-user-avatar" style="width:36px; height:36px; border-radius:50%; background:var(--primary); display:flex; align-items:center; justify-content:center; font-weight:600; color:white; overflow:hidden;" title="Synchronisé"></div>
+    <div class="sync-status" id="sidebar-sync-status" style="font-size:10px; color:var(--success); text-align:center; margin-top:4px;">☁</div>
   </div>
   <div class="sidebar-footer">
     Stockage local + Cloud
@@ -855,26 +968,38 @@ label {
   <section id="tab-recipes" class="tab active">
     <div class="toolbar">
       <div class="toolbar-row">
-        <input type="text" id="search-input" class="search-input" placeholder="🔍 Rechercher...">
-        <select id="sort-select" class="compact-select" style="width:auto; min-width:110px;">
-          <option value="name-asc">Nom A→Z</option>
-          <option value="name-desc">Nom Z→A</option>
-          <option value="rating-desc">Note ↓</option>
-          <option value="rating-asc">Note ↑</option>
-          <option value="time-asc">Temps ↑</option>
-          <option value="time-desc">Temps ↓</option>
-        </select>
-        <div class="filter-group compact">
-          <label>Sélect. :</label>
-          <div id="filter-selection-buttons" style="display:flex; gap:3px;"></div>
-        </div>
+        <input type="text" id="search-input" placeholder="🔍 Rechercher..." style="width:220px; flex:0 0 auto;">
+        <button class="btn btn-ghost btn-sm" id="btn-toggle-adv-filters" title="Afficher/masquer les filtres détaillés">⚙ Filtres détaillés</button>
+        <button class="btn btn-ghost btn-sm" id="btn-reset-filters" title="Réinitialiser tous les filtres">✕ Reset</button>
         <span id="recipe-count-display" style="font-size:12px; color:var(--text-muted); margin-left:auto; white-space:nowrap;">0 / 0</span>
-        <button class="btn btn-ghost btn-sm" id="btn-toggle-adv-filters" title="Afficher/masquer les filtres avancés">⚙ Filtres</button>
-        <button class="btn btn-ghost btn-sm" id="btn-reset-filters">✕ Reset</button>
+      </div>
+      <div class="toolbar-row" style="justify-content:space-between;">
+        <div style="display:flex; gap:6px; align-items:center;">
+          <button class="btn btn-sm" id="btn-toggle-quick-filter" title="Afficher / masquer les filtres rapides">⏷ Filtre</button>
+          <select id="sort-select" class="compact-select" style="width:auto; min-width:110px;">
+            <option value="name-asc">Nom A → Z</option>
+            <option value="name-desc">Nom Z → A</option>
+            <option value="rating-desc">Note ↓</option>
+            <option value="rating-asc">Note ↑</option>
+            <option value="time-asc">Temps ↑</option>
+            <option value="time-desc">Temps ↓</option>
+          </select>
+        </div>
+        <button class="btn btn-primary btn-sm" id="btn-new-recipe-inline">＋ Ajouter</button>
+      </div>
+      <div id="quick-filter-panel" style="display:none; padding:8px 10px; background:var(--surface); border:1px solid var(--border); border-radius:8px; margin-top:6px;">
+        <div style="display:flex; gap:16px; flex-wrap:wrap;">
+          <label class="quick-filter-chk">
+            <input type="checkbox" id="filter-selection-only"> Sélection uniquement
+          </label>
+          <label class="quick-filter-chk">
+            <input type="checkbox" id="filter-season-toggle"> Saison (mois actuel)
+          </label>
+        </div>
       </div>
       <div class="toolbar-adv" id="toolbar-advanced" style="display:none;">
         <div class="toolbar-row">
-          <div class="filter-group compact" style="width:180px;">
+          <div class="filter-group compact" style="width:200px;">
             <label>Notes :</label>
             <div id="filter-rating-wrapper" style="flex:1; min-width:0;"></div>
           </div>
@@ -886,10 +1011,6 @@ label {
             <label title="Cuisson max (min)">🔥 max</label>
             <input type="number" id="filter-cook-max" min="0" value="" placeholder="min" style="width:55px;">
           </div>
-          <label class="season-toggle-label" title="Ne garder que les recettes de saison (mois actuel)">
-            <input type="checkbox" id="filter-season-toggle">
-            <span>📅 De saison</span>
-          </label>
         </div>
         <div class="toolbar-row">
           <div class="filter-group" style="flex:1; min-width:200px; flex-wrap:wrap;">
@@ -943,21 +1064,36 @@ label {
 
   <!-- Onglet Saison -->
   <section id="tab-season" class="tab">
-    <div style="margin-bottom:16px; display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
-      <h2 style="font-size:18px; font-weight:600; flex:1;">📅 Calendrier des ingrédients de saison</h2>
-      <div style="color:var(--text-muted); font-size:13px;" id="season-current-month"></div>
+    <div style="margin-bottom:12px;">
+      <h2 style="font-size:18px; font-weight:600;">Calendrier des ingrédients de saison</h2>
+      <p style="color:var(--text-muted); font-size:13px; margin-top:4px;">Pour chaque mois, renseigne les ingrédients de saison. Un ingrédient sans mois est considéré comme <b>intemporel</b>. Les ingrédients avec au moins un mois renseigné sont <b>hors saison</b> les autres mois.</p>
     </div>
-    <p style="color:var(--text-muted); font-size:13px; margin-bottom:12px;">Pour chaque mois, renseigne les ingrédients qui sont de saison. Un ingrédient sans mois renseigné est considéré comme <b>intemporel</b>. Les ingrédients renseignés à certains mois sont <b>hors saison</b> pour tous les autres mois.</p>
-    <div id="season-months-grid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(280px, 1fr)); gap:12px;"></div>
+    <div id="season-months-grid" class="season-grid"></div>
   </section>
 
   <!-- Onglet Notes et bugs -->
   <section id="tab-notes" class="tab">
     <div style="margin-bottom:14px;">
-      <h2 style="font-size:18px; font-weight:600;">📝 Notes, idées d'amélioration et bugs</h2>
-      <p style="color:var(--text-muted); font-size:13px; margin-top:4px;">Espace libre pour noter tes idées, bugs à corriger, suggestions. Sauvegardé automatiquement (local + cloud si connecté).</p>
+      <h2 style="font-size:18px; font-weight:600;">Notes, idées d'amélioration et bugs</h2>
+      <p style="color:var(--text-muted); font-size:13px; margin-top:4px;">Espace libre pour tes notes. Sauvegarde automatique (local + cloud si connecté).</p>
     </div>
-    <textarea id="notes-textarea" rows="25" style="width:100%; min-height:500px; font-family:inherit; font-size:14px; resize:vertical;" placeholder="Commence à écrire tes notes ici..."></textarea>
+    <div class="notes-editor-wrapper">
+      <div class="notes-toolbar">
+        <button type="button" class="note-btn" data-cmd="bold" title="Gras (Ctrl+B)"><b>B</b></button>
+        <button type="button" class="note-btn" data-cmd="italic" title="Italique (Ctrl+I)"><i>I</i></button>
+        <button type="button" class="note-btn" data-cmd="underline" title="Souligné (Ctrl+U)"><u>U</u></button>
+        <button type="button" class="note-btn" data-cmd="strikeThrough" title="Barré"><s>S</s></button>
+        <span class="note-sep"></span>
+        <button type="button" class="note-btn" data-cmd="insertUnorderedList" title="Liste à puces">• Liste</button>
+        <button type="button" class="note-btn" data-cmd="insertOrderedList" title="Liste numérotée">1. Liste</button>
+        <span class="note-sep"></span>
+        <button type="button" class="note-btn" data-cmd="formatBlock" data-arg="H2" title="Titre">H</button>
+        <button type="button" class="note-btn" data-cmd="formatBlock" data-arg="P" title="Paragraphe">¶</button>
+        <span class="note-sep"></span>
+        <button type="button" class="note-btn" data-cmd="removeFormat" title="Retirer le formatage">✕ format</button>
+      </div>
+      <div id="notes-editor" class="notes-editor" contenteditable="true" placeholder="Commence à écrire tes notes ici..."></div>
+    </div>
     <div style="margin-top:8px; display:flex; justify-content:space-between; align-items:center; font-size:12px; color:var(--text-muted);">
       <span id="notes-status">💾 Sauvegardé automatiquement</span>
       <span id="notes-wordcount">0 caractère</span>
@@ -1311,7 +1447,7 @@ let state = {
     includeFamilies: [],
     excludeFamilies: [],
     seasonOnly: false,
-    selectionMode: 'all'
+    selectedOnly: false
   }
 };
 
@@ -1564,20 +1700,29 @@ function renderFirebaseUI() {
     document.getElementById('firebase-user-email').textContent = fbUser.email;
     document.getElementById('firebase-user-uid').textContent = fbUser.uid;
     const avatarEl = document.getElementById('firebase-user-avatar');
+    const sidebarAvatar = document.getElementById('sidebar-user-avatar');
     if (fbUser.photoURL) {
       avatarEl.style.background = 'url(' + fbUser.photoURL + ') center/cover';
       avatarEl.textContent = '';
+      if (sidebarAvatar) {
+        sidebarAvatar.style.background = 'url(' + fbUser.photoURL + ') center/cover';
+        sidebarAvatar.textContent = '';
+      }
     } else {
+      const letter = (fbUser.displayName || fbUser.email || '?').charAt(0).toUpperCase();
       avatarEl.style.background = 'var(--primary)';
-      avatarEl.textContent = (fbUser.displayName || fbUser.email || '?').charAt(0).toUpperCase();
+      avatarEl.textContent = letter;
+      if (sidebarAvatar) {
+        sidebarAvatar.style.background = 'var(--primary)';
+        sidebarAvatar.textContent = letter;
+      }
     }
     sidebarUser.classList.add('active');
-    document.getElementById('sidebar-user-name').textContent = (fbUser.displayName || fbUser.email || '').split(' ')[0];
-    document.getElementById('sidebar-user-email').textContent = fbUser.email || '';
     renderSharedSection();
   } else {
     sidebarUser.classList.remove('active');
-    document.getElementById('share-section').style.display = 'none';
+    const ss = document.getElementById('share-section');
+    if (ss) ss.style.display = 'none';
   }
 }
 
@@ -1835,11 +1980,17 @@ function load() {
       if (!state.mealTypes.some(m => normalizeText(m) === 'aucun')) {
         state.mealTypes.unshift('Aucun');
       }
-      if (!state.filters) state.filters = { search: '', sort: 'name-asc', ratingValues: [], prepMax: null, cookMax: null, mealTypes: [], includeIngredients: [], excludeIngredients: [], includeFamilies: [], excludeFamilies: [], seasonOnly: false, selectionMode: 'all' };
+      if (!state.filters) state.filters = { search: '', sort: 'name-asc', ratingValues: [], prepMax: null, cookMax: null, mealTypes: [], includeIngredients: [], excludeIngredients: [], includeFamilies: [], excludeFamilies: [], seasonOnly: false, selectedOnly: false };
       // Migration : ajouter nouveaux champs filtres s'ils manquent
       if (!state.filters.includeFamilies) state.filters.includeFamilies = [];
       if (!state.filters.excludeFamilies) state.filters.excludeFamilies = [];
       if (state.filters.seasonOnly === undefined) state.filters.seasonOnly = false;
+      if (state.filters.selectedOnly === undefined) state.filters.selectedOnly = false;
+      // Migration depuis ancien selectionMode
+      if (state.filters.selectionMode !== undefined) {
+        state.filters.selectedOnly = state.filters.selectionMode === 'checked';
+        delete state.filters.selectionMode;
+      }
       // Migration ingredientFamilies
       if (!state.ingredientFamilies) state.ingredientFamilies = [];
       if (state.ingredientFamilies.length === 0) {
@@ -2083,25 +2234,34 @@ function createChipsInput(wrapper, options) {
   function showDropdown() {
     hideDropdown();
     const q = normalizeText(input.value);
-    const all = getItems().filter(it => !selectedValues.includes(it.name));
+    const all = getItems();
     const filtered = q ? all.filter(it => normalizeText(it.name).includes(q)) : all;
     dropdown = document.createElement('div');
     dropdown.className = 'autocomplete-dropdown active';
     container.appendChild(dropdown);
 
-    filtered.slice(0, 50).forEach(it => {
+    filtered.slice(0, 100).forEach(it => {
       const div = document.createElement('div');
       div.className = 'autocomplete-item';
-      div.textContent = it.name;
-      // onmousedown : empêche le blur de l'input avant que onclick ne se déclenche
+      const isSelected = selectedValues.includes(it.name);
+      if (isSelected) {
+        div.classList.add('selected');
+        div.innerHTML = '<span>✓ ' + escapeHtml(it.name) + '</span>';
+      } else {
+        div.textContent = it.name;
+      }
       div.onmousedown = ev => ev.preventDefault();
       div.onclick = ev => {
-        selectedValues.push(it.name);
+        if (isSelected) {
+          // Toggle : retirer
+          selectedValues = selectedValues.filter(v => v !== it.name);
+        } else {
+          selectedValues.push(it.name);
+        }
         renderChips();
         updatePlaceholder();
         if (onChange) onChange(selectedValues);
         if (ev.ctrlKey || ev.metaKey) {
-          // Ctrl+clic : garde l'input et le dropdown ouverts
           input.focus();
           showDropdown();
         } else {
@@ -2142,7 +2302,7 @@ function createChipsInput(wrapper, options) {
     if (filtered.length > 0) {
       const hint = document.createElement('div');
       hint.style.cssText = 'padding:5px 10px; font-size:10px; color:var(--text-dim); text-align:center; border-top:1px solid var(--border); background:var(--bg-2); position:sticky; bottom:0;';
-      hint.textContent = '💡 Ctrl+clic pour en enchaîner plusieurs';
+      hint.textContent = '💡 Ctrl+clic pour en enchaîner plusieurs · Clic sur ✓ pour retirer';
       dropdown.appendChild(hint);
     }
   }
@@ -2292,24 +2452,27 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
 });
 
 function initNotesTab() {
-  const ta = document.getElementById('notes-textarea');
-  if (!ta) return;
-  ta.value = state.notes || '';
+  const ed = document.getElementById('notes-editor');
+  if (!ed) return;
+  ed.innerHTML = state.notes || '';
   updateNotesWordcount();
 }
 
 function updateNotesWordcount() {
-  const ta = document.getElementById('notes-textarea');
+  const ed = document.getElementById('notes-editor');
   const wc = document.getElementById('notes-wordcount');
-  if (ta && wc) wc.textContent = ta.value.length + ' caractère' + (ta.value.length > 1 ? 's' : '');
+  if (ed && wc) {
+    const len = (ed.textContent || '').length;
+    wc.textContent = len + ' caractère' + (len > 1 ? 's' : '');
+  }
 }
 
 let notesSaveTimer = null;
 {
-  const ta = document.getElementById('notes-textarea');
-  if (ta) {
-    ta.addEventListener('input', () => {
-      state.notes = ta.value;
+  const ed = document.getElementById('notes-editor');
+  if (ed) {
+    ed.addEventListener('input', () => {
+      state.notes = ed.innerHTML;
       updateNotesWordcount();
       const status = document.getElementById('notes-status');
       if (status) { status.textContent = '✏ Modifications en cours...'; status.style.color = 'var(--text-muted)'; }
@@ -2319,7 +2482,23 @@ let notesSaveTimer = null;
         if (status) { status.textContent = '💾 Sauvegardé'; status.style.color = 'var(--success)'; }
       }, 600);
     });
+    // Raccourcis clavier gérés nativement par le navigateur pour Ctrl+B/I/U
   }
+
+  // Toolbar : boutons de formatage
+  document.querySelectorAll('.notes-toolbar .note-btn').forEach(btn => {
+    btn.addEventListener('mousedown', e => e.preventDefault()); // éviter la perte de focus
+    btn.addEventListener('click', () => {
+      const cmd = btn.dataset.cmd;
+      const arg = btn.dataset.arg || null;
+      if (!cmd) return;
+      const ed = document.getElementById('notes-editor');
+      if (ed) ed.focus();
+      try { document.execCommand(cmd, false, arg); } catch (e) { console.error(e); }
+      // Déclencher save via l'événement input
+      if (ed) ed.dispatchEvent(new Event('input'));
+    });
+  });
 }
 
 /* ========================================================================
@@ -2327,66 +2506,74 @@ let notesSaveTimer = null;
    ======================================================================== */
 function renderSeasonTab() {
   const currentMonth = getCurrentMonth();
-  const curEl = document.getElementById('season-current-month');
-  if (curEl) curEl.innerHTML = 'Mois actuel : <b style="color:var(--accent);">' + MONTHS_FR[currentMonth - 1] + '</b>';
   const grid = document.getElementById('season-months-grid');
   if (!grid) return;
   grid.innerHTML = '';
   MONTHS_FR.forEach((name, idx) => {
     const monthNum = idx + 1;
     const isCurrent = monthNum === currentMonth;
-    const card = document.createElement('div');
-    card.style.cssText = 'background:var(--bg-2); border:1px solid ' + (isCurrent ? 'var(--accent)' : 'var(--border)') + '; border-radius:10px; padding:12px;' + (isCurrent ? ' box-shadow:0 0 0 1px var(--accent);' : '');
+    const col = document.createElement('div');
+    col.className = 'season-col' + (isCurrent ? ' current' : '');
+
     const header = document.createElement('div');
-    header.style.cssText = 'display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;';
-    const title = document.createElement('div');
-    title.style.cssText = 'font-weight:600; font-size:15px; color:' + (isCurrent ? 'var(--accent)' : 'var(--text)') + ';';
+    header.className = 'season-col-header';
+    const title = document.createElement('span');
     title.textContent = (isCurrent ? '● ' : '') + name;
     header.appendChild(title);
-    const ingredientsInMonth = state.ingredients.filter(i => (i.seasonMonths || []).includes(monthNum));
+    const ingredientsInMonth = state.ingredients
+      .filter(i => (i.seasonMonths || []).includes(monthNum))
+      .sort((a,b) => a.name.localeCompare(b.name, 'fr'));
     const countEl = document.createElement('span');
-    countEl.style.cssText = 'font-size:12px; color:var(--text-muted);';
-    countEl.textContent = ingredientsInMonth.length + ' ingrédient' + (ingredientsInMonth.length > 1 ? 's' : '');
+    countEl.style.cssText = 'font-size:11px; color:var(--text-muted); font-weight:400;';
+    countEl.textContent = ingredientsInMonth.length;
     header.appendChild(countEl);
-    card.appendChild(header);
+    col.appendChild(header);
 
-    // Liste des ingrédients
+    // Liste des ingrédients en colonne
     const list = document.createElement('div');
-    list.style.cssText = 'display:flex; flex-wrap:wrap; gap:4px; margin-bottom:10px; min-height:32px;';
+    list.className = 'season-col-items';
     if (ingredientsInMonth.length === 0) {
-      list.innerHTML = '<span style="color:var(--text-dim); font-size:12px; font-style:italic;">Aucun ingrédient renseigné</span>';
+      const empty = document.createElement('div');
+      empty.style.cssText = 'color:var(--text-dim); font-size:11px; font-style:italic; padding:4px 0;';
+      empty.textContent = 'Aucun ingrédient';
+      list.appendChild(empty);
     } else {
-      ingredientsInMonth.sort((a,b) => a.name.localeCompare(b.name, 'fr')).forEach(ing => {
-        const chip = document.createElement('span');
-        chip.className = 'chip';
-        chip.style.cursor = 'pointer';
-        chip.title = 'Retirer de ' + name;
-        chip.textContent = ing.name;
-        chip.onclick = (e) => {
+      ingredientsInMonth.forEach(ing => {
+        const item = document.createElement('div');
+        item.className = 'season-item';
+        const label = document.createElement('span');
+        label.textContent = ing.name;
+        item.appendChild(label);
+        item.title = 'Retirer de ' + name;
+        item.addEventListener('click', (e) => {
           e.stopPropagation();
+          // Retrait immédiat visuel
+          item.style.opacity = '0.3';
+          item.style.pointerEvents = 'none';
+          // Modif state
           ing.seasonMonths = (ing.seasonMonths || []).filter(m => m !== monthNum);
           save();
-          rerenderAll();
-        };
-        list.appendChild(chip);
+          // Force re-render dans le prochain frame pour garantir l'update DOM
+          requestAnimationFrame(() => rerenderAll());
+        });
+        list.appendChild(item);
       });
     }
-    card.appendChild(list);
+    col.appendChild(list);
 
-    // Chip input pour ajouter (avec création possible)
+    // Champ d'ajout
     const addWrapper = document.createElement('div');
-    card.appendChild(addWrapper);
+    col.appendChild(addWrapper);
     createChipsInput(addWrapper, {
       getItems: () => state.ingredients
-        .filter(i => !(i.seasonMonths || []).includes(monthNum))
         .sort((a,b) => a.name.localeCompare(b.name, 'fr'))
-        .map(i => ({ name: i.name, id: i.id })),
+        .map(i => ({ name: i.name, id: i.id, inSeason: (i.seasonMonths || []).includes(monthNum) })),
       onCreate: (name) => {
         const ing = findOrCreateIngredient(name);
         return ing.name;
       },
       initialValues: [],
-      placeholder: 'Ajouter un ingrédient...',
+      placeholder: '+ ingrédient...',
       onChange: names => {
         names.forEach(n => {
           const ing = state.ingredients.find(i => i.name === n);
@@ -2396,11 +2583,11 @@ function renderSeasonTab() {
           }
         });
         save();
-        rerenderAll();
+        requestAnimationFrame(() => rerenderAll());
       }
     });
 
-    grid.appendChild(card);
+    grid.appendChild(col);
   });
 }
 
@@ -2470,9 +2657,8 @@ function getFilteredRecipes() {
       });
       if (offSeason) return false;
     }
-    // Filtre sélection
-    if (f.selectionMode === 'checked' && !state.selectedRecipeIds.includes(r.id)) return false;
-    if (f.selectionMode === 'unchecked' && state.selectedRecipeIds.includes(r.id)) return false;
+    // Filtre sélection (Toutes OU Sélection uniquement)
+    if (f.selectedOnly && !state.selectedRecipeIds.includes(r.id)) return false;
     return true;
   });
 
@@ -2494,7 +2680,9 @@ function renderRecipes() {
   const total = state.recipes.length;
   const filtered = recipes.length;
   document.getElementById('recipe-count').textContent = total;
-  document.getElementById('selected-badge').textContent = state.selectedRecipeIds.length;
+  const selBadge = document.getElementById('selected-badge');
+  selBadge.textContent = state.selectedRecipeIds.length;
+  selBadge.setAttribute('data-value', state.selectedRecipeIds.length);
   const cntDisplay = document.getElementById('recipe-count-display');
   if (cntDisplay) {
     cntDisplay.textContent = filtered === total
@@ -3005,6 +3193,8 @@ document.querySelectorAll('.modal-overlay').forEach(m => {
   m.addEventListener('click', e => { if (e.target === m) closeAllModals(); });
 });
 document.getElementById('btn-new-recipe').onclick = () => openRecipeModal();
+const btnNewInline = document.getElementById('btn-new-recipe-inline');
+if (btnNewInline) btnNewInline.onclick = () => openRecipeModal();
 
 /* ========================================================================
    BARRE DE FILTRES
@@ -3014,29 +3204,27 @@ let includeCtrl = null, excludeCtrl = null;
 function buildFilterBar() {
   const collator = new Intl.Collator('fr', { sensitivity: 'base' });
 
-  // Filtre Sélection : tous / cochées / non cochées
-  const selCont = document.getElementById('filter-selection-buttons');
-  selCont.innerHTML = '';
-  [
-    { value: 'all', label: 'Toutes' },
-    { value: 'checked', label: '✓ Cochées' },
-    { value: 'unchecked', label: '○ Non cochées' }
-  ].forEach(opt => {
-    const btn = document.createElement('button');
-    btn.className = 'btn btn-xs';
-    btn.textContent = opt.label;
-    const isActive = state.filters.selectionMode === opt.value;
-    btn.style.background = isActive ? 'var(--primary)' : 'var(--surface)';
-    btn.style.color = isActive ? 'white' : 'var(--text-muted)';
-    btn.style.borderColor = isActive ? 'var(--primary)' : 'var(--border)';
-    btn.onclick = () => {
-      state.filters.selectionMode = opt.value;
+  // Quick filter: Sélection uniquement
+  const selChk = document.getElementById('filter-selection-only');
+  if (selChk) {
+    selChk.checked = !!state.filters.selectedOnly;
+    selChk.onchange = e => {
+      state.filters.selectedOnly = e.target.checked;
       saveLocal();
-      buildFilterBar();
       renderRecipes();
     };
-    selCont.appendChild(btn);
-  });
+  }
+
+  // Quick filter: Saison
+  const seasonToggle = document.getElementById('filter-season-toggle');
+  if (seasonToggle) {
+    seasonToggle.checked = !!state.filters.seasonOnly;
+    seasonToggle.onchange = e => {
+      state.filters.seasonOnly = e.target.checked;
+      saveLocal();
+      renderRecipes();
+    };
+  }
 
   // Filtre Notes : chip input avec liste "Non noté", 10, 9, ..., 1
   const ratingItems = [{ name: 'Non noté' }];
@@ -3142,17 +3330,6 @@ function buildFilterBar() {
       }
     }
   );
-
-  // Toggle Saison
-  const seasonToggle = document.getElementById('filter-season-toggle');
-  if (seasonToggle) {
-    seasonToggle.checked = !!state.filters.seasonOnly;
-    seasonToggle.onchange = e => {
-      state.filters.seasonOnly = e.target.checked;
-      saveLocal();
-      renderRecipes();
-    };
-  }
 }
 
 document.getElementById('search-input').addEventListener('input', e => {
@@ -3173,14 +3350,21 @@ document.getElementById('sort-select').addEventListener('change', e => {
   });
 });
 document.getElementById('btn-reset-filters').onclick = () => {
-  state.filters = { search: '', sort: 'name-asc', ratingValues: [], prepMax: null, cookMax: null, mealTypes: [], includeIngredients: [], excludeIngredients: [], includeFamilies: [], excludeFamilies: [], seasonOnly: false, selectionMode: 'all' };
+  state.filters = { search: '', sort: 'name-asc', ratingValues: [], prepMax: null, cookMax: null, mealTypes: [], includeIngredients: [], excludeIngredients: [], includeFamilies: [], excludeFamilies: [], seasonOnly: false, selectedOnly: false };
   document.getElementById('search-input').value = '';
   document.getElementById('sort-select').value = 'name-asc';
   ['filter-prep-max','filter-cook-max'].forEach(id => document.getElementById(id).value = '');
-  document.getElementById('filter-season-toggle').checked = false;
+  const ss = document.getElementById('filter-season-toggle'); if (ss) ss.checked = false;
+  const so = document.getElementById('filter-selection-only'); if (so) so.checked = false;
   saveLocal();
   buildFilterBar();
   renderRecipes();
+};
+
+// Toggle filtres rapides (case à cocher Sélection/Saison)
+document.getElementById('btn-toggle-quick-filter').onclick = () => {
+  const panel = document.getElementById('quick-filter-panel');
+  panel.style.display = panel.style.display === 'none' ? '' : 'none';
 };
 
 // Toggle filtres avancés
