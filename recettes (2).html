@@ -212,18 +212,23 @@ label {
 .recipe-main {
   flex: 1;
   min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  align-items: center;
 }
 .recipe-title {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
   color: var(--text);
-  margin-bottom: 4px;
   word-wrap: break-word;
+  flex-shrink: 0;
+  margin-right: 4px;
 }
 .recipe-meta {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px 12px;
+  gap: 4px 12px;
   font-size: 13px;
   color: var(--text-muted);
   align-items: center;
@@ -525,10 +530,16 @@ label {
   margin-top: 2px;
   flex-shrink: 0;
 }
-.shopping-item-content { flex: 1; }
+.shopping-item-content {
+  flex: 1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  align-items: baseline;
+}
 .shopping-item-name { font-weight: 500; }
-.shopping-item-qty { color: var(--accent); font-size: 13px; margin-top: 2px; }
-.shopping-item-sources { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
+.shopping-item-qty { color: var(--accent); font-size: 14px; }
+.shopping-item-sources { font-size: 11px; color: var(--text-dim); flex-basis: 100%; }
 .shopping-item.checked {
   opacity: 0.6;
 }
