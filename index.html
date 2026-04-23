@@ -1138,7 +1138,7 @@ label {
       </div>
       <div class="toolbar-row" style="justify-content:space-between;">
         <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
-          <button class="btn btn-sm" id="btn-toggle-quick-filter" title="Afficher / masquer les filtres rapides">⏷ Filtre</button>
+          <button class="btn btn-sm" id="btn-toggle-filter" title="Afficher / masquer les filtres">⏷ Filtre</button>
           <select id="sort-select" class="compact-select" style="width:auto; min-width:110px;">
             <option value="name-asc">Nom A → Z</option>
             <option value="name-desc">Nom Z → A</option>
@@ -1147,13 +1147,12 @@ label {
             <option value="time-asc">Temps ↑</option>
             <option value="time-desc">Temps ↓</option>
           </select>
-          <button class="btn btn-ghost btn-sm" id="btn-toggle-adv-filters" title="Afficher/masquer les filtres détaillés">⚙ Filtres détaillés</button>
           <button class="btn btn-ghost btn-sm" id="btn-reset-filters" title="Réinitialiser tous les filtres">✕ Reset</button>
         </div>
         <button class="btn btn-primary btn-sm" id="btn-new-recipe-inline">＋ Ajouter</button>
       </div>
-      <div id="quick-filter-panel" style="display:none; padding:8px 10px; background:var(--surface); border:1px solid var(--border); border-radius:8px; margin-top:6px;">
-        <div style="display:flex; gap:16px; flex-wrap:wrap;">
+      <div id="filter-panel" style="display:none; padding:10px; background:var(--surface); border:1px solid var(--border); border-radius:8px; margin-top:6px;">
+        <div class="toolbar-row" style="margin-bottom:10px;">
           <label class="quick-filter-chk">
             <input type="checkbox" id="filter-selection-only"> Sélection uniquement
           </label>
@@ -1161,8 +1160,6 @@ label {
             <input type="checkbox" id="filter-season-toggle"> Saison (mois actuel)
           </label>
         </div>
-      </div>
-      <div class="toolbar-adv" id="toolbar-advanced" style="display:none;">
         <div class="toolbar-row">
           <div class="filter-group compact" style="width:200px;">
             <label>Notes :</label>
@@ -1836,6 +1833,30 @@ function fbSchedulePush() {
   }, 5000);
 }
 
+// Flush du push cloud avant de quitter la page (évite de perdre les modifs non-pushées)
+window.addEventListener('beforeunload', () => {
+  if (fbSaveTimer && fbDocRef) {
+    clearTimeout(fbSaveTimer);
+    fbSaveTimer = null;
+    // Tentative de push synchrone - le navigateur l'envoie même si l'onglet ferme
+    try {
+      state.lastModified = Date.now();
+      fbDocRef.set({
+        recipes: state.recipes,
+        ingredients: state.ingredients,
+        units: state.units,
+        ingredientTypes: state.ingredientTypes,
+        ingredientFamilies: state.ingredientFamilies,
+        mealTypes: state.mealTypes,
+        selectedRecipeIds: state.selectedRecipeIds,
+        checkedShoppingItems: state.checkedShoppingItems,
+        notes: state.notes || '',
+        lastModified: state.lastModified
+      });
+    } catch (e) {}
+  }
+});
+
 async function pushToCloud() {
   if (!fbDocRef) return;
   fbSkipNextSnapshot = true;
@@ -2419,7 +2440,7 @@ function createAutocomplete(wrapper, options) {
    COMPOSANT CHIPS (multi-select)
    ======================================================================== */
 function createChipsInput(wrapper, options) {
-  const { getItems, onCreate, initialValues = [], placeholder = 'Ajouter...', onChange } = options;
+  const { getItems, onCreate, initialValues = [], placeholder = 'Ajouter...', onChange, dropdownPosition } = options;
   wrapper.innerHTML = '';
 
   const container = document.createElement('div');
@@ -2468,26 +2489,77 @@ function createChipsInput(wrapper, options) {
   function positionDropdown() {
     if (!dropdown) return;
     const rect = input.getBoundingClientRect();
-    dropdown.style.top = (rect.bottom + 2) + 'px';
-    dropdown.style.left = rect.left + 'px';
-    dropdown.style.width = Math.max(rect.width, 180) + 'px';
+    if (dropdownPosition === 'right') {
+      // À droite de l'anchor
+      const anchor = options.dropdownAnchorEl || input;
+      const arect = anchor.getBoundingClientRect();
+      dropdown.style.top = arect.top + 'px';
+      dropdown.style.left = (arect.right + 8) + 'px';
+      dropdown.style.width = '220px';
+    } else {
+      dropdown.style.top = (rect.bottom + 2) + 'px';
+      dropdown.style.left = rect.left + 'px';
+      dropdown.style.width = Math.max(rect.width, 180) + 'px';
+    }
+  }
+
+  // Listener global pour fermer le dropdown quand la souris s'éloigne trop
+  function onMouseMove(e) {
+    if (!dropdown) return;
+    const dr = dropdown.getBoundingClientRect();
+    const ir = input.getBoundingClientRect();
+    // Zone englobante = input + dropdown, avec marge de tolérance 80px
+    const margin = 80;
+    const left = Math.min(dr.left, ir.left) - margin;
+    const right = Math.max(dr.right, ir.right) + margin;
+    const top = Math.min(dr.top, ir.top) - margin;
+    const bottom = Math.max(dr.bottom, ir.bottom) + margin;
+    if (e.clientX < left || e.clientX > right || e.clientY < top || e.clientY > bottom) {
+      hideDropdown();
+      document.removeEventListener('mousemove', onMouseMove);
+    }
   }
 
   function showDropdown() {
-    hideDropdown();
+    const wasOpen = !!dropdown;
+    // Si le dropdown est déjà affiché, on le met juste à jour sans changer sa position
+    if (wasOpen) {
+      updateDropdownContent();
+      return;
+    }
     const q = normalizeText(input.value);
     const all = getItems();
     const filtered = q ? all.filter(it => normalizeText(it.name).includes(q)) : all;
     dropdown = document.createElement('div');
     dropdown.className = 'autocomplete-dropdown active';
-    // Détecter si l'input est dans un contexte compact (filter-group.compact)
     if (input.closest('.filter-group.compact')) {
       dropdown.classList.add('compact-dropdown');
     }
     dropdown.style.position = 'fixed';
     dropdown.style.zIndex = '1000';
+    // Hauteur max fixe pour que le dropdown ne change pas de taille entre les renders
+    dropdown.style.maxHeight = '260px';
+    dropdown.style.overflowY = 'auto';
     document.body.appendChild(dropdown);
     positionDropdown();
+    buildDropdownItems(filtered, q);
+    // Écouter mouvement souris pour fermer à distance
+    document.addEventListener('mousemove', onMouseMove);
+  }
+
+  function updateDropdownContent() {
+    if (!dropdown) return;
+    const q = normalizeText(input.value);
+    const all = getItems();
+    const filtered = q ? all.filter(it => normalizeText(it.name).includes(q)) : all;
+    // Préserver la position de scroll
+    const scrollTop = dropdown.scrollTop;
+    buildDropdownItems(filtered, q);
+    dropdown.scrollTop = scrollTop;
+  }
+
+  function buildDropdownItems(filtered, q) {
+    dropdown.innerHTML = '';
 
     filtered.slice(0, 100).forEach(it => {
       const div = document.createElement('div');
@@ -2497,7 +2569,6 @@ function createChipsInput(wrapper, options) {
       div.textContent = it.name;
       div.onmousedown = ev => ev.preventDefault();
       div.onclick = ev => {
-        // Toggle : ajouter ou retirer, mais garder le dropdown ouvert
         if (selectedValues.includes(it.name)) {
           selectedValues = selectedValues.filter(v => v !== it.name);
         } else {
@@ -2506,9 +2577,9 @@ function createChipsInput(wrapper, options) {
         renderChips();
         updatePlaceholder();
         if (onChange) onChange(selectedValues);
-        // Re-render le dropdown (pour mettre à jour ✓) et garder le focus
+        // Mise à jour en place, sans fermer ni changer la position
+        updateDropdownContent();
         input.focus();
-        showDropdown();
       };
       dropdown.appendChild(div);
     });
@@ -2526,8 +2597,8 @@ function createChipsInput(wrapper, options) {
           input.value = '';
           updatePlaceholder();
           if (onChange) onChange(selectedValues);
+          updateDropdownContent();
           input.focus();
-          showDropdown();
         }
       };
       dropdown.appendChild(c);
@@ -2542,20 +2613,31 @@ function createChipsInput(wrapper, options) {
   }
 
   input.addEventListener('focus', showDropdown);
-  input.addEventListener('input', showDropdown);
-  input.addEventListener('blur', () => setTimeout(hideDropdown, 200));
+  input.addEventListener('input', () => {
+    if (dropdown) updateDropdownContent();
+    else showDropdown();
+  });
+  input.addEventListener('blur', () => setTimeout(() => {
+    // Ne fermer que si la souris n'est pas sur le dropdown
+    if (dropdown && !dropdown.matches(':hover')) {
+      hideDropdown();
+      document.removeEventListener('mousemove', onMouseMove);
+    }
+  }, 200));
   input.addEventListener('keydown', e => {
     if (e.key === 'Backspace' && !input.value && selectedValues.length > 0) {
       selectedValues.pop();
       renderChips();
       updatePlaceholder();
       if (onChange) onChange(selectedValues);
+      if (dropdown) updateDropdownContent();
     } else if (e.key === 'Enter' && input.value.trim()) {
       e.preventDefault();
       const first = dropdown?.querySelector('.autocomplete-item, .autocomplete-create');
       if (first) first.click();
     } else if (e.key === 'Escape') {
       hideDropdown();
+      document.removeEventListener('mousemove', onMouseMove);
       input.blur();
     }
   });
@@ -2743,8 +2825,7 @@ function notesUndo() {
   ed.innerHTML = prev;
   notesLastSnapshot = prev;
   state.notes = prev;
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch {}
-  fbSchedulePush();
+  save();
   updateNotesWordcount();
 }
 
@@ -2757,8 +2838,7 @@ function notesRedo() {
   ed.innerHTML = next;
   notesLastSnapshot = next;
   state.notes = next;
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch {}
-  fbSchedulePush();
+  save();
   updateNotesWordcount();
 }
 
@@ -2767,6 +2847,7 @@ function notesRedo() {
   if (ed) {
     ed.addEventListener('input', () => {
       state.notes = ed.innerHTML;
+      state.lastModified = Date.now();
       // Sauvegarde localStorage IMMÉDIATE (jamais perdre les notes)
       try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch {}
       updateNotesWordcount();
@@ -2951,6 +3032,8 @@ function renderSeasonTab() {
       },
       initialValues: [],
       placeholder: '+ ingrédient...',
+      dropdownPosition: 'right',
+      dropdownAnchorEl: col,
       onChange: names => {
         names.forEach(n => {
           const ing = state.ingredients.find(i => i.name === n);
@@ -3765,17 +3848,14 @@ document.getElementById('btn-reset-filters').onclick = () => {
   renderRecipes();
 };
 
-// Toggle filtres rapides (case à cocher Sélection/Saison)
-document.getElementById('btn-toggle-quick-filter').onclick = () => {
-  const panel = document.getElementById('quick-filter-panel');
-  panel.style.display = panel.style.display === 'none' ? '' : 'none';
-};
-
-// Toggle filtres avancés
-document.getElementById('btn-toggle-adv-filters').onclick = () => {
-  const adv = document.getElementById('toolbar-advanced');
-  adv.style.display = adv.style.display === 'none' ? '' : 'none';
-};
+// Toggle panneau unique de filtres
+{
+  const btn = document.getElementById('btn-toggle-filter');
+  if (btn) btn.onclick = () => {
+    const panel = document.getElementById('filter-panel');
+    panel.style.display = panel.style.display === 'none' ? '' : 'none';
+  };
+}
 
 /* ========================================================================
    LISTE DE COURSES
@@ -4143,28 +4223,47 @@ function renderDataTab() {
       famList.innerHTML = '<div style="padding:14px; color:var(--text-dim); text-align:center;">Aucune famille</div>';
     } else {
       [...state.ingredientFamilies].sort((a,b) => a.name.localeCompare(b.name, 'fr')).forEach(f => {
+        const wrapEl = document.createElement('div');
+        wrapEl.className = 'family-block';
+
+        // Ligne principale (cliquable pour déplier)
         const el = document.createElement('div');
-        el.className = 'data-list-item';
-        const usage = state.ingredients.filter(i => (i.familyIds || []).includes(f.id)).length;
-        el.innerHTML = '<span>' + escapeHtml(f.name) + ' <span style="color:var(--text-dim); font-size:12px;">(' + usage + ' ingrédients)</span></span>';
+        el.className = 'data-list-item family-header';
+        el.style.cursor = 'pointer';
+        const memberIngs = state.ingredients.filter(i => (i.familyIds || []).includes(f.id));
+        const usage = memberIngs.length;
+        const arrow = document.createElement('span');
+        arrow.textContent = '▸';
+        arrow.style.cssText = 'display:inline-block; transition:transform 0.15s; margin-right:6px; color:var(--text-dim);';
+        const nameSpan = document.createElement('span');
+        nameSpan.innerHTML = '<b>' + escapeHtml(f.name) + '</b> <span style="color:var(--text-dim); font-size:12px;">(' + usage + ' ingrédients)</span>';
+        const headerLeft = document.createElement('span');
+        headerLeft.appendChild(arrow);
+        headerLeft.appendChild(nameSpan);
+        el.appendChild(headerLeft);
+
         const actions = document.createElement('span');
         actions.className = 'data-list-item-actions';
         const editBtn = document.createElement('button');
         editBtn.className = 'btn btn-xs';
         editBtn.textContent = '✏';
         editBtn.title = 'Renommer';
-        editBtn.onclick = () => openRenameModal('Renommer la famille', f.name, (nv) => {
-          f.name = nv.trim();
-          save();
-          rerenderAll();
-        });
+        editBtn.onclick = (e) => {
+          e.stopPropagation();
+          openRenameModal('Renommer la famille', f.name, (nv) => {
+            f.name = nv.trim();
+            save();
+            rerenderAll();
+          });
+        };
         const delBtn = document.createElement('button');
         delBtn.className = 'btn btn-xs btn-danger';
         delBtn.textContent = '🗑';
         delBtn.title = 'Supprimer';
-        delBtn.onclick = () => {
+        delBtn.onclick = (e) => {
+          e.stopPropagation();
           if (!confirm('Supprimer la famille « ' + f.name + ' » ?\nLes ingrédients qui y appartenaient n\'auront plus cette famille.')) return;
-          el.remove();
+          wrapEl.remove();
           state.ingredientFamilies = state.ingredientFamilies.filter(x => x.id !== f.id);
           state.ingredients.forEach(i => { i.familyIds = (i.familyIds || []).filter(fid => fid !== f.id); });
           save();
@@ -4173,7 +4272,80 @@ function renderDataTab() {
         actions.appendChild(editBtn);
         actions.appendChild(delBtn);
         el.appendChild(actions);
-        famList.appendChild(el);
+
+        // Corps dépliable
+        const body = document.createElement('div');
+        body.className = 'family-body';
+        body.style.cssText = 'display:none; padding:10px; background:var(--bg); border-top:1px solid var(--border);';
+
+        const ingContainer = document.createElement('div');
+        ingContainer.style.cssText = 'display:flex; flex-wrap:wrap; gap:4px; margin-bottom:10px; min-height:30px;';
+        if (memberIngs.length === 0) {
+          const empty = document.createElement('span');
+          empty.style.cssText = 'color:var(--text-dim); font-size:12px; font-style:italic;';
+          empty.textContent = 'Aucun ingrédient';
+          ingContainer.appendChild(empty);
+        } else {
+          memberIngs.sort((a,b) => a.name.localeCompare(b.name, 'fr')).forEach(ing => {
+            const chip = document.createElement('span');
+            chip.className = 'chip';
+            chip.textContent = ing.name;
+            chip.title = 'Retirer de la famille';
+            chip.onclick = () => {
+              chip.remove();
+              ing.familyIds = (ing.familyIds || []).filter(fid => fid !== f.id);
+              save();
+              rerenderAll();
+            };
+            ingContainer.appendChild(chip);
+          });
+        }
+        body.appendChild(ingContainer);
+
+        // Champ d'ajout
+        const addWrapper = document.createElement('div');
+        body.appendChild(addWrapper);
+        createChipsInput(addWrapper, {
+          getItems: () => state.ingredients
+            .sort((a,b) => a.name.localeCompare(b.name, 'fr'))
+            .map(i => ({ name: i.name, id: i.id })),
+          onCreate: (name) => {
+            const ing = findOrCreateIngredient(name);
+            return ing.name;
+          },
+          initialValues: memberIngs.map(i => i.name),
+          placeholder: '+ ingrédient dans cette famille...',
+          onChange: names => {
+            // Mettre à jour l'appartenance des ingrédients à cette famille
+            // Ajouter : noms présents mais pas encore membres
+            names.forEach(n => {
+              const ing = state.ingredients.find(i => i.name === n);
+              if (ing) {
+                ing.familyIds = ing.familyIds || [];
+                if (!ing.familyIds.includes(f.id)) ing.familyIds.push(f.id);
+              }
+            });
+            // Retirer : ingrédients qui étaient membres mais ne le sont plus
+            memberIngs.forEach(ing => {
+              if (!names.includes(ing.name)) {
+                ing.familyIds = (ing.familyIds || []).filter(fid => fid !== f.id);
+              }
+            });
+            save();
+            rerenderAll();
+          }
+        });
+
+        // Toggle au clic du header
+        el.addEventListener('click', () => {
+          const open = body.style.display !== 'none';
+          body.style.display = open ? 'none' : '';
+          arrow.style.transform = open ? 'none' : 'rotate(90deg)';
+        });
+
+        wrapEl.appendChild(el);
+        wrapEl.appendChild(body);
+        famList.appendChild(wrapEl);
       });
     }
   }
