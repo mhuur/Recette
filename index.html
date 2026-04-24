@@ -176,9 +176,10 @@ html, body { overflow-x: hidden; }
 .sidebar nav button.active .count-badge { background: rgba(255,255,255,0.25); }
 main {
   flex: 1;
-  padding: 12px 16px;
+  padding: 16px;
   min-width: 0;
   min-height: 100vh;
+  overflow-x: hidden;
 }
 .tab { display: none; }
 .tab.active { display: block; }
@@ -1065,35 +1066,201 @@ label {
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 5px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--border-light); }
 
-/* Mobile */
+/* ============================================================
+   ICÔNES ONGLETS (desktop : icône cachée)
+   ============================================================ */
+.tab-icon { display: none; }
+.tab-label { }
+
+/* ============================================================
+   MOBILE
+   ============================================================ */
 @media (max-width: 768px) {
-  body { font-size: 14px; }
-  .app-layout { flex-direction: column; }
+
+  /* ---- Navigation bas d'écran ---- */
+  .app-layout { flex-direction: column; min-height: 100dvh; }
+
   .sidebar {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    top: auto;
     width: 100%;
     height: auto;
+    padding: 0;
+    border-right: none;
+    border-top: 1px solid var(--border);
+    border-bottom: none;
+    background: var(--bg-2);
+    flex-direction: row;
+    align-items: stretch;
+    gap: 0;
+    flex-wrap: nowrap;
+    z-index: 200;
+    /* Flou façon iOS */
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    background: rgba(15, 34, 64, 0.92);
+  }
+
+  .sidebar h1 { display: none; }
+  .sidebar-footer, .sidebar-user { display: none; }
+
+  .sidebar nav {
+    flex-direction: row;
+    width: 100%;
+    gap: 0;
+    align-items: stretch;
+  }
+
+  /* Chaque bouton d'onglet = une colonne égale */
+  .sidebar nav .tab-btn {
+    flex: 1;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    padding: 10px 2px 12px;
+    font-size: 9px;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+    border-radius: 0;
+    text-align: center;
+    color: var(--text-dim);
+    background: transparent;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .sidebar nav .tab-btn:hover { background: transparent; color: var(--text-muted); }
+  .sidebar nav .tab-btn.active {
+    background: transparent;
+    color: var(--primary);
+  }
+  /* Petit trait actif en haut */
+  .sidebar nav .tab-btn.active::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 20%; right: 20%;
+    height: 2px;
+    background: var(--primary);
+    border-radius: 0 0 2px 2px;
+  }
+  .sidebar nav .tab-btn { position: relative; }
+
+  /* Icônes visibles sur mobile */
+  .tab-icon { display: block; font-size: 20px; line-height: 1; }
+  .tab-label { display: block; }
+
+  /* Badge dans la nav mobile */
+  .sidebar nav .count-badge {
+    position: absolute;
+    top: 6px; right: calc(50% - 16px);
+    font-size: 9px;
+    padding: 1px 4px;
+    min-width: 14px;
+  }
+
+  /* Bouton connexion mobile repositionné */
+  #mobile-login-btn {
+    padding: 8px 14px;
+    font-size: 12px;
+    margin: auto 8px;
+    flex-shrink: 0;
+    border-radius: 20px;
+  }
+
+  /* ---- En-tête mobile en haut ---- */
+  main {
+    padding: 0 0 72px; /* espace pour la nav du bas */
+    flex: 1;
+  }
+
+  /* Barre de titre en haut sur mobile */
+  .app-layout::before {
+    content: '🍳 Mes Recettes';
+    display: block;
     position: sticky;
     top: 0;
-    padding: 10px 14px;
-    border-right: none;
+    background: rgba(15, 34, 64, 0.92);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
     border-bottom: 1px solid var(--border);
-    flex-direction: row;
-    align-items: center;
-    gap: 10px;
-    flex-wrap: wrap;
+    padding: 14px 16px;
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--text);
+    z-index: 100;
+    letter-spacing: -0.01em;
   }
-  .sidebar h1 { font-size: 18px; padding: 0; margin-right: auto; }
-  .sidebar nav { flex-direction: row; gap: 2px; }
-  .sidebar nav button { padding: 6px 10px; font-size: 13px; }
-  .sidebar-footer, .sidebar-user { display: none; }
-  main { padding: 12px; }
-  .recipe-header { flex-wrap: wrap; }
+
+  /* ---- Contenu ---- */
+  .tab { padding: 16px; }
+
+  /* ---- Recettes ---- */
+  .recipe-list { gap: 8px; }
+  .recipe-card {
+    border-radius: 12px;
+    border-color: var(--border);
+    background: var(--bg-2);
+  }
+  .recipe-card.expanded { border-color: var(--primary); }
+  .recipe-header {
+    padding: 12px 14px;
+    gap: 12px;
+    flex-wrap: nowrap;
+  }
+  .recipe-title { font-size: 15px; }
+  .recipe-meta { font-size: 12px; gap: 4px 8px; }
+  .recipe-checkbox input { width: 20px; height: 20px; }
+
+  /* ---- Filtres ---- */
+  .toolbar-row { flex-direction: column; align-items: stretch; gap: 8px; }
+  .filter-group { width: 100%; justify-content: space-between; }
+
+  /* ---- Formulaires ---- */
   .ing-row { grid-template-columns: 1fr; }
   .form-grid { grid-template-columns: 1fr; }
-  .toolbar-row { flex-direction: column; align-items: stretch; }
-  .filter-group { width: 100%; justify-content: space-between; }
-  .modal { border-radius: 10px; }
-  .modal-body { padding: 14px; }
+
+  /* ---- Modals ---- */
+  .modal-overlay {
+    align-items: flex-end;
+    padding: 0;
+  }
+  .modal {
+    border-radius: 20px 20px 0 0;
+    width: 100%;
+    max-width: 100%;
+    max-height: 92dvh;
+  }
+  .modal-body { padding: 16px; }
+  .modal-header { padding: 16px 16px 12px; }
+
+  /* ---- FAB ---- */
+  .fab {
+    bottom: 80px; /* au-dessus de la nav */
+    right: 16px;
+    width: 52px;
+    height: 52px;
+    font-size: 24px;
+    box-shadow: 0 4px 16px rgba(74, 158, 255, 0.4);
+  }
+
+  /* ---- Sections paramètres/données ---- */
+  .data-section {
+    padding: 16px;
+    border-radius: 12px;
+    margin-bottom: 10px;
+  }
+
+  /* ---- Liste de courses ---- */
+  .shopping-toolbar {
+    flex-direction: column;
+    gap: 10px;
+    padding: 14px 16px;
+  }
+
+  body { font-size: 14px; }
 }
 
 /* ============================================================
@@ -1234,12 +1401,12 @@ body.guest-mode .sidebar::after {
 <div class="app-layout">
 <aside class="sidebar">
   <nav>
-    <button class="tab-btn active" data-tab="recipes">Recettes <span class="count-badge" id="recipe-count">0</span></button>
-    <button class="tab-btn" data-tab="shopping">Liste de courses <span class="count-badge hide-if-zero" id="selected-badge">0</span></button>
-    <button class="tab-btn" data-tab="season">Saison</button>
-    <button class="tab-btn" data-tab="data">Données</button>
-    <button class="tab-btn" data-tab="settings">⚙ Paramètres</button>
-    <button class="tab-btn" data-tab="notes">Notes & bugs</button>
+    <button class="tab-btn active" data-tab="recipes"><span class="tab-icon">🍳</span><span class="tab-label">Recettes</span> <span class="count-badge" id="recipe-count">0</span></button>
+    <button class="tab-btn" data-tab="shopping"><span class="tab-icon">🛒</span><span class="tab-label">Courses</span> <span class="count-badge hide-if-zero" id="selected-badge">0</span></button>
+    <button class="tab-btn" data-tab="season"><span class="tab-icon">🌿</span><span class="tab-label">Saison</span></button>
+    <button class="tab-btn" data-tab="data"><span class="tab-icon">📋</span><span class="tab-label">Données</span></button>
+    <button class="tab-btn" data-tab="settings"><span class="tab-icon">⚙️</span><span class="tab-label">Réglages</span></button>
+    <button class="tab-btn" data-tab="notes"><span class="tab-icon">📝</span><span class="tab-label">Notes</span></button>
     <button class="btn btn-primary" id="mobile-login-btn">🔑 Connexion</button>
   </nav>
   <div class="sidebar-user" id="sidebar-user">
