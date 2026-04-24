@@ -2090,13 +2090,16 @@ function initFirebase() {
           handleGuestAccess(user);
           return;
         }
-        renderFirebaseUI();
+        // Définir fbDocRef AVANT renderFirebaseUI pour que le chemin soit déjà disponible
         if (user) {
           fbDocRef = getFirebaseDocRef(user);
-          onFirebaseSignIn();
         } else {
           if (fbUnsubscribe) { fbUnsubscribe(); fbUnsubscribe = null; }
           fbDocRef = null;
+        }
+        renderFirebaseUI();
+        if (user) {
+          onFirebaseSignIn();
         }
       });
 
