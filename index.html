@@ -2266,6 +2266,7 @@ function isMobile() {
 async function signInWithGoogle() {
   if (!fbAuth) return;
   const provider = new firebase.auth.GoogleAuthProvider();
+  provider.setCustomParameters({ prompt: 'select_account' });
   const errEl = document.getElementById('login-error');
   const btn   = document.getElementById('btn-login-google');
   if (errEl) errEl.style.display = 'none';
