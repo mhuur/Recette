@@ -2031,6 +2031,7 @@ const DEFAULT_FIREBASE_CONFIG = {
 };
 let fbApp = null, fbAuth = null, fbDb = null, fbUser = null, fbDocRef = null;
 let fbUnsubscribe = null, fbSaveTimer = null, fbSkipNextSnapshot = false;
+let authStateResolved = false;
 
 function parseFirebaseConfig(raw) {
   if (!raw || !raw.trim()) return null;
@@ -2081,6 +2082,7 @@ function initFirebase() {
 
       fbAuth.onAuthStateChanged(user => {
         fbUser = user;
+        authStateResolved = true;
         if (guestMode) {
           handleGuestAccess(user);
           return;
@@ -2202,7 +2204,7 @@ function applyCloudData(data) {
   renderDataTab();
   buildFilterBar();
   if (document.getElementById('tab-shopping').classList.contains('active')) renderShopping();
-  if (document.getElementById('tab-season').classList.contains('active')) renderSeasonTab();
+  renderSeasonTab();
   if (document.getElementById('tab-notes').classList.contains('active')) initNotesTab();
 }
 
@@ -2273,6 +2275,7 @@ async function pullFromCloud() {
     const snap = await fbDocRef.get();
     if (snap.exists) {
       applyCloudData(snap.data());
+      renderSeasonTab();
       toast('Données rechargées depuis le cloud', 'success');
     } else {
       toast('Aucune donnée dans le cloud', 'error');
@@ -2295,9 +2298,9 @@ function renderFirebaseUI() {
   document.getElementById('firebase-not-configured').style.display = hasConfig ? 'none' : '';
   document.getElementById('firebase-configured').style.display = hasConfig ? '' : 'none';
 
-  // Écran de connexion principal
+  // Écran de connexion principal — affiché seulement après résolution de l'auth pour éviter le flash
   const loginOverlay = document.getElementById('login-overlay');
-  if (loginOverlay && !guestMode) loginOverlay.classList.toggle('active', !fbUser);
+  if (loginOverlay && !guestMode) loginOverlay.classList.toggle('active', authStateResolved && !fbUser);
 
   // Bouton mobile (secondaire, dans la nav)
   const mobileBtn = document.getElementById('mobile-login-btn');
