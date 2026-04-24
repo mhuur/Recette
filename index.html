@@ -1169,6 +1169,49 @@ label {
   vertical-align: middle;
 }
 
+/* ============================================================
+   ÉCRAN DE CONNEXION
+   ============================================================ */
+#login-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--bg);
+  z-index: 1500;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  text-align: center;
+}
+#login-overlay.active { display: flex; }
+.login-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 40px 32px;
+  max-width: 360px;
+  width: 100%;
+}
+.login-card .app-icon { font-size: 52px; margin-bottom: 12px; display: block; }
+.login-card h1 { font-size: 24px; margin-bottom: 6px; }
+.login-card p { color: var(--text-muted); font-size: 14px; margin-bottom: 28px; }
+#btn-login-google {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-size: 15px;
+  padding: 12px 20px;
+}
+#login-error {
+  color: #ef4444;
+  font-size: 13px;
+  margin-top: 14px;
+  display: none;
+}
+
 /* Mode invité : masquer les contrôles d'édition */
 body.guest-mode .fab { display: none !important; }
 body.guest-mode .recipe-actions { display: none !important; }
@@ -1534,6 +1577,20 @@ body.guest-mode .sidebar::after {
 </main>
 </div>
 
+<!-- Écran de connexion -->
+<div id="login-overlay">
+  <div class="login-card">
+    <span class="app-icon">🍳</span>
+    <h1>Mes Recettes</h1>
+    <p>Connectez-vous pour accéder à vos recettes</p>
+    <button class="btn btn-primary" id="btn-login-google">
+      <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z"/><path fill="#FBBC05" d="M3.964 10.707c-.18-.54-.282-1.117-.282-1.707s.102-1.167.282-1.707V4.961H.957C.347 6.175 0 7.55 0 9s.348 2.825.957 4.039l3.007-2.332z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.961L3.964 7.293C4.672 5.166 6.656 3.58 9 3.58z"/></svg>
+      Se connecter avec Google
+    </button>
+    <p id="login-error"></p>
+  </div>
+</div>
+
 <!-- Overlay mode invité -->
 <div id="guest-overlay">
   <div class="guest-card">
@@ -1823,6 +1880,14 @@ function saveLocal() {
    FIREBASE - Synchronisation Cloud
    ======================================================================== */
 const FB_CONFIG_KEY = 'mhuur_firebase_config_v1';
+const DEFAULT_FIREBASE_CONFIG = {
+  apiKey: "AIzaSyCO4gd7rVibJ2khql7fB4eT9JENb-j2ppI",
+  authDomain: "mes-recettes-ff138.firebaseapp.com",
+  projectId: "mes-recettes-ff138",
+  storageBucket: "mes-recettes-ff138.firebasestorage.app",
+  messagingSenderId: "1098075014918",
+  appId: "1:1098075014918:web:3049cf8a8255f13e660087"
+};
 let fbApp = null, fbAuth = null, fbDb = null, fbUser = null, fbDocRef = null;
 let fbUnsubscribe = null, fbSaveTimer = null, fbSkipNextSnapshot = false;
 
@@ -1846,8 +1911,8 @@ function parseFirebaseConfig(raw) {
 function getStoredFirebaseConfig() {
   try {
     const raw = localStorage.getItem(FB_CONFIG_KEY);
-    return raw ? JSON.parse(raw) : null;
-  } catch { return null; }
+    return raw ? JSON.parse(raw) : DEFAULT_FIREBASE_CONFIG;
+  } catch { return DEFAULT_FIREBASE_CONFIG; }
 }
 
 function setStoredFirebaseConfig(config) {
@@ -2087,7 +2152,11 @@ function renderFirebaseUI() {
   document.getElementById('firebase-not-configured').style.display = hasConfig ? 'none' : '';
   document.getElementById('firebase-configured').style.display = hasConfig ? '' : 'none';
 
-  // Bouton mobile : toujours visible quand non connecté (même sans config Firebase)
+  // Écran de connexion principal
+  const loginOverlay = document.getElementById('login-overlay');
+  if (loginOverlay && !guestMode) loginOverlay.classList.toggle('active', !fbUser);
+
+  // Bouton mobile (secondaire, dans la nav)
   const mobileBtn = document.getElementById('mobile-login-btn');
   if (mobileBtn) mobileBtn.classList.toggle('visible', !fbUser && !guestMode);
 
@@ -2188,6 +2257,7 @@ document.getElementById('btn-remove-firebase').onclick = () => {
 };
 
 document.getElementById('btn-sign-in').onclick = () => signInWithGoogle();
+document.getElementById('btn-login-google').onclick = () => signInWithGoogle();
 
 function isMobile() {
   return window.innerWidth <= 768 || /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
@@ -2196,21 +2266,27 @@ function isMobile() {
 async function signInWithGoogle() {
   if (!fbAuth) return;
   const provider = new firebase.auth.GoogleAuthProvider();
+  const errEl = document.getElementById('login-error');
+  const btn   = document.getElementById('btn-login-google');
+  if (errEl) errEl.style.display = 'none';
+  if (btn)   { btn.disabled = true; btn.textContent = 'Connexion…'; }
   try {
     if (isMobile()) {
-      // Sur mobile : redirection (plus fiable que les popups)
       await fbAuth.signInWithRedirect(provider);
     } else {
       await fbAuth.signInWithPopup(provider);
     }
   } catch (e) {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z"/><path fill="#FBBC05" d="M3.964 10.707c-.18-.54-.282-1.117-.282-1.707s.102-1.167.282-1.707V4.961H.957C.347 6.175 0 7.55 0 9s.348 2.825.957 4.039l3.007-2.332z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.961L3.964 7.293C4.672 5.166 6.656 3.58 9 3.58z"/></svg> Se connecter avec Google';
+    }
     if (e.code === 'auth/popup-blocked' || e.code === 'auth/popup-closed-by-user') {
-      // Fallback automatique vers redirection si popup bloquée
       await fbAuth.signInWithRedirect(provider);
     } else if (e.code === 'auth/unauthorized-domain') {
-      toast('Domaine non autorisé dans Firebase. Ajoute-le dans Auth → Settings → Authorized domains.', 'error');
+      if (errEl) { errEl.textContent = 'Domaine non autorisé dans Firebase (Auth → Authorized domains).'; errEl.style.display = ''; }
     } else if (e.code !== 'auth/cancelled-popup-request') {
-      toast('Erreur : ' + e.message, 'error');
+      if (errEl) { errEl.textContent = 'Erreur : ' + e.message; errEl.style.display = ''; }
     }
   }
 }
