@@ -2153,16 +2153,10 @@ async function onFirebaseSignIn() {
     fbUnsubscribe = fbDocRef.onSnapshot(snap => {
       if (fbSkipNextSnapshot) { fbSkipNextSnapshot = false; return; }
       if (snap.metadata.hasPendingWrites) return;
-      if (fbSaveTimer) return; // modifs locales en attente
+      if (fbSaveTimer) return; // modifs locales non encore envoyées
       if (snap.exists) {
-        const data = snap.data();
-        const cloudMod = data.lastModified || 0;
-        const localMod = state.lastModified || 0;
-        // Ne charger que si cloud est plus récent
-        if (cloudMod > localMod) {
-          applyCloudData(data);
-          setSyncStatus('☁ Mise à jour depuis un autre appareil', 'success');
-        }
+        applyCloudData(snap.data());
+        setSyncStatus('☁ Synchronisé', 'success');
       }
     }, err => {
       console.error('Snapshot error:', err);
