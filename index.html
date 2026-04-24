@@ -1638,6 +1638,9 @@ body.guest-mode .sidebar::after {
               <button class="btn btn-xs" id="btn-copy-uid">📋</button>
             </div>
           </details>
+          <div style="margin-top:8px; font-size:11px; color:var(--text-dim);">
+            Chemin de synchro : <code id="firebase-doc-path" style="color:var(--accent); font-size:10px; word-break:break-all;">—</code>
+          </div>
         </div>
       </div>
     </div>
@@ -2107,6 +2110,21 @@ function initFirebase() {
           showLoginError('Erreur : ' + e.message);
         }
       });
+
+      // Resync dès que l'onglet redevient visible (écran de téléphone qui se rallume, retour sur l'onglet…)
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible' && fbDocRef && !fbSaveTimer) {
+          fbDocRef.get().then(snap => {
+            if (snap.exists) {
+              const data = snap.data();
+              if ((data.lastModified || 0) > (state.lastModified || 0)) {
+                applyCloudData(data);
+                setSyncStatus('☁ Mis à jour', 'success');
+              }
+            }
+          }).catch(() => {});
+        }
+      });
     }
   } catch (e) {
     toast('Erreur Firebase : ' + e.message, 'error');
@@ -2199,11 +2217,12 @@ function applyCloudData(data) {
   buildFilterBar();
   if (document.getElementById('tab-shopping').classList.contains('active')) renderShopping();
   renderSeasonTab();
-  if (document.getElementById('tab-notes').classList.contains('active')) initNotesTab();
+  const notesEd = document.getElementById('notes-editor');
+  if (notesEd) notesEd.innerHTML = state.notes || '';
 }
 
 function fbSchedulePush() {
-  if (!fbDocRef) return;
+  if (!fbDocRef) { setSyncStatus('⚠ Non connecté — données locales seulement', 'error'); return; }
   clearTimeout(fbSaveTimer);
   setSyncStatus('💾 Modifs non enregistrées...', 'muted');
   fbSaveTimer = setTimeout(() => {
@@ -2311,6 +2330,8 @@ function renderFirebaseUI() {
     document.getElementById('firebase-user-name').textContent = fbUser.displayName || fbUser.email;
     document.getElementById('firebase-user-email').textContent = fbUser.email;
     document.getElementById('firebase-user-uid').textContent = fbUser.uid;
+    const pathEl = document.getElementById('firebase-doc-path');
+    if (pathEl && fbDocRef) pathEl.textContent = fbDocRef.path;
     const avatarEl = document.getElementById('firebase-user-avatar');
     const sidebarAvatar = document.getElementById('sidebar-user-avatar');
     if (fbUser.photoURL) {
