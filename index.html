@@ -2971,6 +2971,14 @@ function createChipsInput(wrapper, options) {
     dropdown.style.maxHeight = '260px';
     dropdown.style.overflowY = 'auto';
     document.body.appendChild(dropdown);
+    // Empêcher que le scroll à l'intérieur du dropdown fasse scroller la page
+    dropdown.addEventListener('wheel', e => {
+      e.stopPropagation();
+      const { scrollTop, scrollHeight, clientHeight } = dropdown;
+      const atTop = scrollTop === 0 && e.deltaY < 0;
+      const atBottom = scrollTop + clientHeight >= scrollHeight - 1 && e.deltaY > 0;
+      if (atTop || atBottom) e.preventDefault();
+    }, { passive: false });
     positionDropdown();
     buildDropdownItems(filtered, q);
     // Écouter mouvement souris pour fermer à distance
@@ -2994,7 +3002,8 @@ function createChipsInput(wrapper, options) {
     filtered.slice(0, 100).forEach(it => {
       const div = document.createElement('div');
       div.className = 'autocomplete-item';
-      const isSelected = selectedValues.includes(it.name);
+      // Utiliser it.inSeason si disponible (onglet Saison), sinon selectedValues
+      const isSelected = (it.inSeason !== undefined) ? it.inSeason : selectedValues.includes(it.name);
       if (isSelected) div.classList.add('selected');
       div.textContent = it.name;
       div.onmousedown = ev => ev.preventDefault();
@@ -3071,8 +3080,8 @@ function createChipsInput(wrapper, options) {
       input.blur();
     }
   });
-  // Reposition dropdown on scroll/resize
-  window.addEventListener('scroll', () => { if (dropdown) positionDropdown(); }, true);
+  // Reposition dropdown on scroll/resize (ignorer les scrolls internes du dropdown lui-même)
+  window.addEventListener('scroll', (e) => { if (dropdown && e.target !== dropdown) positionDropdown(); }, true);
   window.addEventListener('resize', () => { if (dropdown) positionDropdown(); });
 
   container.addEventListener('click', e => {
@@ -3447,11 +3456,11 @@ function renderSeasonTab() {
         list.appendChild(item);
       });
     }
-    col.appendChild(list);
-
-    // Champ d'ajout
+    // Champ d'ajout (en haut, avant la liste)
     const addWrapper = document.createElement('div');
     col.appendChild(addWrapper);
+
+    col.appendChild(list);
     createChipsInput(addWrapper, {
       getItems: () => state.ingredients
         .sort((a,b) => a.name.localeCompare(b.name, 'fr'))
@@ -4486,6 +4495,39 @@ function openMergeTypeDialog(sourceType) {
   toast(usage + ' ingrédient(s) réaffecté(s) à « ' + target.name + ' »', 'success');
 }
 
+function openMergeIngredientDialog(sourceIng) {
+  const others = [...state.ingredients].filter(i => i.id !== sourceIng.id).sort((a,b) => a.name.localeCompare(b.name, 'fr'));
+  if (others.length === 0) { toast('Aucun autre ingrédient disponible.', 'error'); return; }
+  const usage = state.recipes.filter(r => (r.ingredients||[]).some(i => i.ingredientId === sourceIng.id)).length;
+  const list = others.map((i, idx) => (idx+1) + '. ' + i.name).join('\n');
+  const choice = prompt(
+    'Fusionner « ' + sourceIng.name + ' » (utilisé dans ' + usage + ' recette(s)) vers quel ingrédient ?\n\nTape le numéro de l\'ingrédient cible :\n\n' + list
+  );
+  if (!choice) return;
+  const idx = parseInt(choice.trim()) - 1;
+  if (isNaN(idx) || idx < 0 || idx >= others.length) { toast('Numéro invalide.', 'error'); return; }
+  const target = others[idx];
+  if (!confirm('Fusionner « ' + sourceIng.name + ' » → « ' + target.name + ' » ?\n\n' +
+               'Les ' + usage + ' recette(s) utilisant « ' + sourceIng.name + ' » seront mises à jour.\n« ' + sourceIng.name + ' » sera supprimé.')) return;
+  // Remplacer toutes les références dans les recettes
+  state.recipes.forEach(r => {
+    (r.ingredients||[]).forEach(i => { if (i.ingredientId === sourceIng.id) i.ingredientId = target.id; });
+  });
+  // Fusionner seasonMonths
+  const mergedMonths = [...new Set([...(target.seasonMonths||[]), ...(sourceIng.seasonMonths||[])])];
+  target.seasonMonths = mergedMonths;
+  // Fusionner familyIds
+  const mergedFamilies = [...new Set([...(target.familyIds||[]), ...(sourceIng.familyIds||[])])];
+  target.familyIds = mergedFamilies;
+  // Conserver le typeId de la cible (ou prendre celui de la source si la cible n'en a pas)
+  if (!target.typeId && sourceIng.typeId) target.typeId = sourceIng.typeId;
+  // Supprimer la source
+  state.ingredients = state.ingredients.filter(i => i.id !== sourceIng.id);
+  save();
+  rerenderAll();
+  toast('« ' + sourceIng.name + ' » fusionné dans « ' + target.name + ' »', 'success');
+}
+
 function renderDataTab() {
   // Ingrédients
   const ingList = document.getElementById('ingredients-list');
@@ -4529,7 +4571,13 @@ function renderDataTab() {
         save();
         rerenderAll();
       };
+      const mergeIngBtn = document.createElement('button');
+      mergeIngBtn.className = 'btn btn-xs';
+      mergeIngBtn.textContent = '🔗';
+      mergeIngBtn.title = 'Fusionner avec un autre ingrédient';
+      mergeIngBtn.onclick = () => openMergeIngredientDialog(ing);
       actions.appendChild(editBtn);
+      actions.appendChild(mergeIngBtn);
       actions.appendChild(delBtn);
       el.appendChild(actions);
       ingList.appendChild(el);
@@ -4578,33 +4626,46 @@ function renderDataTab() {
   document.getElementById('type-count-badge').textContent = state.ingredientTypes.length;
   typeList.innerHTML = '';
   [...state.ingredientTypes].sort((a,b) => a.name.localeCompare(b.name, 'fr')).forEach(t => {
+    const wrapEl = document.createElement('div');
+    wrapEl.className = 'family-block';
+    const memberIngs = state.ingredients.filter(i => i.typeId === t.id);
+    const usage = memberIngs.length;
+
     const el = document.createElement('div');
-    el.className = 'data-list-item';
-    const usage = state.ingredients.filter(i => i.typeId === t.id).length;
-    el.innerHTML = '<span>' + escapeHtml(t.name) + ' <span style="color:var(--text-dim); font-size:12px;">(' + usage + ' ingrédients)</span></span>';
+    el.className = 'data-list-item family-header';
+    el.style.cursor = 'pointer';
+    const arrow = document.createElement('span');
+    arrow.textContent = '▸';
+    arrow.style.cssText = 'display:inline-block; transition:transform 0.15s; margin-right:6px; color:var(--text-dim);';
+    const nameSpan = document.createElement('span');
+    nameSpan.innerHTML = '<b>' + escapeHtml(t.name) + '</b> <span style="color:var(--text-dim); font-size:12px;">(' + usage + ' ingrédients)</span>';
+    const headerLeft = document.createElement('span');
+    headerLeft.appendChild(arrow);
+    headerLeft.appendChild(nameSpan);
+    el.appendChild(headerLeft);
+
     const actions = document.createElement('span');
     actions.className = 'data-list-item-actions';
     const editBtn = document.createElement('button');
     editBtn.className = 'btn btn-xs';
     editBtn.textContent = '✏';
     editBtn.title = 'Renommer';
-    editBtn.onclick = () => openRenameModal('Renommer le type', t.name, (nv) => {
-      t.name = nv.trim();
-      save();
-      rerenderAll();
-    });
+    editBtn.onclick = (e) => { e.stopPropagation(); openRenameModal('Renommer le type', t.name, (nv) => {
+      t.name = nv.trim(); save(); rerenderAll();
+    }); };
     const mergeBtn = document.createElement('button');
     mergeBtn.className = 'btn btn-xs';
     mergeBtn.textContent = '🔗';
     mergeBtn.title = 'Fusionner avec un autre type';
-    mergeBtn.onclick = () => openMergeTypeDialog(t);
+    mergeBtn.onclick = (e) => { e.stopPropagation(); openMergeTypeDialog(t); };
     const delBtn = document.createElement('button');
     delBtn.className = 'btn btn-xs btn-danger';
     delBtn.textContent = '🗑';
     delBtn.title = 'Supprimer';
-    delBtn.onclick = () => {
+    delBtn.onclick = (e) => {
+      e.stopPropagation();
       if (!confirm('Supprimer le type « ' + t.name + ' » ?\nLes ingrédients qui l\'utilisent n\'auront plus de type.')) return;
-      el.remove();
+      wrapEl.remove();
       state.ingredientTypes = state.ingredientTypes.filter(x => x.id !== t.id);
       state.ingredients.forEach(i => { if (i.typeId === t.id) i.typeId = null; });
       save();
@@ -4614,7 +4675,60 @@ function renderDataTab() {
     actions.appendChild(mergeBtn);
     actions.appendChild(delBtn);
     el.appendChild(actions);
-    typeList.appendChild(el);
+
+    // Corps dépliable avec ingrédients
+    const body = document.createElement('div');
+    body.className = 'family-body';
+    body.style.cssText = 'display:none; padding:10px; background:var(--bg); border-top:1px solid var(--border);';
+
+    const ingContainer = document.createElement('div');
+    ingContainer.style.cssText = 'display:flex; flex-wrap:wrap; gap:4px; margin-bottom:10px; min-height:30px;';
+    if (memberIngs.length === 0) {
+      const empty = document.createElement('span');
+      empty.style.cssText = 'color:var(--text-dim); font-size:12px; font-style:italic;';
+      empty.textContent = 'Aucun ingrédient';
+      ingContainer.appendChild(empty);
+    } else {
+      memberIngs.sort((a,b) => a.name.localeCompare(b.name, 'fr')).forEach(ing => {
+        const chip = document.createElement('span');
+        chip.className = 'chip';
+        chip.textContent = ing.name;
+        chip.title = 'Retirer ce type';
+        chip.onclick = () => { chip.remove(); ing.typeId = null; save(); rerenderAll(); };
+        ingContainer.appendChild(chip);
+      });
+    }
+    body.appendChild(ingContainer);
+
+    const addWrapper = document.createElement('div');
+    body.appendChild(addWrapper);
+    createChipsInput(addWrapper, {
+      getItems: () => state.ingredients.sort((a,b) => a.name.localeCompare(b.name, 'fr')).map(i => ({ name: i.name, id: i.id })),
+      onCreate: (name) => { const ing = findOrCreateIngredient(name); return ing.name; },
+      initialValues: memberIngs.map(i => i.name),
+      placeholder: '+ ingrédient dans ce type...',
+      onChange: names => {
+        // Ajouter : assigner ce type
+        names.forEach(n => {
+          const ing = state.ingredients.find(i => i.name === n);
+          if (ing) ing.typeId = t.id;
+        });
+        // Retirer : désassigner
+        memberIngs.forEach(ing => { if (!names.includes(ing.name)) ing.typeId = null; });
+        save();
+        rerenderAll();
+      }
+    });
+
+    el.addEventListener('click', () => {
+      const open = body.style.display !== 'none';
+      body.style.display = open ? 'none' : '';
+      arrow.style.transform = open ? 'none' : 'rotate(90deg)';
+    });
+
+    wrapEl.appendChild(el);
+    wrapEl.appendChild(body);
+    typeList.appendChild(wrapEl);
   });
 
   // Types de plats
