@@ -1954,12 +1954,14 @@ function initFirebase() {
         }
       });
 
-      // Récupère le résultat d'une connexion par redirection (mobile)
-      fbAuth.getRedirectResult().catch(e => {
+      // Traite le retour d'une connexion par redirection si elle a eu lieu
+      fbAuth.getRedirectResult().then(result => {
+        // Rien à faire : onAuthStateChanged gère la suite
+      }).catch(e => {
         if (e.code === 'auth/unauthorized-domain') {
-          toast('Domaine non autorisé dans Firebase. Ajoute-le dans Auth → Authorized domains.', 'error');
+          showLoginError('Domaine non autorisé dans Firebase (Auth → Authorized domains).');
         } else if (e.code && e.code !== 'auth/no-auth-event') {
-          toast('Erreur connexion : ' + e.message, 'error');
+          showLoginError('Erreur : ' + e.message);
         }
       });
     }
@@ -2263,6 +2265,18 @@ function isMobile() {
   return window.innerWidth <= 768 || /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
 }
 
+function showLoginError(msg) {
+  const errEl = document.getElementById('login-error');
+  const btn   = document.getElementById('btn-login-google');
+  if (errEl) { errEl.textContent = msg; errEl.style.display = ''; }
+  if (btn)   {
+    btn.disabled = false;
+    btn.innerHTML = GOOGLE_BTN_INNER;
+  }
+}
+
+const GOOGLE_BTN_INNER = '<svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z"/><path fill="#FBBC05" d="M3.964 10.707c-.18-.54-.282-1.117-.282-1.707s.102-1.167.282-1.707V4.961H.957C.347 6.175 0 7.55 0 9s.348 2.825.957 4.039l3.007-2.332z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.961L3.964 7.293C4.672 5.166 6.656 3.58 9 3.58z"/></svg> Se connecter avec Google';
+
 async function signInWithGoogle() {
   if (!fbAuth) return;
   const provider = new firebase.auth.GoogleAuthProvider();
@@ -2272,22 +2286,21 @@ async function signInWithGoogle() {
   if (errEl) errEl.style.display = 'none';
   if (btn)   { btn.disabled = true; btn.textContent = 'Connexion…'; }
   try {
-    if (isMobile()) {
-      await fbAuth.signInWithRedirect(provider);
-    } else {
-      await fbAuth.signInWithPopup(provider);
-    }
+    // signInWithPopup fonctionne sur desktop et mobile récent.
+    // signInWithRedirect échoue silencieusement sur iOS Safari (ITP bloque
+    // la restauration de la session après la redirection).
+    await fbAuth.signInWithPopup(provider);
   } catch (e) {
-    if (btn) {
-      btn.disabled = false;
-      btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z"/><path fill="#FBBC05" d="M3.964 10.707c-.18-.54-.282-1.117-.282-1.707s.102-1.167.282-1.707V4.961H.957C.347 6.175 0 7.55 0 9s.348 2.825.957 4.039l3.007-2.332z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.961L3.964 7.293C4.672 5.166 6.656 3.58 9 3.58z"/></svg> Se connecter avec Google';
-    }
-    if (e.code === 'auth/popup-blocked' || e.code === 'auth/popup-closed-by-user') {
-      await fbAuth.signInWithRedirect(provider);
+    if (e.code === 'auth/popup-blocked') {
+      // Popup bloquée par le navigateur → redirection comme dernier recours
+      try { await fbAuth.signInWithRedirect(provider); } catch { showLoginError('Connexion impossible. Autorisez les popups ou réessayez.'); }
     } else if (e.code === 'auth/unauthorized-domain') {
-      if (errEl) { errEl.textContent = 'Domaine non autorisé dans Firebase (Auth → Authorized domains).'; errEl.style.display = ''; }
-    } else if (e.code !== 'auth/cancelled-popup-request') {
-      if (errEl) { errEl.textContent = 'Erreur : ' + e.message; errEl.style.display = ''; }
+      showLoginError('Domaine non autorisé dans Firebase. Ajoutez-le dans Auth → Authorized domains.');
+    } else if (e.code !== 'auth/cancelled-popup-request' && e.code !== 'auth/popup-closed-by-user') {
+      showLoginError('Erreur : ' + e.message);
+    } else {
+      // Popup fermée par l'utilisateur → on remet le bouton
+      if (btn) { btn.disabled = false; btn.innerHTML = GOOGLE_BTN_INNER; }
     }
   }
 }
@@ -5613,18 +5626,7 @@ document.getElementById('btn-copy-firestore-rules')?.addEventListener('click', (
   if (pre) navigator.clipboard.writeText(pre.textContent).then(() => toast('Règles copiées !', 'success'));
 });
 
-document.getElementById('btn-guest-sign-in')?.addEventListener('click', async () => {
-  if (!fbAuth) { toast('Firebase non initialisé.', 'error'); return; }
-  const btn = document.getElementById('btn-guest-sign-in');
-  if (btn) { btn.disabled = true; btn.textContent = '⏳ Connexion…'; }
-  try {
-    await signInWithGoogle();
-  } catch (e) {
-    const errEl = document.getElementById('guest-error-msg');
-    if (errEl) { errEl.textContent = 'Erreur : ' + e.message; errEl.style.display = ''; }
-    showGuestState('login');
-  }
-});
+document.getElementById('btn-guest-sign-in')?.addEventListener('click', () => signInWithGoogle());
 
 document.getElementById('mobile-login-btn')?.addEventListener('click', () => {
   if (!getStoredFirebaseConfig()) {
