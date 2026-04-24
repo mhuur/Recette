@@ -1888,6 +1888,15 @@ function initFirebase() {
           fbDocRef = null;
         }
       });
+
+      // Récupère le résultat d'une connexion par redirection (mobile)
+      fbAuth.getRedirectResult().catch(e => {
+        if (e.code === 'auth/unauthorized-domain') {
+          toast('Domaine non autorisé dans Firebase. Ajoute-le dans Auth → Authorized domains.', 'error');
+        } else if (e.code && e.code !== 'auth/no-auth-event') {
+          toast('Erreur connexion : ' + e.message, 'error');
+        }
+      });
     }
   } catch (e) {
     toast('Erreur Firebase : ' + e.message, 'error');
@@ -2176,21 +2185,33 @@ document.getElementById('btn-remove-firebase').onclick = () => {
   setTimeout(() => location.reload(), 800);
 };
 
-document.getElementById('btn-sign-in').onclick = async () => {
+document.getElementById('btn-sign-in').onclick = () => signInWithGoogle();
+
+function isMobile() {
+  return window.innerWidth <= 768 || /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+}
+
+async function signInWithGoogle() {
   if (!fbAuth) return;
+  const provider = new firebase.auth.GoogleAuthProvider();
   try {
-    const provider = new firebase.auth.GoogleAuthProvider();
-    await fbAuth.signInWithPopup(provider);
+    if (isMobile()) {
+      // Sur mobile : redirection (plus fiable que les popups)
+      await fbAuth.signInWithRedirect(provider);
+    } else {
+      await fbAuth.signInWithPopup(provider);
+    }
   } catch (e) {
     if (e.code === 'auth/popup-blocked' || e.code === 'auth/popup-closed-by-user') {
-      toast('Popup bloquée. Autorise les popups et réessaie.', 'error');
+      // Fallback automatique vers redirection si popup bloquée
+      await fbAuth.signInWithRedirect(provider);
     } else if (e.code === 'auth/unauthorized-domain') {
-      toast('Ce domaine n\'est pas autorisé dans Firebase. Ajoute-le dans Auth → Settings → Authorized domains.', 'error');
-    } else {
+      toast('Domaine non autorisé dans Firebase. Ajoute-le dans Auth → Settings → Authorized domains.', 'error');
+    } else if (e.code !== 'auth/cancelled-popup-request') {
       toast('Erreur : ' + e.message, 'error');
     }
   }
-};
+}
 
 document.getElementById('btn-sign-out').onclick = () => {
   if (fbAuth) fbAuth.signOut();
@@ -5518,8 +5539,7 @@ document.getElementById('btn-guest-sign-in')?.addEventListener('click', async ()
   const btn = document.getElementById('btn-guest-sign-in');
   if (btn) { btn.disabled = true; btn.textContent = '⏳ Connexion…'; }
   try {
-    const provider = new firebase.auth.GoogleAuthProvider();
-    await fbAuth.signInWithPopup(provider);
+    await signInWithGoogle();
   } catch (e) {
     const errEl = document.getElementById('guest-error-msg');
     if (errEl) { errEl.textContent = 'Erreur : ' + e.message; errEl.style.display = ''; }
