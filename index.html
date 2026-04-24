@@ -258,6 +258,7 @@ label {
   align-items: center;
 }
 .toolbar-row + .toolbar-row { margin-top: 8px; }
+.filter-row-compact { flex-wrap: wrap; gap: 8px; }
 .search-input { flex: 1; min-width: 160px; }
 .filter-group {
   display: flex;
@@ -1233,6 +1234,7 @@ label {
   .modal-overlay {
     align-items: flex-end;
     padding: 0;
+    overflow: hidden;
   }
   .modal {
     border-radius: 20px 20px 0 0;
@@ -1458,54 +1460,65 @@ body.guest-mode .sidebar::after {
         <button class="btn btn-primary btn-sm" id="btn-new-recipe-inline">＋ Ajouter</button>
       </div>
       <div id="filter-panel" style="display:none; padding:10px; background:var(--surface); border:1px solid var(--border); border-radius:8px; margin-top:6px;">
-        <div class="toolbar-row" style="margin-bottom:10px;">
+        <!-- Ligne 1: checkboxes + temps max compacts -->
+        <div class="toolbar-row filter-row-compact">
           <label class="quick-filter-chk">
-            <input type="checkbox" id="filter-selection-only"> Sélection uniquement
+            <input type="checkbox" id="filter-selection-only"> Sélection
           </label>
           <label class="quick-filter-chk">
-            <input type="checkbox" id="filter-season-toggle"> Saison (mois actuel)
+            <input type="checkbox" id="filter-season-toggle"> Saison
           </label>
+          <div class="filter-group compact">
+            <label title="Prép. max (min)">🔪</label>
+            <input type="number" id="filter-prep-max" min="0" value="" placeholder="min" style="width:50px;">
+          </div>
+          <div class="filter-group compact">
+            <label title="Cuisson max (min)">🔥</label>
+            <input type="number" id="filter-cook-max" min="0" value="" placeholder="min" style="width:50px;">
+          </div>
         </div>
-        <div class="toolbar-row">
-          <div class="filter-group compact" style="width:200px;">
+        <!-- Ligne 2: notes -->
+        <div class="toolbar-row" style="margin-top:8px;">
+          <div class="filter-group compact" style="flex:1;">
             <label>Notes :</label>
             <div id="filter-rating-wrapper" style="flex:1; min-width:0;"></div>
           </div>
-          <div class="filter-group compact">
-            <label title="Prép. max (min)">🔪 max</label>
-            <input type="number" id="filter-prep-max" min="0" value="" placeholder="min" style="width:55px;">
-          </div>
-          <div class="filter-group compact">
-            <label title="Cuisson max (min)">🔥 max</label>
-            <input type="number" id="filter-cook-max" min="0" value="" placeholder="min" style="width:55px;">
-          </div>
         </div>
-        <div class="toolbar-row">
-          <div class="filter-group" style="flex:1; min-width:200px; flex-wrap:wrap;">
+        <!-- Ligne 3: types de plat -->
+        <div class="toolbar-row" style="margin-top:8px;">
+          <div class="filter-group" style="flex:1; flex-wrap:wrap;">
             <label>Types :</label>
             <div id="filter-meal-types" style="display:flex; flex-wrap:wrap; gap:4px;"></div>
           </div>
         </div>
-        <div class="toolbar-row">
-          <div class="filter-group" style="flex:1; min-width:220px;">
-            <label>✅ Contient :</label>
-            <div id="filter-include-wrapper" style="flex:1;"></div>
+        <!-- Filtres avancés (repliables sur mobile) -->
+        <details class="filter-advanced-toggle" style="margin-top:8px;">
+          <summary style="cursor:pointer; font-size:12px; color:var(--text-muted); padding:4px 0; list-style:none; display:flex; align-items:center; gap:4px;">
+            <span>▸</span> Filtres avancés (ingrédients, familles)
+          </summary>
+          <div style="margin-top:8px; display:flex; flex-direction:column; gap:8px;">
+            <div class="toolbar-row">
+              <div class="filter-group" style="flex:1; min-width:180px;">
+                <label>✅ Contient :</label>
+                <div id="filter-include-wrapper" style="flex:1;"></div>
+              </div>
+              <div class="filter-group" style="flex:1; min-width:180px;">
+                <label>❌ Sans :</label>
+                <div id="filter-exclude-wrapper" style="flex:1;"></div>
+              </div>
+            </div>
+            <div class="toolbar-row">
+              <div class="filter-group" style="flex:1; min-width:180px;">
+                <label>👪 Familles requises :</label>
+                <div id="filter-include-families-wrapper" style="flex:1;"></div>
+              </div>
+              <div class="filter-group" style="flex:1; min-width:180px;">
+                <label>🚫 Familles exclues :</label>
+                <div id="filter-exclude-families-wrapper" style="flex:1;"></div>
+              </div>
+            </div>
           </div>
-          <div class="filter-group" style="flex:1; min-width:220px;">
-            <label>❌ Sans :</label>
-            <div id="filter-exclude-wrapper" style="flex:1;"></div>
-          </div>
-        </div>
-        <div class="toolbar-row">
-          <div class="filter-group" style="flex:1; min-width:220px;">
-            <label>👪 Familles requises :</label>
-            <div id="filter-include-families-wrapper" style="flex:1;"></div>
-          </div>
-          <div class="filter-group" style="flex:1; min-width:220px;">
-            <label>🚫 Familles exclues :</label>
-            <div id="filter-exclude-families-wrapper" style="flex:1;"></div>
-          </div>
-        </div>
+        </details>
       </div>
     </div>
 
@@ -1763,7 +1776,7 @@ body.guest-mode .sidebar::after {
     <div class="modal-body">
       <div class="form-group">
         <label>Nom de la recette *</label>
-        <input type="text" id="recipe-name" placeholder="Ex: Tarte aux pommes" autocomplete="off">
+        <input type="text" id="recipe-name" placeholder="Ex: Tarte aux pommes" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false">
       </div>
       <div class="form-grid">
         <div class="form-group">
@@ -1800,15 +1813,15 @@ body.guest-mode .sidebar::after {
         </div>
         <div id="origin-book" class="origin-fields">
           <div class="form-grid">
-            <input type="text" id="origin-book-name" placeholder="Nom du livre" autocomplete="off">
-            <input type="text" id="origin-book-page" placeholder="Page" style="max-width:120px;" autocomplete="off">
+            <input type="text" id="origin-book-name" placeholder="Nom du livre" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false">
+            <input type="text" id="origin-book-page" placeholder="Page" style="max-width:120px;" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false">
           </div>
         </div>
         <div id="origin-url" class="origin-fields" style="display:none;">
-          <input type="url" id="origin-url-value" placeholder="https://...">
+          <input type="url" id="origin-url-value" placeholder="https://..." autocomplete="off">
         </div>
         <div id="origin-other" class="origin-fields" style="display:none;">
-          <input type="text" id="origin-other-value" placeholder="Source" autocomplete="off">
+          <input type="text" id="origin-other-value" placeholder="Source" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false">
         </div>
       </div>
       <div class="form-group full">
@@ -1946,14 +1959,48 @@ service cloud.firestore {
       <span class="modal-title" id="merge-modal-title">Fusionner</span>
       <button class="modal-close" id="merge-modal-close">×</button>
     </div>
-    <div class="modal-body" style="padding:16px;">
-      <p id="merge-modal-desc" style="font-size:13px; color:var(--text-muted); margin:0 0 12px;"></p>
-      <input type="text" id="merge-search-input" placeholder="Rechercher…" autocomplete="off"
-             style="width:100%; margin-bottom:10px;">
-      <div id="merge-items-list" style="max-height:300px; overflow-y:auto; display:flex; flex-direction:column; gap:4px;"></div>
+    <!-- Étape 1 : recherche -->
+    <div id="merge-step-search">
+      <div class="modal-body" style="padding:16px;">
+        <p id="merge-modal-desc" style="font-size:13px; color:var(--text-muted); margin:0 0 12px;"></p>
+        <input type="text" id="merge-search-input" placeholder="Rechercher…" autocomplete="off"
+               style="width:100%; margin-bottom:10px;">
+        <div id="merge-items-list" style="max-height:300px; overflow-y:auto; display:flex; flex-direction:column; gap:4px;"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" id="merge-modal-cancel">Annuler</button>
+      </div>
+    </div>
+    <!-- Étape 2 : confirmation -->
+    <div id="merge-step-confirm" style="display:none;">
+      <div class="modal-body" style="padding:20px;">
+        <div style="text-align:center; padding:10px 0;">
+          <div id="merge-confirm-source" style="font-size:16px; font-weight:600; color:var(--danger);"></div>
+          <div style="font-size:24px; margin:8px 0; color:var(--text-muted);">↓</div>
+          <div id="merge-confirm-target" style="font-size:16px; font-weight:600; color:var(--success);"></div>
+        </div>
+        <p id="merge-confirm-detail" style="font-size:13px; color:var(--text-muted); text-align:center; margin:12px 0 0;"></p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" id="merge-confirm-back">← Retour</button>
+        <button class="btn btn-primary" id="merge-confirm-ok">✓ Fusionner</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de confirmation générique -->
+<div class="modal-overlay" id="confirm-modal">
+  <div class="modal" style="max-width:360px;">
+    <div class="modal-header">
+      <span class="modal-title" id="confirm-modal-title">Confirmer</span>
+    </div>
+    <div class="modal-body" style="padding:18px 20px;">
+      <p id="confirm-modal-msg" style="margin:0; font-size:14px; line-height:1.5; color:var(--text);"></p>
     </div>
     <div class="modal-footer">
-      <button class="btn" id="merge-modal-cancel">Annuler</button>
+      <button class="btn" id="confirm-modal-cancel">Annuler</button>
+      <button class="btn btn-danger" id="confirm-modal-ok">Supprimer</button>
     </div>
   </div>
 </div>
@@ -2934,6 +2981,9 @@ function createChipsInput(wrapper, options) {
   input.type = 'text';
   input.className = 'chips-inner-input';
   input.autocomplete = 'off';
+  input.setAttribute('autocorrect', 'off');
+  input.setAttribute('autocapitalize', 'none');
+  input.setAttribute('spellcheck', 'false');
 
   function renderChips() {
     // Retire tous les chips mais conserve l'input
@@ -3743,7 +3793,7 @@ function renderRecipes() {
       if (o.innerHTML) body.appendChild(o);
     }
 
-    // Édition inline des types de plat
+    // Types de plat : chips cliquables + bouton "+" pour ouvrir l'ajout
     const mealRow = document.createElement('div');
     mealRow.style.cssText = 'display:flex; flex-wrap:wrap; gap:6px; align-items:center; margin-top:10px; padding-top:10px; border-top:1px solid var(--border);';
 
@@ -3756,12 +3806,38 @@ function renderRecipes() {
     mealChipsArea.style.cssText = 'display:flex; flex-wrap:wrap; gap:4px; flex:1; align-items:center;';
     mealRow.appendChild(mealChipsArea);
 
+    // Input d'ajout, masqué par défaut
+    const addWrap = document.createElement('div');
+    addWrap.style.cssText = 'display:none; min-width:120px; max-width:180px;';
+    mealRow.appendChild(addWrap);
+    let mealCtrl = null;
+
+    function showMealInput() {
+      addWrap.style.display = '';
+      if (!mealCtrl) {
+        mealCtrl = createChipsInput(addWrap, {
+          getItems: () => state.mealTypes.map(m => ({ name: m, inSeason: (r.mealTypes||[]).includes(m) })),
+          onCreate: name => { findOrCreateMealType(name); return name; },
+          initialValues: [],
+          placeholder: '+ type...',
+          onChange: names => {
+            r.mealTypes = r.mealTypes || [];
+            names.forEach(n => { if (!r.mealTypes.includes(n)) r.mealTypes.push(n); });
+            save(); fbSchedulePush(); refreshMealChips();
+          }
+        });
+      }
+      // focus the inner input
+      const inp = addWrap.querySelector('input');
+      if (inp) { inp.focus(); }
+    }
+
     function refreshMealChips() {
       mealChipsArea.innerHTML = '';
       (r.mealTypes || []).forEach(m => {
         const chip = document.createElement('span');
         chip.className = 'chip';
-        chip.textContent = m;
+        chip.textContent = m + ' ×';
         chip.title = 'Retirer';
         chip.style.cursor = 'pointer';
         chip.onclick = e => {
@@ -3771,21 +3847,13 @@ function renderRecipes() {
         };
         mealChipsArea.appendChild(chip);
       });
-      // Add input
-      const addWrap = document.createElement('div');
-      addWrap.style.cssText = 'min-width:100px; max-width:160px;';
-      mealChipsArea.appendChild(addWrap);
-      createChipsInput(addWrap, {
-        getItems: () => state.mealTypes.map(m => ({ name: m, inSeason: (r.mealTypes||[]).includes(m) })),
-        onCreate: name => { findOrCreateMealType(name); return name; },
-        initialValues: [],
-        placeholder: '+ type...',
-        onChange: names => {
-          r.mealTypes = r.mealTypes || [];
-          names.forEach(n => { if (!r.mealTypes.includes(n)) r.mealTypes.push(n); });
-          save(); fbSchedulePush(); refreshMealChips();
-        }
-      });
+      // Bouton "+"
+      const addBtn = document.createElement('span');
+      addBtn.style.cssText = 'font-size:18px; color:var(--primary); cursor:pointer; line-height:1; padding:2px 4px;';
+      addBtn.textContent = '+';
+      addBtn.title = 'Ajouter un type';
+      addBtn.onclick = e => { e.stopPropagation(); showMealInput(); };
+      mealChipsArea.appendChild(addBtn);
     }
     refreshMealChips();
     body.appendChild(mealRow);
@@ -4171,14 +4239,16 @@ document.getElementById('btn-save-recipe').onclick = () => {
 
 document.getElementById('btn-delete-recipe').onclick = () => {
   if (!currentRecipeId) return;
-  if (!confirm('Supprimer définitivement cette recette ?')) return;
-  state.recipes = state.recipes.filter(r => r.id !== currentRecipeId);
-  state.selectedRecipeIds = state.selectedRecipeIds.filter(id => id !== currentRecipeId);
-  closeAllModals();
-  save();
-  renderRecipes();
-  buildFilterBar();
-  toast('Recette supprimée', 'success');
+  const r = state.recipes.find(x => x.id === currentRecipeId);
+  showConfirm('Supprimer la recette', 'Supprimer définitivement « ' + (r ? r.name : 'cette recette') + ' » ?', 'Supprimer', () => {
+    state.recipes = state.recipes.filter(r => r.id !== currentRecipeId);
+    state.selectedRecipeIds = state.selectedRecipeIds.filter(id => id !== currentRecipeId);
+    closeAllModals();
+    save();
+    renderRecipes();
+    buildFilterBar();
+    toast('Recette supprimée', 'success');
+  });
 };
 
 function closeAllModals() {
@@ -4563,15 +4633,19 @@ document.getElementById('btn-clear-selection').onclick = () => {
 
 // ---- Modal de fusion générique ----
 let _mergeCallback = null;
+let _mergeSourceLabel = '';
 
-function openMergeModal(title, desc, items, onSelect) {
+function openMergeModal(title, desc, sourceLabel, items, onSelect) {
   _mergeCallback = onSelect;
+  _mergeSourceLabel = sourceLabel;
   document.getElementById('merge-modal-title').textContent = title;
   document.getElementById('merge-modal-desc').textContent = desc;
   document.getElementById('merge-search-input').value = '';
+  document.getElementById('merge-step-search').style.display = '';
+  document.getElementById('merge-step-confirm').style.display = 'none';
   renderMergeItems(items, '');
   document.getElementById('merge-modal').classList.add('active');
-  document.getElementById('merge-search-input').focus();
+  setTimeout(() => document.getElementById('merge-search-input').focus(), 50);
 
   document.getElementById('merge-search-input').oninput = () => {
     renderMergeItems(items, document.getElementById('merge-search-input').value.toLowerCase());
@@ -4585,8 +4659,12 @@ function renderMergeItems(items, q) {
   filtered.forEach(it => {
     const btn = document.createElement('button');
     btn.className = 'btn';
-    btn.style.cssText = 'text-align:left; justify-content:flex-start; padding:10px 14px; font-size:14px;';
-    btn.textContent = it.label;
+    btn.style.cssText = 'text-align:left; justify-content:flex-start; padding:10px 14px; font-size:14px; background:var(--surface);';
+    const arrow = document.createElement('span');
+    arrow.style.cssText = 'color:var(--text-dim); margin-right:6px;';
+    arrow.textContent = '→';
+    btn.appendChild(arrow);
+    btn.appendChild(document.createTextNode(it.label));
     if (it.sub) {
       const sub = document.createElement('span');
       sub.style.cssText = 'font-size:11px; color:var(--text-muted); margin-left:8px;';
@@ -4594,8 +4672,16 @@ function renderMergeItems(items, q) {
       btn.appendChild(sub);
     }
     btn.onclick = () => {
-      document.getElementById('merge-modal').classList.remove('active');
-      if (_mergeCallback) _mergeCallback(it);
+      // Afficher l'étape de confirmation dans le modal
+      document.getElementById('merge-step-search').style.display = 'none';
+      document.getElementById('merge-step-confirm').style.display = '';
+      document.getElementById('merge-confirm-source').textContent = _mergeSourceLabel;
+      document.getElementById('merge-confirm-target').textContent = it.label;
+      document.getElementById('merge-confirm-detail').textContent = it.detail || '';
+      document.getElementById('merge-confirm-ok').onclick = () => {
+        document.getElementById('merge-modal').classList.remove('active');
+        if (_mergeCallback) _mergeCallback(it);
+      };
     };
     list.appendChild(btn);
   });
@@ -4606,21 +4692,44 @@ function renderMergeItems(items, q) {
 
 document.getElementById('merge-modal-close').onclick = () => document.getElementById('merge-modal').classList.remove('active');
 document.getElementById('merge-modal-cancel').onclick = () => document.getElementById('merge-modal').classList.remove('active');
+document.getElementById('merge-confirm-back').onclick = () => {
+  document.getElementById('merge-step-search').style.display = '';
+  document.getElementById('merge-step-confirm').style.display = 'none';
+};
+
+// ---- Modal de confirmation générique ----
+let _confirmOkCallback = null;
+function showConfirm(title, msg, okLabel, onOk) {
+  document.getElementById('confirm-modal-title').textContent = title;
+  document.getElementById('confirm-modal-msg').textContent = msg;
+  document.getElementById('confirm-modal-ok').textContent = okLabel || 'Confirmer';
+  _confirmOkCallback = onOk;
+  document.getElementById('confirm-modal').classList.add('active');
+}
+document.getElementById('confirm-modal-ok').onclick = () => {
+  document.getElementById('confirm-modal').classList.remove('active');
+  if (_confirmOkCallback) _confirmOkCallback();
+};
+document.getElementById('confirm-modal-cancel').onclick = () => {
+  document.getElementById('confirm-modal').classList.remove('active');
+};
 
 function openMergeTypeDialog(sourceType) {
   const others = state.ingredientTypes.filter(t => t.id !== sourceType.id).sort((a,b) => a.name.localeCompare(b.name, 'fr'));
   if (others.length === 0) { toast('Aucun autre type disponible pour fusionner.', 'error'); return; }
   const usage = state.ingredients.filter(i => i.typeId === sourceType.id).length;
-  const items = others.map(t => ({
-    id: t.id, label: t.name,
-    sub: (() => { const u = state.ingredients.filter(i => i.typeId === t.id).length; return u > 0 ? u + ' ingrédient' + (u > 1 ? 's' : '') : ''; })()
-  }));
+  const items = others.map(t => {
+    const u = state.ingredients.filter(i => i.typeId === t.id).length;
+    return { id: t.id, label: t.name,
+      sub: u > 0 ? u + ' ingrédient' + (u > 1 ? 's' : '') : '',
+      detail: usage + ' ingrédient(s) de « ' + sourceType.name + ' » seront réaffectés à « ' + t.name + ' ».' };
+  });
   openMergeModal(
-    'Fusionner « ' + sourceType.name + ' »',
-    usage + ' ingrédient(s) seront réaffectés. Choisir le type cible :',
+    'Fusionner le type',
+    'Choisir le type cible (« ' + sourceType.name + ' » sera supprimé) :',
+    sourceType.name,
     items,
     target => {
-      if (!confirm('Fusionner « ' + sourceType.name + ' » → « ' + target.label + ' » ?')) return;
       state.ingredients.forEach(i => { if (i.typeId === sourceType.id) i.typeId = target.id; });
       state.ingredientTypes = state.ingredientTypes.filter(x => x.id !== sourceType.id);
       save(); renderDataTab(); renderRecipes();
@@ -4633,21 +4742,20 @@ function openMergeIngredientDialog(sourceIng) {
   const others = [...state.ingredients].filter(i => i.id !== sourceIng.id).sort((a,b) => a.name.localeCompare(b.name, 'fr'));
   if (others.length === 0) { toast('Aucun autre ingrédient disponible.', 'error'); return; }
   const usage = state.recipes.filter(r => (r.ingredients||[]).some(i => i.ingredientId === sourceIng.id)).length;
-  const items = others.map(i => ({
-    id: i.id, label: i.name,
-    sub: (() => {
-      const u = state.recipes.filter(r => (r.ingredients||[]).some(x => x.ingredientId === i.id)).length;
-      return u > 0 ? u + ' recette' + (u > 1 ? 's' : '') : '';
-    })()
-  }));
+  const items = others.map(i => {
+    const u = state.recipes.filter(r => (r.ingredients||[]).some(x => x.ingredientId === i.id)).length;
+    return { id: i.id, label: i.name,
+      sub: u > 0 ? u + ' recette' + (u > 1 ? 's' : '') : '',
+      detail: '« ' + sourceIng.name + ' » sera remplacé par « ' + i.name + ' » dans ' + usage + ' recette(s). « ' + sourceIng.name + ' » sera supprimé.' };
+  });
   openMergeModal(
-    'Fusionner « ' + sourceIng.name + ' »',
-    'Utilisé dans ' + usage + ' recette(s). Choisir l\'ingrédient cible (le nom cible sera conservé) :',
+    'Fusionner un ingrédient',
+    'Choisir l\'ingrédient qui remplacera « ' + sourceIng.name + ' » :',
+    sourceIng.name,
     items,
     target => {
       const targetIng = state.ingredients.find(i => i.id === target.id);
       if (!targetIng) return;
-      if (!confirm('Fusionner « ' + sourceIng.name + ' » → « ' + targetIng.name + ' » ?\n' + usage + ' recette(s) seront mises à jour.')) return;
       state.recipes.forEach(r => { (r.ingredients||[]).forEach(i => { if (i.ingredientId === sourceIng.id) i.ingredientId = targetIng.id; }); });
       targetIng.seasonMonths = [...new Set([...(targetIng.seasonMonths||[]), ...(sourceIng.seasonMonths||[])])];
       targetIng.familyIds = [...new Set([...(targetIng.familyIds||[]), ...(sourceIng.familyIds||[])])];
@@ -4692,15 +4800,15 @@ function renderDataTab() {
       delBtn.textContent = '🗑';
       delBtn.title = 'Supprimer';
       delBtn.onclick = () => {
-        if (usage > 0) { if (!confirm('Cet ingrédient est utilisé dans ' + usage + ' recette(s). Le supprimer aussi de ces recettes ?')) return; }
-        else if (!confirm('Supprimer « ' + ing.name + ' » ?')) return;
-        el.remove();
-        state.ingredients = state.ingredients.filter(i => i.id !== ing.id);
-        state.recipes.forEach(r => {
-          r.ingredients = (r.ingredients||[]).filter(i => i.ingredientId !== ing.id);
+        const msg = usage > 0
+          ? 'Supprimer « ' + ing.name + ' » ? Il est utilisé dans ' + usage + ' recette(s).'
+          : 'Supprimer l\'ingrédient « ' + ing.name + ' » ?';
+        showConfirm('Supprimer l\'ingrédient', msg, 'Supprimer', () => {
+          el.remove();
+          state.ingredients = state.ingredients.filter(i => i.id !== ing.id);
+          state.recipes.forEach(r => { r.ingredients = (r.ingredients||[]).filter(i => i.ingredientId !== ing.id); });
+          save(); rerenderAll();
         });
-        save();
-        rerenderAll();
       };
       const mergeIngBtn = document.createElement('button');
       mergeIngBtn.className = 'btn btn-xs';
