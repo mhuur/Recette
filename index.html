@@ -3444,7 +3444,7 @@ function renderSeasonTab() {
           // Modif state
           ing.seasonMonths = (ing.seasonMonths || []).filter(m => m !== monthNum);
           save();
-          // Re-render pour mettre à jour le compteur et les autres vues
+          fbSchedulePush();
           rerenderAll();
         });
         list.appendChild(item);
@@ -3476,6 +3476,7 @@ function renderSeasonTab() {
           }
         });
         save();
+        fbSchedulePush();
         requestAnimationFrame(() => rerenderAll());
       }
     });
