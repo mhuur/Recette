@@ -8,6 +8,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
 <style>
 :root {
   --bg: #0a1628;
@@ -1095,6 +1096,94 @@ label {
   .modal { border-radius: 10px; }
   .modal-body { padding: 14px; }
 }
+
+/* ============================================================
+   BOUTON CONNEXION MOBILE
+   ============================================================ */
+#mobile-login-btn {
+  display: none;
+  padding: 5px 12px;
+  font-size: 12px;
+  margin-left: auto;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+@media (max-width: 768px) {
+  #mobile-login-btn.visible { display: block; }
+}
+
+/* ============================================================
+   ÉCRAN INVITÉ (overlay plein écran)
+   ============================================================ */
+#guest-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--bg);
+  z-index: 2000;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  text-align: center;
+}
+#guest-overlay.active { display: flex; }
+.guest-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 32px 24px;
+  max-width: 380px;
+  width: 100%;
+}
+.guest-card h2 { margin: 0 0 8px; font-size: 20px; }
+.guest-card .guest-subtitle { color: var(--text-muted); font-size: 14px; margin: 0 0 24px; line-height: 1.5; }
+.guest-state-icon { font-size: 44px; margin-bottom: 14px; display: block; }
+
+/* Panneau gestion des accès (admin) */
+.access-request-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: var(--bg);
+  border-radius: 8px;
+  margin-bottom: 6px;
+}
+.req-info { flex: 1; min-width: 0; }
+.req-name { font-weight: 500; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.req-email { font-size: 11px; color: var(--text-muted); }
+.req-badge { font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 4px; white-space: nowrap; flex-shrink: 0; }
+.req-badge.pending  { background: #fff3cd; color: #856404; }
+.req-badge.approved { background: #d1e7dd; color: #0f5132; }
+.req-badge.denied   { background: #f8d7da; color: #842029; }
+#access-requests-badge {
+  background: #e74c3c;
+  color: white;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 10px;
+  margin-left: 6px;
+  display: none;
+  vertical-align: middle;
+}
+
+/* Mode invité : masquer les contrôles d'édition */
+body.guest-mode .fab { display: none !important; }
+body.guest-mode .recipe-actions { display: none !important; }
+body.guest-mode .tab-btn[data-tab="data"],
+body.guest-mode .tab-btn[data-tab="notes"],
+body.guest-mode .tab-btn[data-tab="shopping"] { display: none !important; }
+body.guest-mode .sidebar::after {
+  content: '👁 Lecture seule';
+  font-size: 11px;
+  color: var(--text-muted);
+  padding: 3px 8px;
+  background: var(--surface);
+  border-radius: 4px;
+  flex-shrink: 0;
+}
 </style>
 </head>
 <body>
@@ -1107,6 +1196,7 @@ label {
     <button class="tab-btn" data-tab="season">Saison</button>
     <button class="tab-btn" data-tab="data">Données</button>
     <button class="tab-btn" data-tab="notes">Notes & bugs</button>
+    <button class="btn btn-primary" id="mobile-login-btn">🔑 Connexion</button>
   </nav>
   <div class="sidebar-user" id="sidebar-user">
     <div class="user-avatar-wrapper" id="user-avatar-wrapper">
@@ -1346,6 +1436,67 @@ label {
       </div>
     </div>
 
+    <!-- Section Accès Invités (admin seulement, visible quand connecté) -->
+    <div class="data-section" id="guest-mgmt-section" style="display:none;">
+      <h3>🔑 Accès invités <span id="access-requests-badge"></span></h3>
+      <p style="font-size:13px; color:var(--text-muted);">Partagez vos recettes avec d'autres personnes via un lien. Après leur connexion Google, vous recevrez une notification et pourrez approuver ou refuser l'accès.</p>
+
+      <div style="margin-bottom:16px;">
+        <button class="btn btn-primary" id="btn-gen-share-link">🔗 Générer le lien de partage</button>
+        <div id="share-link-box" style="display:none; margin-top:10px; background:var(--bg); border-radius:8px; padding:10px;">
+          <div style="font-size:12px; color:var(--text-muted); margin-bottom:6px;">Envoyez ce lien aux personnes à qui vous souhaitez donner accès :</div>
+          <div style="display:flex; gap:6px;">
+            <input type="text" id="share-link-value" readonly style="font-size:11px; font-family:monospace; background:var(--surface);">
+            <button class="btn btn-sm" id="btn-copy-share-link">📋</button>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-bottom:16px;">
+        <details id="emailjs-details">
+          <summary style="cursor:pointer; font-size:13px; font-weight:500; padding:6px 0; color:var(--text);">⚙ Notifications par email (EmailJS)</summary>
+          <div style="margin-top:10px; background:var(--bg); border-radius:8px; padding:12px;">
+            <p style="font-size:12px; color:var(--text-muted); margin:0 0 10px;">Créez un compte gratuit sur <a href="https://www.emailjs.com/" target="_blank" style="color:var(--primary);">emailjs.com</a> et configurez un template avec les variables : <code>guest_name</code>, <code>guest_email</code>, <code>approve_url</code>, <code>deny_url</code>.</p>
+            <div class="form-grid">
+              <div class="form-group">
+                <label>Clé publique</label>
+                <input type="text" id="ejs-pubkey" placeholder="user_xxxxx">
+              </div>
+              <div class="form-group">
+                <label>Service ID</label>
+                <input type="text" id="ejs-service" placeholder="service_xxxxx">
+              </div>
+              <div class="form-group">
+                <label>Template ID</label>
+                <input type="text" id="ejs-template" placeholder="template_xxxxx">
+              </div>
+              <div class="form-group">
+                <label>Votre adresse email</label>
+                <input type="email" id="ejs-to-email" placeholder="moi@example.com">
+              </div>
+            </div>
+            <button class="btn btn-sm btn-primary" id="btn-save-emailjs">Enregistrer</button>
+          </div>
+        </details>
+      </div>
+
+      <div style="margin-bottom:16px;">
+        <details id="firestore-rules-details">
+          <summary style="cursor:pointer; font-size:13px; font-weight:500; padding:6px 0; color:var(--text);">📋 Règles Firestore requises</summary>
+          <div style="margin-top:10px;">
+            <p style="font-size:12px; color:var(--text-muted); margin-bottom:8px;">Copiez ces règles dans votre <a href="https://console.firebase.google.com/" target="_blank" style="color:var(--primary);">console Firebase → Firestore → Règles</a>.</p>
+            <pre id="firestore-rules-text" style="background:var(--bg); padding:10px; border-radius:6px; font-size:10px; overflow-x:auto; white-space:pre-wrap; word-break:break-all; max-height:200px; overflow-y:auto; text-align:left;"></pre>
+            <button class="btn btn-sm" id="btn-copy-firestore-rules" style="margin-top:6px;">📋 Copier les règles</button>
+          </div>
+        </details>
+      </div>
+
+      <div>
+        <h4 style="margin:0 0 10px; font-size:14px;">Demandes d'accès</h4>
+        <div id="access-requests-list" style="font-size:13px; color:var(--text-muted);">Aucune demande pour l'instant.</div>
+      </div>
+    </div>
+
     <div class="data-section">
       <h3>🧂 Ingrédients <span id="ing-count-badge" class="count-badge" style="background:var(--surface);">0</span></h3>
       <div id="ingredients-list" class="data-list"></div>
@@ -1381,6 +1532,17 @@ label {
     </div>
   </section>
 </main>
+</div>
+
+<!-- Overlay mode invité -->
+<div id="guest-overlay">
+  <div class="guest-card">
+    <span id="guest-state-icon" class="guest-state-icon">🍽</span>
+    <h2 id="guest-title">Recettes partagées</h2>
+    <p class="guest-subtitle" id="guest-subtitle">Connectez-vous avec votre compte Google pour accéder aux recettes.</p>
+    <button class="btn btn-primary" id="btn-guest-sign-in" style="width:100%;">🔑 Se connecter avec Google</button>
+    <p id="guest-error-msg" style="color:#e74c3c; font-size:13px; margin-top:12px; display:none;"></p>
+  </div>
 </div>
 
 <button class="fab" id="btn-new-recipe" title="Nouvelle recette">+</button>
@@ -1713,6 +1875,10 @@ function initFirebase() {
 
       fbAuth.onAuthStateChanged(user => {
         fbUser = user;
+        if (guestMode) {
+          handleGuestAccess(user);
+          return;
+        }
         renderFirebaseUI();
         if (user) {
           fbDocRef = getFirebaseDocRef(user);
@@ -1946,11 +2112,26 @@ function renderFirebaseUI() {
     if (nm) nm.textContent = fbUser.displayName || fbUser.email;
     if (em) em.textContent = fbUser.email || '';
     renderSharedSection();
+    // Afficher le panneau de gestion des accès invités (admin uniquement)
+    const guestMgmt = document.getElementById('guest-mgmt-section');
+    if (guestMgmt) guestMgmt.style.display = '';
+    // Charger config EmailJS dans les champs
+    loadEmailJSConfig();
+    // Souscrire aux demandes d'accès en temps réel
+    subscribeToAccessRequests();
+    // Traiter un éventuel lien d'approbation/refus
+    if (pendingApprovalAction) processApprovalLink();
   } else {
     sidebarUser.classList.remove('active');
     const ss = document.getElementById('share-section');
     if (ss) ss.style.display = 'none';
+    const guestMgmt = document.getElementById('guest-mgmt-section');
+    if (guestMgmt) guestMgmt.style.display = 'none';
   }
+
+  // Bouton connexion mobile : visible quand non connecté
+  const mobileBtn = document.getElementById('mobile-login-btn');
+  if (mobileBtn) mobileBtn.classList.toggle('visible', !signedIn);
 }
 
 document.getElementById('btn-setup-firebase').onclick = () => openFirebaseModal();
@@ -4994,8 +5175,408 @@ function doExcelImport(headers, dataRows, selects) {
 }
 
 /* ========================================================================
+   SYSTÈME D'ACCÈS INVITÉ
+   ======================================================================== */
+const EMAILJS_STORAGE_KEY = 'mhuur_emailjs_v1';
+
+let guestMode = false;
+let guestAdminUid = null;
+let guestAdminDataPath = 'personal';
+let guestAdminSpace = null;
+let accessRequestsUnsubscribe = null;
+let pendingApprovalAction = null;
+
+function getEmailJSConfig() {
+  try { return JSON.parse(localStorage.getItem(EMAILJS_STORAGE_KEY) || 'null'); } catch { return null; }
+}
+function setEmailJSConfigStored(cfg) { localStorage.setItem(EMAILJS_STORAGE_KEY, JSON.stringify(cfg)); }
+
+// --- Détection du mode invité (lien de partage dans le hash) ---
+function detectGuestMode() {
+  const hash = location.hash;
+  if (!hash) return false;
+
+  // Lien d'approbation/refus : #approve=UID&admin=ADMIN_UID ou #deny=UID&admin=ADMIN_UID
+  const approveMatch = hash.match(/[#&]approve=([^&]+)/);
+  const denyMatch    = hash.match(/[#&]deny=([^&]+)/);
+  const adminMatch   = hash.match(/[#&]admin=([^&]+)/);
+  if (approveMatch || denyMatch) {
+    pendingApprovalAction = {
+      action:   approveMatch ? 'approve' : 'deny',
+      uid:      (approveMatch || denyMatch)[1],
+      adminUid: adminMatch ? adminMatch[1] : null
+    };
+    history.replaceState(null, '', location.pathname);
+    return false;
+  }
+
+  // Lien de partage : #guestAccess=BASE64
+  const shareMatch = hash.match(/^#guestAccess=([A-Za-z0-9+/=_-]+)/);
+  if (!shareMatch) return false;
+
+  try {
+    const raw = atob(shareMatch[1].replace(/-/g, '+').replace(/_/g, '/'));
+    const data = JSON.parse(raw);
+    if (!data.config || !data.adminUid) return false;
+
+    setStoredFirebaseConfig(data.config);
+    guestAdminUid      = data.adminUid;
+    guestAdminDataPath = data.dataPath || 'personal';
+    guestAdminSpace    = data.space || null;
+    guestMode          = true;
+    history.replaceState(null, '', location.pathname);
+    return true;
+  } catch (e) {
+    console.error('Lien de partage invalide :', e);
+    return false;
+  }
+}
+
+function parseHashParams(hash) {
+  const result = {};
+  hash.replace(/^#/, '').split('&').forEach(pair => {
+    const [k, v] = pair.split('=');
+    if (k) result[decodeURIComponent(k)] = decodeURIComponent(v || '');
+  });
+  return result;
+}
+
+// --- Affichage des états de l'écran invité ---
+function showGuestState(state, msg) {
+  const icon     = document.getElementById('guest-state-icon');
+  const title    = document.getElementById('guest-title');
+  const subtitle = document.getElementById('guest-subtitle');
+  const btn      = document.getElementById('btn-guest-sign-in');
+  const err      = document.getElementById('guest-error-msg');
+  if (err) err.style.display = 'none';
+
+  const states = {
+    login:    { icon:'🍽', title:'Recettes partagées',   sub:'Connectez-vous avec votre compte Google pour accéder aux recettes.', showBtn:true },
+    loading:  { icon:'⏳', title:'Connexion…',           sub:'Vérification de vos accès…', showBtn:false },
+    pending:  { icon:'⏳', title:'Demande envoyée',       sub:'Votre demande a été transmise. Vous serez notifié(e) une fois approuvé(e).', showBtn:false },
+    approved: { icon:'✅', title:'Accès accordé !',       sub:'Chargement de vos recettes…', showBtn:false },
+    denied:   { icon:'🚫', title:'Accès refusé',          sub:'Votre demande d\'accès a été refusée.', showBtn:false },
+    error:    { icon:'⚠️', title:'Erreur',               sub: msg || 'Une erreur est survenue.', showBtn:true }
+  };
+
+  const s = states[state] || states.error;
+  if (icon)     icon.textContent     = s.icon;
+  if (title)    title.textContent    = s.title;
+  if (subtitle) subtitle.textContent = s.sub;
+  if (btn) {
+    btn.style.display = s.showBtn ? '' : 'none';
+    btn.disabled = false;
+    btn.textContent = state === 'error' ? '🔄 Réessayer' : '🔑 Se connecter avec Google';
+  }
+}
+
+// --- Gestion de l'état d'authentification pour un invité ---
+async function handleGuestAccess(user) {
+  if (!user) {
+    showGuestState('login');
+    return;
+  }
+  showGuestState('loading');
+
+  try {
+    const reqRef  = fbDb.collection('accessRequests').doc(user.uid);
+    const reqSnap = await reqRef.get();
+
+    if (reqSnap.exists) {
+      const d = reqSnap.data();
+      if (d.adminUid !== guestAdminUid) {
+        // Demande pour un autre admin → créer une nouvelle demande
+        await createAccessRequest(user, reqRef);
+      } else if (d.status === 'approved') {
+        showGuestState('approved');
+        await loadGuestData();
+      } else if (d.status === 'denied') {
+        showGuestState('denied');
+      } else {
+        showGuestState('pending');
+        listenForAccessStatusChange(reqRef);
+      }
+    } else {
+      await createAccessRequest(user, reqRef);
+    }
+  } catch (e) {
+    console.error('Erreur vérification accès invité :', e);
+    showGuestState('error', 'Erreur : ' + e.message);
+  }
+}
+
+async function createAccessRequest(user, reqRef) {
+  await reqRef.set({
+    adminUid:      guestAdminUid,
+    guestEmail:    user.email,
+    guestName:     user.displayName || user.email,
+    guestPhotoURL: user.photoURL || '',
+    status:        'pending',
+    requestedAt:   firebase.firestore.FieldValue.serverTimestamp()
+  });
+  showGuestState('pending');
+  sendEmailNotification(user);
+  listenForAccessStatusChange(reqRef);
+}
+
+function listenForAccessStatusChange(reqRef) {
+  const unsub = reqRef.onSnapshot(snap => {
+    if (!snap.exists) return;
+    const s = snap.data().status;
+    if (s === 'approved') { unsub(); showGuestState('approved'); loadGuestData(); }
+    else if (s === 'denied') { unsub(); showGuestState('denied'); }
+  });
+}
+
+async function sendEmailNotification(user) {
+  const cfg = getEmailJSConfig();
+  if (!cfg || !cfg.pubkey || !cfg.service || !cfg.template || !cfg.toEmail) return;
+  const base  = location.origin + location.pathname;
+  const uid   = user.uid;
+  const admin = guestAdminUid;
+  try {
+    if (typeof emailjs !== 'undefined') {
+      emailjs.init(cfg.pubkey);
+      await emailjs.send(cfg.service, cfg.template, {
+        to_email:    cfg.toEmail,
+        guest_name:  user.displayName || user.email,
+        guest_email: user.email,
+        approve_url: base + '#approve=' + uid + '&admin=' + admin,
+        deny_url:    base + '#deny='    + uid + '&admin=' + admin
+      });
+    }
+  } catch (e) {
+    console.warn('Notification email échouée :', e);
+  }
+}
+
+async function loadGuestData() {
+  try {
+    const docRef = (guestAdminDataPath === 'shared' && guestAdminSpace)
+      ? fbDb.collection('sharedData').doc(guestAdminSpace)
+      : fbDb.collection('users').doc(guestAdminUid).collection('app').doc('data');
+
+    const snap = await docRef.get();
+    if (snap.exists) applyCloudData(snap.data());
+
+    document.getElementById('guest-overlay').classList.remove('active');
+    document.body.classList.add('guest-mode');
+
+    // Synchronisation temps réel (lecture seule)
+    docRef.onSnapshot(snap => {
+      if (snap.exists && !snap.metadata.hasPendingWrites) applyCloudData(snap.data());
+    });
+  } catch (e) {
+    showGuestState('error', 'Impossible de charger les recettes : ' + e.message);
+  }
+}
+
+// --- Traitement d'un lien d'approbation/refus ---
+async function processApprovalLink() {
+  if (!pendingApprovalAction || !fbUser || !fbDb) return;
+  const { action, uid, adminUid } = pendingApprovalAction;
+  if (adminUid && fbUser.uid !== adminUid) {
+    toast('Vous n\'êtes pas l\'administrateur de cet espace.', 'error');
+    pendingApprovalAction = null;
+    return;
+  }
+  try {
+    await fbDb.collection('accessRequests').doc(uid).update({
+      status:    action === 'approve' ? 'approved' : 'denied',
+      decidedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    toast(action === 'approve' ? 'Accès accordé !' : 'Accès refusé.', action === 'approve' ? 'success' : 'info');
+    pendingApprovalAction = null;
+  } catch (e) {
+    toast('Erreur lors du traitement : ' + e.message, 'error');
+  }
+}
+
+// --- Génération du lien de partage ---
+function generateShareLink() {
+  if (!fbUser || !getStoredFirebaseConfig()) return null;
+  const data = {
+    config:   getStoredFirebaseConfig(),
+    adminUid: fbUser.uid,
+    dataPath: getSharedMode() ? 'shared' : 'personal',
+    space:    getSharedMode() ? getSharedSpace() : null
+  };
+  const encoded = btoa(JSON.stringify(data)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+  return location.origin + location.pathname + '#guestAccess=' + encoded;
+}
+
+// --- Gestion des demandes d'accès (admin) ---
+function subscribeToAccessRequests() {
+  if (accessRequestsUnsubscribe) { accessRequestsUnsubscribe(); accessRequestsUnsubscribe = null; }
+  if (!fbUser || !fbDb) return;
+
+  accessRequestsUnsubscribe = fbDb.collection('accessRequests')
+    .where('adminUid', '==', fbUser.uid)
+    .onSnapshot(snap => {
+      renderAccessRequestsList(snap.docs.map(d => ({ uid: d.id, ...d.data() })));
+    }, err => {
+      // L'erreur est normale si les règles Firestore ne sont pas encore mises à jour
+      const container = document.getElementById('access-requests-list');
+      if (container) container.innerHTML = '<p style="font-size:12px;color:var(--text-muted);">Mettez à jour les règles Firestore pour activer cette fonctionnalité.</p>';
+    });
+}
+
+function renderAccessRequestsList(requests) {
+  const container = document.getElementById('access-requests-list');
+  if (!container) return;
+
+  const pending = requests.filter(r => r.status === 'pending').length;
+  const badge = document.getElementById('access-requests-badge');
+  if (badge) { badge.textContent = pending; badge.style.display = pending > 0 ? 'inline' : 'none'; }
+
+  if (!requests.length) {
+    container.innerHTML = '<p style="color:var(--text-muted);font-size:13px;margin:0;">Aucune demande d\'accès pour l\'instant.</p>';
+    return;
+  }
+
+  container.innerHTML = '';
+  const order = { pending: 0, approved: 1, denied: 2 };
+  requests
+    .sort((a, b) => (order[a.status] || 0) - (order[b.status] || 0))
+    .forEach(req => {
+      const el = document.createElement('div');
+      el.className = 'access-request-item';
+      const photo = req.guestPhotoURL
+        ? '<img src="' + escapeHtml(req.guestPhotoURL) + '" style="width:32px;height:32px;border-radius:50%;object-fit:cover;flex-shrink:0;" onerror="this.style.display=\'none\'">'
+        : '<div style="width:32px;height:32px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;color:white;font-weight:600;flex-shrink:0;">' + escapeHtml((req.guestName||'?').charAt(0).toUpperCase()) + '</div>';
+      const labels = { pending:'⏳ En attente', approved:'✅ Approuvé', denied:'🚫 Refusé' };
+      const actions = req.status === 'pending'
+        ? '<button class="btn btn-xs" style="background:#d1e7dd;color:#0f5132;" onclick="approveGuest(\''+req.uid+'\')">✓ Approuver</button><button class="btn btn-xs btn-danger" onclick="denyGuest(\''+req.uid+'\')">✗ Refuser</button>'
+        : req.status === 'approved'
+        ? '<button class="btn btn-xs btn-danger" onclick="denyGuest(\''+req.uid+'\')">Révoquer</button>'
+        : '<button class="btn btn-xs" style="background:#d1e7dd;color:#0f5132;" onclick="approveGuest(\''+req.uid+'\')">Ré-approuver</button>';
+      el.innerHTML = photo +
+        '<div class="req-info"><div class="req-name">' + escapeHtml(req.guestName||req.guestEmail||req.uid) + '</div><div class="req-email">' + escapeHtml(req.guestEmail||'') + '</div></div>' +
+        '<span class="req-badge ' + req.status + '">' + (labels[req.status]||req.status) + '</span>' +
+        '<div style="display:flex;gap:4px;flex-shrink:0;">' + actions + '</div>';
+      container.appendChild(el);
+    });
+}
+
+async function approveGuest(uid) {
+  try {
+    await fbDb.collection('accessRequests').doc(uid).update({ status:'approved', decidedAt: firebase.firestore.FieldValue.serverTimestamp() });
+    toast('Accès accordé.', 'success');
+  } catch(e) { toast('Erreur : '+e.message, 'error'); }
+}
+
+async function denyGuest(uid) {
+  try {
+    await fbDb.collection('accessRequests').doc(uid).update({ status:'denied', decidedAt: firebase.firestore.FieldValue.serverTimestamp() });
+    toast('Accès refusé.', 'info');
+  } catch(e) { toast('Erreur : '+e.message, 'error'); }
+}
+
+// --- Config EmailJS ---
+function loadEmailJSConfig() {
+  const cfg = getEmailJSConfig();
+  if (!cfg) return;
+  const set = (id, v) => { const el = document.getElementById(id); if (el) el.value = v||''; };
+  set('ejs-pubkey', cfg.pubkey);
+  set('ejs-service', cfg.service);
+  set('ejs-template', cfg.template);
+  set('ejs-to-email', cfg.toEmail);
+}
+
+document.getElementById('btn-save-emailjs')?.addEventListener('click', () => {
+  const cfg = {
+    pubkey:  document.getElementById('ejs-pubkey').value.trim(),
+    service: document.getElementById('ejs-service').value.trim(),
+    template:document.getElementById('ejs-template').value.trim(),
+    toEmail: document.getElementById('ejs-to-email').value.trim()
+  };
+  setEmailJSConfigStored(cfg);
+  toast('Configuration email enregistrée.', 'success');
+});
+
+document.getElementById('btn-gen-share-link')?.addEventListener('click', () => {
+  const link = generateShareLink();
+  if (!link) { toast('Impossible de générer le lien (connectez-vous d\'abord).', 'error'); return; }
+  const box   = document.getElementById('share-link-box');
+  const input = document.getElementById('share-link-value');
+  if (box)   box.style.display = '';
+  if (input) input.value = link;
+});
+
+document.getElementById('btn-copy-share-link')?.addEventListener('click', () => {
+  const input = document.getElementById('share-link-value');
+  if (input) { input.select(); document.execCommand('copy'); toast('Lien copié !', 'success'); }
+});
+
+document.getElementById('btn-copy-firestore-rules')?.addEventListener('click', () => {
+  const pre = document.getElementById('firestore-rules-text');
+  if (pre) navigator.clipboard.writeText(pre.textContent).then(() => toast('Règles copiées !', 'success'));
+});
+
+document.getElementById('btn-guest-sign-in')?.addEventListener('click', async () => {
+  if (!fbAuth) { toast('Firebase non initialisé.', 'error'); return; }
+  const btn = document.getElementById('btn-guest-sign-in');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Connexion…'; }
+  try {
+    const provider = new firebase.auth.GoogleAuthProvider();
+    await fbAuth.signInWithPopup(provider);
+  } catch (e) {
+    const errEl = document.getElementById('guest-error-msg');
+    if (errEl) { errEl.textContent = 'Erreur : ' + e.message; errEl.style.display = ''; }
+    showGuestState('login');
+  }
+});
+
+document.getElementById('mobile-login-btn')?.addEventListener('click', () => {
+  if (!getStoredFirebaseConfig()) {
+    openFirebaseModal();
+  } else {
+    document.getElementById('btn-sign-in')?.click();
+  }
+});
+
+// Règles Firestore à copier
+{
+  const rules = `rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Données personnelles de chaque utilisateur
+    match /users/{userId}/app/data {
+      allow read, write: if request.auth.uid == userId;
+      // Accès en lecture pour les invités approuvés
+      allow read: if isApprovedGuest(request.auth.uid, userId);
+    }
+
+    // Espace partagé (mode multi-comptes)
+    match /sharedData/{space} {
+      allow read, write: if request.auth != null;
+    }
+
+    // Demandes d'accès invité
+    match /accessRequests/{reqId} {
+      allow create: if request.auth.uid == reqId;
+      allow read:   if request.auth.uid == reqId
+                    || request.auth.uid == resource.data.adminUid;
+      allow update: if request.auth.uid == resource.data.adminUid;
+    }
+
+    function isApprovedGuest(uid, adminUid) {
+      return uid != null
+          && exists(/databases/$(database)/documents/accessRequests/$(uid))
+          && get(/databases/$(database)/documents/accessRequests/$(uid)).data.status   == 'approved'
+          && get(/databases/$(database)/documents/accessRequests/$(uid)).data.adminUid == adminUid;
+    }
+  }
+}`;
+  const el = document.getElementById('firestore-rules-text');
+  if (el) el.textContent = rules;
+}
+
+/* ========================================================================
    INITIALISATION
    ======================================================================== */
+detectGuestMode();
 load();
 document.getElementById('sort-select').value = state.filters.sort || 'name-asc';
 buildFilterBar();
