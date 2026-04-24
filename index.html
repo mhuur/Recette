@@ -2086,6 +2086,11 @@ function renderFirebaseUI() {
   const hasConfig = !!getStoredFirebaseConfig();
   document.getElementById('firebase-not-configured').style.display = hasConfig ? 'none' : '';
   document.getElementById('firebase-configured').style.display = hasConfig ? '' : 'none';
+
+  // Bouton mobile : toujours visible quand non connecté (même sans config Firebase)
+  const mobileBtn = document.getElementById('mobile-login-btn');
+  if (mobileBtn) mobileBtn.classList.toggle('visible', !fbUser && !guestMode);
+
   if (!hasConfig) return;
 
   const signedIn = !!fbUser;
@@ -2138,9 +2143,6 @@ function renderFirebaseUI() {
     if (guestMgmt) guestMgmt.style.display = 'none';
   }
 
-  // Bouton connexion mobile : visible quand non connecté
-  const mobileBtn = document.getElementById('mobile-login-btn');
-  if (mobileBtn) mobileBtn.classList.toggle('visible', !signedIn);
 }
 
 document.getElementById('btn-setup-firebase').onclick = () => openFirebaseModal();
@@ -5601,6 +5603,7 @@ load();
 document.getElementById('sort-select').value = state.filters.sort || 'name-asc';
 buildFilterBar();
 renderRecipes();
+renderFirebaseUI(); // affiche le bouton mobile dès le démarrage
 initFirebase();
 </script>
 </body>
