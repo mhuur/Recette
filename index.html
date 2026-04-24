@@ -8,7 +8,6 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
 <style>
 :root {
   --bg: #0a1628;
@@ -1216,6 +1215,7 @@ label {
 body.guest-mode .fab { display: none !important; }
 body.guest-mode .recipe-actions { display: none !important; }
 body.guest-mode .tab-btn[data-tab="data"],
+body.guest-mode .tab-btn[data-tab="settings"],
 body.guest-mode .tab-btn[data-tab="notes"],
 body.guest-mode .tab-btn[data-tab="shopping"] { display: none !important; }
 body.guest-mode .sidebar::after {
@@ -1238,6 +1238,7 @@ body.guest-mode .sidebar::after {
     <button class="tab-btn" data-tab="shopping">Liste de courses <span class="count-badge hide-if-zero" id="selected-badge">0</span></button>
     <button class="tab-btn" data-tab="season">Saison</button>
     <button class="tab-btn" data-tab="data">Données</button>
+    <button class="tab-btn" data-tab="settings">⚙ Paramètres</button>
     <button class="tab-btn" data-tab="notes">Notes & bugs</button>
     <button class="btn btn-primary" id="mobile-login-btn">🔑 Connexion</button>
   </nav>
@@ -1406,155 +1407,17 @@ body.guest-mode .sidebar::after {
   <!-- Onglet Données -->
   <section id="tab-data" class="tab">
     <div class="data-section">
-      <h3>☁ Synchronisation Cloud (Firebase)</h3>
-      <p>Connecte-toi avec ton compte Google pour synchroniser tes recettes entre tous tes appareils (ordinateur, téléphone, tablette).</p>
-      <div id="firebase-not-configured">
-        <p style="color:var(--warning); font-size:13px;">⚠ Firebase n'est pas encore configuré.</p>
-        <button class="btn btn-primary" id="btn-setup-firebase">⚙ Configurer Firebase</button>
-      </div>
-      <div id="firebase-configured" style="display:none;">
-        <div id="firebase-signed-out">
-          <button class="btn btn-primary" id="btn-sign-in">🔑 Se connecter avec Google</button>
-          <button class="btn btn-ghost btn-sm" id="btn-edit-firebase">⚙ Modifier la config</button>
-        </div>
-        <div id="firebase-signed-in" style="display:none;">
-          <div style="background:var(--surface); padding:10px 12px; border-radius:8px; margin-bottom:10px;">
-            <div style="display:flex; align-items:center; gap:10px;">
-              <div id="firebase-user-avatar" style="width:36px; height:36px; border-radius:50%; background:var(--primary); display:flex; align-items:center; justify-content:center; font-weight:600; color:white;">?</div>
-              <div style="flex:1;">
-                <div id="firebase-user-name" style="font-weight:500;">—</div>
-                <div id="firebase-user-email" style="font-size:12px; color:var(--text-muted);">—</div>
-                <div id="firebase-sync-status" style="font-size:12px; color:var(--success); margin-top:2px;">☁ Synchronisé</div>
-              </div>
-            </div>
-            <div style="margin-top:10px; padding-top:10px; border-top:1px solid var(--border); font-size:12px;">
-              <div style="color:var(--text-muted); margin-bottom:4px;">Ton identifiant Firebase (UID) :</div>
-              <div style="display:flex; gap:6px; align-items:center;">
-                <code id="firebase-user-uid" style="flex:1; background:var(--bg); padding:6px 8px; border-radius:6px; font-size:11px; word-break:break-all; color:var(--accent);">—</code>
-                <button class="btn btn-xs" id="btn-copy-uid">📋 Copier</button>
-              </div>
-            </div>
-          </div>
-          <div class="data-buttons">
-            <button class="btn btn-sm" id="btn-push-cloud">⬆ Forcer l'envoi vers le cloud</button>
-            <button class="btn btn-sm" id="btn-pull-cloud">⬇ Forcer le téléchargement</button>
-            <button class="btn btn-sm btn-danger" id="btn-sign-out">Déconnexion</button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="data-section" id="share-section" style="display:none;">
-      <h3>🔗 Partage avec d'autres comptes Google</h3>
-      <p>Permet à plusieurs comptes Google d'accéder aux <b>mêmes</b> recettes (utile pour un couple, une famille, etc.). Chaque personne se connecte avec son propre compte mais voit les recettes communes.</p>
-
-      <div style="background:var(--surface); padding:10px 12px; border-radius:8px; margin:10px 0;">
-        <div class="form-group" style="margin-bottom:12px;">
-          <label>Nom de l'espace partagé</label>
-          <input type="text" id="shared-space-name" placeholder="ex: famille-mhuur" style="font-family:monospace;">
-          <div style="font-size:12px; color:var(--text-muted); margin-top:4px;">💡 Les deux comptes doivent utiliser <b>exactement le même nom</b>. Choisis-le d'abord, puis active le mode ci-dessous.</div>
-        </div>
-        <label style="display:flex; align-items:center; gap:10px; margin:0; cursor:pointer;">
-          <input type="checkbox" id="toggle-shared-mode" style="width:auto;">
-          <span style="color:var(--text); font-weight:500;">Activer le mode partagé</span>
-        </label>
-        <div style="font-size:12px; color:var(--text-muted); margin-top:6px;">Quand c'est activé, l'app lit/écrit dans l'espace commun ci-dessus au lieu de ton espace personnel.</div>
-      </div>
-
-      <div id="shared-mode-details" style="display:none;">
-        <div class="form-group">
-          <label>UIDs des comptes autorisés</label>
-          <ul id="shared-uids-list" style="list-style:none; padding:0; margin-bottom:8px;"></ul>
-          <div style="display:flex; gap:6px;">
-            <input type="text" id="new-uid-input" placeholder="Coller l'UID d'un autre compte..." style="font-family:monospace; font-size:12px;">
-            <button class="btn btn-sm" id="btn-add-uid">+ Ajouter</button>
-          </div>
-          <div style="font-size:12px; color:var(--text-muted); margin-top:6px;">💡 Ton UID y est ajouté automatiquement. Pour obtenir l'UID de l'autre personne : qu'elle se connecte une fois à l'app depuis son propre compte Google, son UID apparaîtra dans <a href="https://console.firebase.google.com/" target="_blank" style="color:var(--primary);">Firebase Console → Authentication → Users</a>.</div>
-        </div>
-
-        <div class="data-buttons" style="margin-top:10px;">
-          <button class="btn btn-primary" id="btn-copy-shared-rules">📋 Copier les règles Firestore</button>
-          <button class="btn" id="btn-migrate-to-shared">⬆ Envoyer mes données vers l'espace partagé</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Section Accès Invités (admin seulement, visible quand connecté) -->
-    <div class="data-section" id="guest-mgmt-section" style="display:none;">
-      <h3>🔑 Accès invités <span id="access-requests-badge"></span></h3>
-      <p style="font-size:13px; color:var(--text-muted);">Partagez vos recettes avec d'autres personnes via un lien. Après leur connexion Google, vous recevrez une notification et pourrez approuver ou refuser l'accès.</p>
-
-      <div style="margin-bottom:16px;">
-        <button class="btn btn-primary" id="btn-gen-share-link">🔗 Générer le lien de partage</button>
-        <div id="share-link-box" style="display:none; margin-top:10px; background:var(--bg); border-radius:8px; padding:10px;">
-          <div style="font-size:12px; color:var(--text-muted); margin-bottom:6px;">Envoyez ce lien aux personnes à qui vous souhaitez donner accès :</div>
-          <div style="display:flex; gap:6px;">
-            <input type="text" id="share-link-value" readonly style="font-size:11px; font-family:monospace; background:var(--surface);">
-            <button class="btn btn-sm" id="btn-copy-share-link">📋</button>
-          </div>
-        </div>
-      </div>
-
-      <div style="margin-bottom:16px;">
-        <details id="emailjs-details">
-          <summary style="cursor:pointer; font-size:13px; font-weight:500; padding:6px 0; color:var(--text);">⚙ Notifications par email (EmailJS)</summary>
-          <div style="margin-top:10px; background:var(--bg); border-radius:8px; padding:12px;">
-            <p style="font-size:12px; color:var(--text-muted); margin:0 0 10px;">Créez un compte gratuit sur <a href="https://www.emailjs.com/" target="_blank" style="color:var(--primary);">emailjs.com</a> et configurez un template avec les variables : <code>guest_name</code>, <code>guest_email</code>, <code>approve_url</code>, <code>deny_url</code>.</p>
-            <div class="form-grid">
-              <div class="form-group">
-                <label>Clé publique</label>
-                <input type="text" id="ejs-pubkey" placeholder="user_xxxxx">
-              </div>
-              <div class="form-group">
-                <label>Service ID</label>
-                <input type="text" id="ejs-service" placeholder="service_xxxxx">
-              </div>
-              <div class="form-group">
-                <label>Template ID</label>
-                <input type="text" id="ejs-template" placeholder="template_xxxxx">
-              </div>
-              <div class="form-group">
-                <label>Votre adresse email</label>
-                <input type="email" id="ejs-to-email" placeholder="moi@example.com">
-              </div>
-            </div>
-            <button class="btn btn-sm btn-primary" id="btn-save-emailjs">Enregistrer</button>
-          </div>
-        </details>
-      </div>
-
-      <div style="margin-bottom:16px;">
-        <details id="firestore-rules-details">
-          <summary style="cursor:pointer; font-size:13px; font-weight:500; padding:6px 0; color:var(--text);">📋 Règles Firestore requises</summary>
-          <div style="margin-top:10px;">
-            <p style="font-size:12px; color:var(--text-muted); margin-bottom:8px;">Copiez ces règles dans votre <a href="https://console.firebase.google.com/" target="_blank" style="color:var(--primary);">console Firebase → Firestore → Règles</a>.</p>
-            <pre id="firestore-rules-text" style="background:var(--bg); padding:10px; border-radius:6px; font-size:10px; overflow-x:auto; white-space:pre-wrap; word-break:break-all; max-height:200px; overflow-y:auto; text-align:left;"></pre>
-            <button class="btn btn-sm" id="btn-copy-firestore-rules" style="margin-top:6px;">📋 Copier les règles</button>
-          </div>
-        </details>
-      </div>
-
-      <div>
-        <h4 style="margin:0 0 10px; font-size:14px;">Demandes d'accès</h4>
-        <div id="access-requests-list" style="font-size:13px; color:var(--text-muted);">Aucune demande pour l'instant.</div>
-      </div>
-    </div>
-
-    <div class="data-section">
       <h3>🧂 Ingrédients <span id="ing-count-badge" class="count-badge" style="background:var(--surface);">0</span></h3>
       <div id="ingredients-list" class="data-list"></div>
     </div>
-
     <div class="data-section">
       <h3>📏 Unités <span id="unit-count-badge" class="count-badge" style="background:var(--surface);">0</span></h3>
       <div id="units-list" class="data-list"></div>
     </div>
-
     <div class="data-section">
       <h3>🏷 Types d'ingrédients <span id="type-count-badge" class="count-badge" style="background:var(--surface);">0</span></h3>
       <div id="types-list" class="data-list"></div>
     </div>
-
     <div class="data-section">
       <h3>👪 Familles d'ingrédients <span id="family-count-badge" class="count-badge" style="background:var(--surface);">0</span></h3>
       <p style="font-size:13px; color:var(--text-muted);">Un ingrédient peut appartenir à plusieurs familles (ex: "Poulet" → Viande + Volaille). Sert à filtrer les recettes par famille.</p>
@@ -1564,7 +1427,6 @@ body.guest-mode .sidebar::after {
         <button class="btn btn-primary" id="btn-add-family">Ajouter</button>
       </div>
     </div>
-
     <div class="data-section">
       <h3>🍽 Types de plats <span id="meal-count-badge" class="count-badge" style="background:var(--surface);">0</span></h3>
       <div id="meals-list" class="data-list"></div>
@@ -1573,6 +1435,118 @@ body.guest-mode .sidebar::after {
         <button class="btn btn-primary" id="btn-add-meal-type">Ajouter</button>
       </div>
     </div>
+  </section>
+
+  <!-- Onglet Paramètres -->
+  <section id="tab-settings" class="tab">
+
+    <!-- Mon compte -->
+    <div class="data-section">
+      <h3>👤 Mon compte</h3>
+      <div id="firebase-not-configured" style="display:none;">
+        <button class="btn btn-primary" id="btn-setup-firebase">⚙ Configurer Firebase</button>
+      </div>
+      <div id="firebase-configured">
+        <div id="firebase-signed-out">
+          <button class="btn btn-primary" id="btn-sign-in">🔑 Se connecter avec Google</button>
+        </div>
+        <div id="firebase-signed-in" style="display:none;">
+          <div style="display:flex; align-items:center; gap:12px; background:var(--surface); padding:12px; border-radius:10px;">
+            <div id="firebase-user-avatar" style="width:44px; height:44px; border-radius:50%; background:var(--primary); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:18px; color:white; flex-shrink:0;">?</div>
+            <div style="flex:1; min-width:0;">
+              <div id="firebase-user-name" style="font-weight:600;">—</div>
+              <div id="firebase-user-email" style="font-size:12px; color:var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">—</div>
+              <div id="firebase-sync-status" style="font-size:12px; color:var(--success); margin-top:2px;">☁ Synchronisé</div>
+            </div>
+            <button class="btn btn-sm btn-danger" id="btn-sign-out" style="flex-shrink:0;">Déconnexion</button>
+          </div>
+          <div class="data-buttons" style="margin-top:10px;">
+            <button class="btn btn-sm" id="btn-push-cloud">⬆ Forcer l'envoi</button>
+            <button class="btn btn-sm" id="btn-pull-cloud">⬇ Forcer le téléchargement</button>
+          </div>
+          <details style="margin-top:12px;">
+            <summary style="cursor:pointer; font-size:12px; color:var(--text-muted); padding:4px 0;">Identifiant (UID)</summary>
+            <div style="display:flex; gap:6px; align-items:center; margin-top:6px;">
+              <code id="firebase-user-uid" style="flex:1; background:var(--bg); padding:6px 8px; border-radius:6px; font-size:11px; word-break:break-all; color:var(--accent);">—</code>
+              <button class="btn btn-xs" id="btn-copy-uid">📋</button>
+            </div>
+          </details>
+        </div>
+      </div>
+    </div>
+
+    <!-- Accès invités -->
+    <div class="data-section" id="guest-mgmt-section" style="display:none;">
+      <h3>🔗 Accès invités <span id="access-requests-badge"></span></h3>
+      <p style="font-size:13px; color:var(--text-muted);">Partagez vos recettes en lecture seule. La personne reçoit un lien, se connecte avec Google, et vous pouvez approuver ou refuser son accès.</p>
+
+      <div style="margin-bottom:16px;">
+        <button class="btn btn-primary" id="btn-gen-share-link">🔗 Générer le lien de partage</button>
+        <div id="share-link-box" style="display:none; margin-top:10px; background:var(--bg); border-radius:8px; padding:10px;">
+          <div style="font-size:12px; color:var(--text-muted); margin-bottom:6px;">Envoyez ce lien à la personne souhaitée :</div>
+          <div style="display:flex; gap:6px;">
+            <input type="text" id="share-link-value" readonly style="font-size:11px; font-family:monospace; background:var(--surface);">
+            <button class="btn btn-sm" id="btn-copy-share-link">📋 Copier</button>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <h4 style="margin:0 0 10px; font-size:14px; font-weight:600;">Demandes d'accès</h4>
+        <div id="access-requests-list" style="font-size:13px; color:var(--text-muted);">Aucune demande pour l'instant.</div>
+      </div>
+
+      <details style="margin-top:16px;">
+        <summary style="cursor:pointer; font-size:12px; color:var(--text-muted); padding:4px 0;">Règles Firestore requises</summary>
+        <div style="margin-top:8px;">
+          <p style="font-size:12px; color:var(--text-muted); margin-bottom:6px;">À coller dans <a href="https://console.firebase.google.com/" target="_blank" style="color:var(--primary);">Firebase Console → Firestore → Règles</a>.</p>
+          <pre id="firestore-rules-text" style="background:var(--bg); padding:10px; border-radius:6px; font-size:10px; overflow-x:auto; white-space:pre-wrap; word-break:break-all; max-height:180px; overflow-y:auto; text-align:left;"></pre>
+          <button class="btn btn-sm" id="btn-copy-firestore-rules" style="margin-top:6px;">📋 Copier</button>
+        </div>
+      </details>
+    </div>
+
+    <!-- Partage complet (couple/famille) -->
+    <div class="data-section" id="share-section" style="display:none;">
+      <h3>👥 Partage complet</h3>
+      <p style="font-size:13px; color:var(--text-muted);">Pour qu'une autre personne puisse aussi <b>modifier</b> les recettes (couple, famille…). Les deux comptes voient et éditent les mêmes données.</p>
+      <div style="background:var(--surface); padding:10px 12px; border-radius:8px; margin:10px 0;">
+        <div class="form-group" style="margin-bottom:12px;">
+          <label>Nom de l'espace partagé</label>
+          <input type="text" id="shared-space-name" placeholder="ex: famille-mhuur" style="font-family:monospace;">
+          <div style="font-size:12px; color:var(--text-muted); margin-top:4px;">💡 Les deux comptes doivent utiliser <b>exactement le même nom</b>.</div>
+        </div>
+        <label style="display:flex; align-items:center; gap:10px; margin:0; cursor:pointer;">
+          <input type="checkbox" id="toggle-shared-mode" style="width:auto;">
+          <span style="color:var(--text); font-weight:500;">Activer le mode partagé</span>
+        </label>
+      </div>
+      <div id="shared-mode-details" style="display:none;">
+        <div class="form-group">
+          <label>UIDs des comptes autorisés</label>
+          <ul id="shared-uids-list" style="list-style:none; padding:0; margin-bottom:8px;"></ul>
+          <div style="display:flex; gap:6px;">
+            <input type="text" id="new-uid-input" placeholder="UID du compte à ajouter…" style="font-family:monospace; font-size:12px;">
+            <button class="btn btn-sm" id="btn-add-uid">+ Ajouter</button>
+          </div>
+        </div>
+        <div class="data-buttons" style="margin-top:10px;">
+          <button class="btn btn-primary" id="btn-copy-shared-rules">📋 Copier les règles Firestore</button>
+          <button class="btn" id="btn-migrate-to-shared">⬆ Envoyer mes données vers l'espace partagé</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Config avancée -->
+    <div class="data-section">
+      <details>
+        <summary style="cursor:pointer; font-size:13px; color:var(--text-muted); font-weight:500; padding:4px 0;">⚙ Configuration avancée Firebase</summary>
+        <div style="margin-top:10px;">
+          <button class="btn btn-ghost btn-sm" id="btn-edit-firebase">Modifier la config Firebase</button>
+        </div>
+      </details>
+    </div>
+
   </section>
 </main>
 </div>
@@ -2200,8 +2174,6 @@ function renderFirebaseUI() {
     // Afficher le panneau de gestion des accès invités (admin uniquement)
     const guestMgmt = document.getElementById('guest-mgmt-section');
     if (guestMgmt) guestMgmt.style.display = '';
-    // Charger config EmailJS dans les champs
-    loadEmailJSConfig();
     // Souscrire aux demandes d'accès en temps réel
     subscribeToAccessRequests();
     // Traiter un éventuel lien d'approbation/refus
@@ -5290,19 +5262,12 @@ function doExcelImport(headers, dataRows, selects) {
 /* ========================================================================
    SYSTÈME D'ACCÈS INVITÉ
    ======================================================================== */
-const EMAILJS_STORAGE_KEY = 'mhuur_emailjs_v1';
-
 let guestMode = false;
 let guestAdminUid = null;
 let guestAdminDataPath = 'personal';
 let guestAdminSpace = null;
 let accessRequestsUnsubscribe = null;
 let pendingApprovalAction = null;
-
-function getEmailJSConfig() {
-  try { return JSON.parse(localStorage.getItem(EMAILJS_STORAGE_KEY) || 'null'); } catch { return null; }
-}
-function setEmailJSConfigStored(cfg) { localStorage.setItem(EMAILJS_STORAGE_KEY, JSON.stringify(cfg)); }
 
 // --- Détection du mode invité (lien de partage dans le hash) ---
 function detectGuestMode() {
@@ -5428,7 +5393,6 @@ async function createAccessRequest(user, reqRef) {
     requestedAt:   firebase.firestore.FieldValue.serverTimestamp()
   });
   showGuestState('pending');
-  sendEmailNotification(user);
   listenForAccessStatusChange(reqRef);
 }
 
@@ -5439,28 +5403,6 @@ function listenForAccessStatusChange(reqRef) {
     if (s === 'approved') { unsub(); showGuestState('approved'); loadGuestData(); }
     else if (s === 'denied') { unsub(); showGuestState('denied'); }
   });
-}
-
-async function sendEmailNotification(user) {
-  const cfg = getEmailJSConfig();
-  if (!cfg || !cfg.pubkey || !cfg.service || !cfg.template || !cfg.toEmail) return;
-  const base  = location.origin + location.pathname;
-  const uid   = user.uid;
-  const admin = guestAdminUid;
-  try {
-    if (typeof emailjs !== 'undefined') {
-      emailjs.init(cfg.pubkey);
-      await emailjs.send(cfg.service, cfg.template, {
-        to_email:    cfg.toEmail,
-        guest_name:  user.displayName || user.email,
-        guest_email: user.email,
-        approve_url: base + '#approve=' + uid + '&admin=' + admin,
-        deny_url:    base + '#deny='    + uid + '&admin=' + admin
-      });
-    }
-  } catch (e) {
-    console.warn('Notification email échouée :', e);
-  }
 }
 
 async function loadGuestData() {
@@ -5584,28 +5526,6 @@ async function denyGuest(uid) {
     toast('Accès refusé.', 'info');
   } catch(e) { toast('Erreur : '+e.message, 'error'); }
 }
-
-// --- Config EmailJS ---
-function loadEmailJSConfig() {
-  const cfg = getEmailJSConfig();
-  if (!cfg) return;
-  const set = (id, v) => { const el = document.getElementById(id); if (el) el.value = v||''; };
-  set('ejs-pubkey', cfg.pubkey);
-  set('ejs-service', cfg.service);
-  set('ejs-template', cfg.template);
-  set('ejs-to-email', cfg.toEmail);
-}
-
-document.getElementById('btn-save-emailjs')?.addEventListener('click', () => {
-  const cfg = {
-    pubkey:  document.getElementById('ejs-pubkey').value.trim(),
-    service: document.getElementById('ejs-service').value.trim(),
-    template:document.getElementById('ejs-template').value.trim(),
-    toEmail: document.getElementById('ejs-to-email').value.trim()
-  };
-  setEmailJSConfigStored(cfg);
-  toast('Configuration email enregistrée.', 'success');
-});
 
 document.getElementById('btn-gen-share-link')?.addEventListener('click', () => {
   const link = generateShareLink();
