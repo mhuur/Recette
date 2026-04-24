@@ -489,6 +489,9 @@ label {
   max-width: 720px;
   box-shadow: var(--shadow);
   margin: auto;
+  display: flex;
+  flex-direction: column;
+  max-height: 90dvh;
 }
 .modal-header {
   padding: 18px 22px;
@@ -507,7 +510,7 @@ label {
   line-height: 1;
 }
 .modal-close:hover { color: var(--text); }
-.modal-body { padding: 22px; }
+.modal-body { padding: 22px; overflow-y: auto; flex: 1; }
 .modal-footer {
   padding: 14px 22px;
   border-top: 1px solid var(--border);
@@ -1220,7 +1223,11 @@ label {
 
   /* ---- Formulaires ---- */
   .ing-row { grid-template-columns: 1fr; }
-  .form-grid { grid-template-columns: 1fr; }
+  .form-grid { grid-template-columns: 1fr 1fr; }
+  .form-group { margin-bottom: 10px; }
+  .modal-header { padding: 14px 16px; }
+  .modal-body { padding: 14px 16px; }
+  .modal-footer { padding: 10px 16px; }
 
   /* ---- Modals ---- */
   .modal-overlay {
@@ -1233,8 +1240,6 @@ label {
     max-width: 100%;
     max-height: 92dvh;
   }
-  .modal-body { padding: 16px; }
-  .modal-header { padding: 16px 16px 12px; }
 
   /* ---- FAB ---- */
   .fab {
@@ -1758,7 +1763,7 @@ body.guest-mode .sidebar::after {
     <div class="modal-body">
       <div class="form-group">
         <label>Nom de la recette *</label>
-        <input type="text" id="recipe-name" placeholder="Ex: Tarte aux pommes">
+        <input type="text" id="recipe-name" placeholder="Ex: Tarte aux pommes" autocomplete="off">
       </div>
       <div class="form-grid">
         <div class="form-group">
@@ -1795,15 +1800,15 @@ body.guest-mode .sidebar::after {
         </div>
         <div id="origin-book" class="origin-fields">
           <div class="form-grid">
-            <input type="text" id="origin-book-name" placeholder="Nom du livre">
-            <input type="text" id="origin-book-page" placeholder="Page" style="max-width:120px;">
+            <input type="text" id="origin-book-name" placeholder="Nom du livre" autocomplete="off">
+            <input type="text" id="origin-book-page" placeholder="Page" style="max-width:120px;" autocomplete="off">
           </div>
         </div>
         <div id="origin-url" class="origin-fields" style="display:none;">
           <input type="url" id="origin-url-value" placeholder="https://...">
         </div>
         <div id="origin-other" class="origin-fields" style="display:none;">
-          <input type="text" id="origin-other-value" placeholder="Source">
+          <input type="text" id="origin-other-value" placeholder="Source" autocomplete="off">
         </div>
       </div>
       <div class="form-group full">
@@ -1930,6 +1935,25 @@ service cloud.firestore {
       <div style="flex:1;"></div>
       <button class="btn" data-close-modal>Annuler</button>
       <button class="btn btn-primary" id="btn-save-firebase-config">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de fusion générique -->
+<div class="modal-overlay" id="merge-modal">
+  <div class="modal" style="max-width:440px;">
+    <div class="modal-header">
+      <span class="modal-title" id="merge-modal-title">Fusionner</span>
+      <button class="modal-close" id="merge-modal-close">×</button>
+    </div>
+    <div class="modal-body" style="padding:16px;">
+      <p id="merge-modal-desc" style="font-size:13px; color:var(--text-muted); margin:0 0 12px;"></p>
+      <input type="text" id="merge-search-input" placeholder="Rechercher…" autocomplete="off"
+             style="width:100%; margin-bottom:10px;">
+      <div id="merge-items-list" style="max-height:300px; overflow-y:auto; display:flex; flex-direction:column; gap:4px;"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" id="merge-modal-cancel">Annuler</button>
     </div>
   </div>
 </div>
@@ -2909,6 +2933,7 @@ function createChipsInput(wrapper, options) {
   const input = document.createElement('input');
   input.type = 'text';
   input.className = 'chips-inner-input';
+  input.autocomplete = 'off';
 
   function renderChips() {
     // Retire tous les chips mais conserve l'input
@@ -3718,6 +3743,53 @@ function renderRecipes() {
       if (o.innerHTML) body.appendChild(o);
     }
 
+    // Édition inline des types de plat
+    const mealRow = document.createElement('div');
+    mealRow.style.cssText = 'display:flex; flex-wrap:wrap; gap:6px; align-items:center; margin-top:10px; padding-top:10px; border-top:1px solid var(--border);';
+
+    const mealLabel = document.createElement('span');
+    mealLabel.style.cssText = 'font-size:11px; color:var(--text-muted); flex-shrink:0; margin-right:2px;';
+    mealLabel.textContent = 'Types :';
+    mealRow.appendChild(mealLabel);
+
+    const mealChipsArea = document.createElement('div');
+    mealChipsArea.style.cssText = 'display:flex; flex-wrap:wrap; gap:4px; flex:1; align-items:center;';
+    mealRow.appendChild(mealChipsArea);
+
+    function refreshMealChips() {
+      mealChipsArea.innerHTML = '';
+      (r.mealTypes || []).forEach(m => {
+        const chip = document.createElement('span');
+        chip.className = 'chip';
+        chip.textContent = m;
+        chip.title = 'Retirer';
+        chip.style.cursor = 'pointer';
+        chip.onclick = e => {
+          e.stopPropagation();
+          r.mealTypes = (r.mealTypes || []).filter(x => x !== m);
+          save(); fbSchedulePush(); refreshMealChips();
+        };
+        mealChipsArea.appendChild(chip);
+      });
+      // Add input
+      const addWrap = document.createElement('div');
+      addWrap.style.cssText = 'min-width:100px; max-width:160px;';
+      mealChipsArea.appendChild(addWrap);
+      createChipsInput(addWrap, {
+        getItems: () => state.mealTypes.map(m => ({ name: m, inSeason: (r.mealTypes||[]).includes(m) })),
+        onCreate: name => { findOrCreateMealType(name); return name; },
+        initialValues: [],
+        placeholder: '+ type...',
+        onChange: names => {
+          r.mealTypes = r.mealTypes || [];
+          names.forEach(n => { if (!r.mealTypes.includes(n)) r.mealTypes.push(n); });
+          save(); fbSchedulePush(); refreshMealChips();
+        }
+      });
+    }
+    refreshMealChips();
+    body.appendChild(mealRow);
+
     card.appendChild(body);
     container.appendChild(card);
   });
@@ -4488,68 +4560,103 @@ document.getElementById('btn-clear-selection').onclick = () => {
 /* ========================================================================
    ONGLET DONNÉES
    ======================================================================== */
+
+// ---- Modal de fusion générique ----
+let _mergeCallback = null;
+
+function openMergeModal(title, desc, items, onSelect) {
+  _mergeCallback = onSelect;
+  document.getElementById('merge-modal-title').textContent = title;
+  document.getElementById('merge-modal-desc').textContent = desc;
+  document.getElementById('merge-search-input').value = '';
+  renderMergeItems(items, '');
+  document.getElementById('merge-modal').classList.add('active');
+  document.getElementById('merge-search-input').focus();
+
+  document.getElementById('merge-search-input').oninput = () => {
+    renderMergeItems(items, document.getElementById('merge-search-input').value.toLowerCase());
+  };
+}
+
+function renderMergeItems(items, q) {
+  const list = document.getElementById('merge-items-list');
+  list.innerHTML = '';
+  const filtered = q ? items.filter(it => it.label.toLowerCase().includes(q)) : items;
+  filtered.forEach(it => {
+    const btn = document.createElement('button');
+    btn.className = 'btn';
+    btn.style.cssText = 'text-align:left; justify-content:flex-start; padding:10px 14px; font-size:14px;';
+    btn.textContent = it.label;
+    if (it.sub) {
+      const sub = document.createElement('span');
+      sub.style.cssText = 'font-size:11px; color:var(--text-muted); margin-left:8px;';
+      sub.textContent = it.sub;
+      btn.appendChild(sub);
+    }
+    btn.onclick = () => {
+      document.getElementById('merge-modal').classList.remove('active');
+      if (_mergeCallback) _mergeCallback(it);
+    };
+    list.appendChild(btn);
+  });
+  if (filtered.length === 0) {
+    list.innerHTML = '<div style="padding:12px; color:var(--text-dim); font-style:italic; font-size:13px;">Aucun résultat</div>';
+  }
+}
+
+document.getElementById('merge-modal-close').onclick = () => document.getElementById('merge-modal').classList.remove('active');
+document.getElementById('merge-modal-cancel').onclick = () => document.getElementById('merge-modal').classList.remove('active');
+
 function openMergeTypeDialog(sourceType) {
   const others = state.ingredientTypes.filter(t => t.id !== sourceType.id).sort((a,b) => a.name.localeCompare(b.name, 'fr'));
-  if (others.length === 0) {
-    toast('Aucun autre type disponible pour fusionner.', 'error');
-    return;
-  }
+  if (others.length === 0) { toast('Aucun autre type disponible pour fusionner.', 'error'); return; }
   const usage = state.ingredients.filter(i => i.typeId === sourceType.id).length;
-  const list = others.map((t,i) => (i+1) + '. ' + t.name).join('\n');
-  const choice = prompt(
-    'Fusionner « ' + sourceType.name + ' » (' + usage + ' ingrédients) vers quel autre type ?\n\n' +
-    'Tape le numéro du type cible :\n\n' + list
+  const items = others.map(t => ({
+    id: t.id, label: t.name,
+    sub: (() => { const u = state.ingredients.filter(i => i.typeId === t.id).length; return u > 0 ? u + ' ingrédient' + (u > 1 ? 's' : '') : ''; })()
+  }));
+  openMergeModal(
+    'Fusionner « ' + sourceType.name + ' »',
+    usage + ' ingrédient(s) seront réaffectés. Choisir le type cible :',
+    items,
+    target => {
+      if (!confirm('Fusionner « ' + sourceType.name + ' » → « ' + target.label + ' » ?')) return;
+      state.ingredients.forEach(i => { if (i.typeId === sourceType.id) i.typeId = target.id; });
+      state.ingredientTypes = state.ingredientTypes.filter(x => x.id !== sourceType.id);
+      save(); renderDataTab(); renderRecipes();
+      toast(usage + ' ingrédient(s) réaffecté(s) à « ' + target.label + ' »', 'success');
+    }
   );
-  if (!choice) return;
-  const idx = parseInt(choice.trim()) - 1;
-  if (isNaN(idx) || idx < 0 || idx >= others.length) {
-    toast('Numéro invalide.', 'error');
-    return;
-  }
-  const target = others[idx];
-  if (!confirm('Fusionner « ' + sourceType.name + ' » → « ' + target.name + ' » ?\n\n' +
-               usage + ' ingrédient(s) seront réaffectés. Le type « ' + sourceType.name + ' » sera supprimé.')) return;
-  // Réaffecter tous les ingrédients
-  state.ingredients.forEach(i => { if (i.typeId === sourceType.id) i.typeId = target.id; });
-  // Supprimer le type source
-  state.ingredientTypes = state.ingredientTypes.filter(x => x.id !== sourceType.id);
-  save();
-  renderDataTab();
-  renderRecipes();
-  toast(usage + ' ingrédient(s) réaffecté(s) à « ' + target.name + ' »', 'success');
 }
 
 function openMergeIngredientDialog(sourceIng) {
   const others = [...state.ingredients].filter(i => i.id !== sourceIng.id).sort((a,b) => a.name.localeCompare(b.name, 'fr'));
   if (others.length === 0) { toast('Aucun autre ingrédient disponible.', 'error'); return; }
   const usage = state.recipes.filter(r => (r.ingredients||[]).some(i => i.ingredientId === sourceIng.id)).length;
-  const list = others.map((i, idx) => (idx+1) + '. ' + i.name).join('\n');
-  const choice = prompt(
-    'Fusionner « ' + sourceIng.name + ' » (utilisé dans ' + usage + ' recette(s)) vers quel ingrédient ?\n\nTape le numéro de l\'ingrédient cible :\n\n' + list
+  const items = others.map(i => ({
+    id: i.id, label: i.name,
+    sub: (() => {
+      const u = state.recipes.filter(r => (r.ingredients||[]).some(x => x.ingredientId === i.id)).length;
+      return u > 0 ? u + ' recette' + (u > 1 ? 's' : '') : '';
+    })()
+  }));
+  openMergeModal(
+    'Fusionner « ' + sourceIng.name + ' »',
+    'Utilisé dans ' + usage + ' recette(s). Choisir l\'ingrédient cible (le nom cible sera conservé) :',
+    items,
+    target => {
+      const targetIng = state.ingredients.find(i => i.id === target.id);
+      if (!targetIng) return;
+      if (!confirm('Fusionner « ' + sourceIng.name + ' » → « ' + targetIng.name + ' » ?\n' + usage + ' recette(s) seront mises à jour.')) return;
+      state.recipes.forEach(r => { (r.ingredients||[]).forEach(i => { if (i.ingredientId === sourceIng.id) i.ingredientId = targetIng.id; }); });
+      targetIng.seasonMonths = [...new Set([...(targetIng.seasonMonths||[]), ...(sourceIng.seasonMonths||[])])];
+      targetIng.familyIds = [...new Set([...(targetIng.familyIds||[]), ...(sourceIng.familyIds||[])])];
+      if (!targetIng.typeId && sourceIng.typeId) targetIng.typeId = sourceIng.typeId;
+      state.ingredients = state.ingredients.filter(i => i.id !== sourceIng.id);
+      save(); rerenderAll();
+      toast('« ' + sourceIng.name + ' » fusionné dans « ' + targetIng.name + ' »', 'success');
+    }
   );
-  if (!choice) return;
-  const idx = parseInt(choice.trim()) - 1;
-  if (isNaN(idx) || idx < 0 || idx >= others.length) { toast('Numéro invalide.', 'error'); return; }
-  const target = others[idx];
-  if (!confirm('Fusionner « ' + sourceIng.name + ' » → « ' + target.name + ' » ?\n\n' +
-               'Les ' + usage + ' recette(s) utilisant « ' + sourceIng.name + ' » seront mises à jour.\n« ' + sourceIng.name + ' » sera supprimé.')) return;
-  // Remplacer toutes les références dans les recettes
-  state.recipes.forEach(r => {
-    (r.ingredients||[]).forEach(i => { if (i.ingredientId === sourceIng.id) i.ingredientId = target.id; });
-  });
-  // Fusionner seasonMonths
-  const mergedMonths = [...new Set([...(target.seasonMonths||[]), ...(sourceIng.seasonMonths||[])])];
-  target.seasonMonths = mergedMonths;
-  // Fusionner familyIds
-  const mergedFamilies = [...new Set([...(target.familyIds||[]), ...(sourceIng.familyIds||[])])];
-  target.familyIds = mergedFamilies;
-  // Conserver le typeId de la cible (ou prendre celui de la source si la cible n'en a pas)
-  if (!target.typeId && sourceIng.typeId) target.typeId = sourceIng.typeId;
-  // Supprimer la source
-  state.ingredients = state.ingredients.filter(i => i.id !== sourceIng.id);
-  save();
-  rerenderAll();
-  toast('« ' + sourceIng.name + ' » fusionné dans « ' + target.name + ' »', 'success');
 }
 
 function renderDataTab() {
