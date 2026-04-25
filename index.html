@@ -416,6 +416,15 @@ label {
   gap: 4px;
   flex-shrink: 0;
 }
+.recipe-menu-btn {
+  opacity: 0;
+  transition: opacity 0.15s;
+  font-size: 20px;
+  letter-spacing: -1px;
+  line-height: 1;
+}
+.recipe-card:hover .recipe-menu-btn,
+.recipe-card.expanded .recipe-menu-btn { opacity: 1; }
 .recipe-expand {
   color: var(--text-dim);
   font-size: 14px;
@@ -518,6 +527,11 @@ label {
   display: flex;
   justify-content: space-between;
   gap: 10px;
+  position: sticky;
+  bottom: 0;
+  background: var(--bg-2);
+  z-index: 1;
+  flex-shrink: 0;
 }
 
 /* Form grid */
@@ -528,6 +542,29 @@ label {
 }
 .form-group { margin-bottom: 14px; }
 .form-group.full { grid-column: 1 / -1; }
+.form-compact-row { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:14px; align-items:center; }
+.form-compact-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 5px 10px;
+}
+.form-compact-icon { font-size:15px; flex-shrink:0; }
+.form-compact-item input[type="number"] {
+  width: 56px;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  font-size: 14px;
+  outline: none;
+  font-family: inherit;
+  padding: 0;
+}
+.form-compact-item .rating-input { gap:6px; border:none; padding:0; background:transparent; }
+.form-compact-item .rating-input input[type="number"] { width:48px; }
 
 /* Autocomplete */
 .autocomplete {
@@ -591,6 +628,31 @@ label {
   font-size: 13px;
   text-align: center;
 }
+
+/* Sort popup */
+.sort-popup {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: var(--shadow);
+  z-index: 200;
+  min-width: 148px;
+  overflow: hidden;
+  display: none;
+}
+.sort-popup.active { display: block; }
+.sort-option {
+  padding: 9px 14px;
+  font-size: 13px;
+  cursor: pointer;
+  color: var(--text);
+  transition: background 0.1s;
+}
+.sort-option:hover { background: var(--surface-2); }
+.sort-option.active-sort { color: var(--primary); font-weight: 600; }
 
 /* Ingredient rows in form */
 .ing-rows { display: flex; flex-direction: column; gap: 8px; }
@@ -1223,7 +1285,11 @@ label {
   .filter-group { width: 100%; justify-content: space-between; }
 
   /* ---- Formulaires ---- */
-  .ing-row { grid-template-columns: 1fr; }
+  .ing-row { display:flex; flex-direction:row; flex-wrap:nowrap; gap:4px; align-items:start; }
+  .ing-row > .autocomplete:first-child { flex:2 1 0; min-width:0; }
+  .ing-row > input[type="text"] { width:52px; flex-shrink:0; }
+  .ing-row > .autocomplete:nth-child(3) { flex:1 1 0; min-width:0; }
+  .recipe-menu-btn { opacity:1 !important; }
   .form-grid { grid-template-columns: 1fr 1fr; }
   .form-group { margin-bottom: 10px; }
   .modal-header { padding: 14px 16px; }
@@ -1447,14 +1513,17 @@ body.guest-mode .sidebar::after {
       <div class="toolbar-row" style="justify-content:space-between;">
         <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
           <button class="btn btn-sm" id="btn-toggle-filter" title="Afficher / masquer les filtres">⏷ Filtre</button>
-          <select id="sort-select" class="compact-select" style="width:auto; min-width:110px;">
-            <option value="name-asc">Nom A → Z</option>
-            <option value="name-desc">Nom Z → A</option>
-            <option value="rating-desc">Note ↓</option>
-            <option value="rating-asc">Note ↑</option>
-            <option value="time-asc">Temps ↑</option>
-            <option value="time-desc">Temps ↓</option>
-          </select>
+          <div style="position:relative;">
+            <button class="btn btn-ghost btn-sm" id="sort-btn" title="Trier">⇅ <span id="sort-label">A→Z</span></button>
+            <div class="sort-popup" id="sort-popup">
+              <div class="sort-option active-sort" data-sort="name-asc">Nom A → Z</div>
+              <div class="sort-option" data-sort="name-desc">Nom Z → A</div>
+              <div class="sort-option" data-sort="rating-desc">Note ↓</div>
+              <div class="sort-option" data-sort="rating-asc">Note ↑</div>
+              <div class="sort-option" data-sort="time-asc">Temps ↑</div>
+              <div class="sort-option" data-sort="time-desc">Temps ↓</div>
+            </div>
+          </div>
           <button class="btn btn-ghost btn-sm" id="btn-reset-filters" title="Réinitialiser tous les filtres">✕ Reset</button>
         </div>
         <button class="btn btn-primary btn-sm" id="btn-new-recipe-inline">＋ Ajouter</button>
@@ -1778,25 +1847,25 @@ body.guest-mode .sidebar::after {
         <label>Nom de la recette *</label>
         <input type="text" id="recipe-name" placeholder="Ex: Tarte aux pommes" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false">
       </div>
-      <div class="form-grid">
-        <div class="form-group">
-          <label>Note / 10</label>
+      <div class="form-compact-row">
+        <div class="form-compact-item" title="Note / 10">
+          <span class="form-compact-icon">⭐</span>
           <div class="rating-input">
-            <input type="number" id="recipe-rating" min="0" max="10" step="0.5" placeholder="8.5">
+            <input type="number" id="recipe-rating" min="0" max="10" step="0.5" placeholder="/10">
             <span class="rating-stars-display" id="rating-preview"></span>
           </div>
         </div>
-        <div class="form-group">
-          <label>Nombre de personnes</label>
+        <div class="form-compact-item" title="Nombre de personnes">
+          <span class="form-compact-icon">👥</span>
           <input type="number" id="recipe-servings" min="1" value="4">
         </div>
-        <div class="form-group">
-          <label>Temps de préparation (min)</label>
-          <input type="number" id="recipe-prep" min="0" placeholder="30">
+        <div class="form-compact-item" title="Temps de préparation (min)">
+          <span class="form-compact-icon">🔪</span>
+          <input type="number" id="recipe-prep" min="0" placeholder="min">
         </div>
-        <div class="form-group">
-          <label>Temps de cuisson (min)</label>
-          <input type="number" id="recipe-cook" min="0" placeholder="45">
+        <div class="form-compact-item" title="Temps de cuisson (min)">
+          <span class="form-compact-icon">🔥</span>
+          <input type="number" id="recipe-cook" min="0" placeholder="min">
         </div>
       </div>
       <div class="form-group full">
@@ -3748,8 +3817,8 @@ function renderRecipes() {
     const actions = document.createElement('div');
     actions.className = 'recipe-actions';
     const editBtn = document.createElement('button');
-    editBtn.className = 'btn btn-ghost btn-xs';
-    editBtn.innerHTML = '✏';
+    editBtn.className = 'btn btn-ghost btn-xs recipe-menu-btn';
+    editBtn.innerHTML = '⋮';
     editBtn.title = 'Modifier';
     editBtn.onclick = e => { e.stopPropagation(); openRecipeModal(r); };
     actions.appendChild(editBtn);
@@ -3822,8 +3891,13 @@ function renderRecipes() {
           placeholder: '+ type...',
           onChange: names => {
             r.mealTypes = r.mealTypes || [];
-            names.forEach(n => { if (!r.mealTypes.includes(n)) r.mealTypes.push(n); });
+            names.forEach(n => {
+              if (r.mealTypes.includes(n)) r.mealTypes = r.mealTypes.filter(x => x !== n);
+              else r.mealTypes.push(n);
+            });
             save(); fbSchedulePush(); refreshMealChips();
+            // Clear input widget after each toggle so dropdown stays open for next pick
+            setTimeout(() => { if (mealCtrl) mealCtrl.setValues([]); }, 0);
           }
         });
       }
@@ -3867,12 +3941,10 @@ function renderRecipes() {
    FERMETURE AUTOMATIQUE DES CARTES AU CLIC EXTÉRIEUR
    ======================================================================== */
 document.addEventListener('click', (e) => {
-  // Ne pas fermer si on clique dans un modal ouvert (sinon on ferme les cards derrière)
   if (document.querySelector('.modal-overlay.active')) return;
-  // Ne pas fermer si on clique dans une card
   if (e.target.closest('.recipe-card')) return;
-  // Ne pas fermer si on clique dans la toolbar (filtres) - on veut garder les cards ouvertes
-  // En fait : fermer quand même, c'est la demande de l'utilisateur
+  // Dropdown appended to body — don't close cards when clicking dropdown items
+  if (e.target.closest('.autocomplete-dropdown')) return;
   document.querySelectorAll('.recipe-card.expanded').forEach(card => {
     card.classList.remove('expanded');
   });
@@ -4429,10 +4501,30 @@ document.getElementById('search-input').addEventListener('input', e => {
   state.filters.search = e.target.value;
   renderRecipes();
 });
-document.getElementById('sort-select').addEventListener('change', e => {
-  state.filters.sort = e.target.value;
+// Sort popup
+const sortLabels = { 'name-asc':'A→Z', 'name-desc':'Z→A', 'rating-desc':'Note↓', 'rating-asc':'Note↑', 'time-asc':'Temps↑', 'time-desc':'Temps↓' };
+function setSortValue(v) {
+  state.filters.sort = v;
+  const lbl = document.getElementById('sort-label');
+  if (lbl) lbl.textContent = sortLabels[v] || v;
+  document.querySelectorAll('#sort-popup .sort-option').forEach(o => {
+    o.classList.toggle('active-sort', o.dataset.sort === v);
+  });
   saveLocal();
   renderRecipes();
+}
+document.getElementById('sort-btn').addEventListener('click', e => {
+  e.stopPropagation();
+  document.getElementById('sort-popup').classList.toggle('active');
+});
+document.getElementById('sort-popup').addEventListener('click', e => {
+  const opt = e.target.closest('.sort-option');
+  if (!opt) return;
+  setSortValue(opt.dataset.sort);
+  document.getElementById('sort-popup').classList.remove('active');
+});
+document.addEventListener('click', () => {
+  document.getElementById('sort-popup')?.classList.remove('active');
 });
 ['filter-prep-max','filter-cook-max'].forEach(id => {
   document.getElementById(id).addEventListener('input', e => {
@@ -4445,7 +4537,7 @@ document.getElementById('sort-select').addEventListener('change', e => {
 document.getElementById('btn-reset-filters').onclick = () => {
   state.filters = { search: '', sort: 'name-asc', ratingValues: [], prepMax: null, cookMax: null, mealTypes: [], includeIngredients: [], excludeIngredients: [], includeFamilies: [], excludeFamilies: [], seasonOnly: false, selectedOnly: false };
   document.getElementById('search-input').value = '';
-  document.getElementById('sort-select').value = 'name-asc';
+  setSortValue('name-asc');
   ['filter-prep-max','filter-cook-max'].forEach(id => document.getElementById(id).value = '');
   const ss = document.getElementById('filter-season-toggle'); if (ss) ss.checked = false;
   const so = document.getElementById('filter-selection-only'); if (so) so.checked = false;
@@ -6117,7 +6209,7 @@ service cloud.firestore {
    ======================================================================== */
 detectGuestMode();
 load();
-document.getElementById('sort-select').value = state.filters.sort || 'name-asc';
+setSortValue(state.filters.sort || 'name-asc');
 buildFilterBar();
 renderRecipes();
 renderFirebaseUI(); // affiche le bouton mobile dès le démarrage
