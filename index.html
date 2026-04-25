@@ -931,7 +931,137 @@ label {
   user-select: none;
   margin: 0;
 }
+
+/* Filter bottom sheet */
+.filter-toggle-pill {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 14px;
+  flex: 1;
+  user-select: none;
+  transition: background 0.15s, border-color 0.15s;
+}
+.filter-toggle-pill input[type="checkbox"] { display: none; }
+.filter-toggle-pill.active {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+}
+.filter-sheet-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 8px;
+}
+.filter-sheet-section { display: flex; flex-direction: column; }
+.filter-count-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--primary);
+  color: white;
+  font-size: 10px;
+  font-weight: 700;
+  min-width: 17px;
+  height: 17px;
+  padding: 0 4px;
+  border-radius: 9px;
+  margin-left: 3px;
+}
+/* Active filter chips bar */
+#active-filter-bar {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding: 0 0 6px;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  flex-wrap: nowrap;
+}
+#active-filter-bar::-webkit-scrollbar { display: none; }
+.active-filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--primary);
+  color: white;
+  padding: 4px 10px;
+  border-radius: 14px;
+  font-size: 12px;
+  white-space: nowrap;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.active-filter-chip::after { content: '×'; opacity: 0.8; font-size: 13px; }
 .quick-filter-chk input { width: auto; margin: 0; cursor: pointer; }
+
+/* Filter bottom sheet overlay */
+.filter-sheet-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 350;
+  display: none;
+  align-items: flex-end;
+  justify-content: center;
+}
+.filter-sheet-overlay.active { display: flex; }
+.filter-sheet {
+  background: var(--bg-2);
+  border-radius: 16px 16px 0 0;
+  width: 100%;
+  max-width: 600px;
+  max-height: 85dvh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: sheetSlideUp 0.22s ease;
+}
+@keyframes sheetSlideUp {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+.filter-sheet-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px 12px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.filter-sheet-title { font-size: 16px; font-weight: 600; }
+.filter-sheet-close {
+  background: var(--surface);
+  border: none;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 15px;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+.filter-sheet-body {
+  overflow-y: auto;
+  padding: 16px;
+  flex: 1;
+  min-height: 0;
+  -webkit-overflow-scrolling: touch;
+}
+.filter-sheet-section { margin-bottom: 18px; }
+.filter-sheet-section:last-child { margin-bottom: 6px; }
 
 /* Onglet Saison : colonnes avec scroll horizontal */
 .season-grid {
@@ -1507,12 +1637,12 @@ body.guest-mode .sidebar::after {
   <section id="tab-recipes" class="tab active">
     <div class="toolbar">
       <div class="toolbar-row">
-        <input type="text" id="search-input" placeholder="🔍 Rechercher..." style="width:220px; flex:0 0 auto;">
-        <span id="recipe-count-display" style="font-size:12px; color:var(--text-muted); margin-left:auto; white-space:nowrap;">0 / 0</span>
+        <input type="text" id="search-input" placeholder="🔍 Rechercher..." style="flex:1;" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" data-form-type="other">
+        <span id="recipe-count-display" style="font-size:12px; color:var(--text-muted); margin-left:8px; white-space:nowrap; flex-shrink:0;">0 / 0</span>
       </div>
       <div class="toolbar-row" style="justify-content:space-between;">
-        <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
-          <button class="btn btn-sm" id="btn-toggle-filter" title="Afficher / masquer les filtres">⏷ Filtre</button>
+        <div style="display:flex; gap:6px; align-items:center;">
+          <button class="btn btn-sm" id="btn-toggle-filter" title="Filtres">⏷ Filtre<span class="filter-count-badge" id="filter-count-badge" style="display:none;">0</span></button>
           <div style="position:relative;">
             <button class="btn btn-ghost btn-sm" id="sort-btn" title="Trier">⇅ <span id="sort-label">A→Z</span></button>
             <div class="sort-popup" id="sort-popup">
@@ -1524,71 +1654,10 @@ body.guest-mode .sidebar::after {
               <div class="sort-option" data-sort="time-desc">Temps ↓</div>
             </div>
           </div>
-          <button class="btn btn-ghost btn-sm" id="btn-reset-filters" title="Réinitialiser tous les filtres">✕ Reset</button>
         </div>
         <button class="btn btn-primary btn-sm" id="btn-new-recipe-inline">＋ Ajouter</button>
       </div>
-      <div id="filter-panel" style="display:none; padding:10px; background:var(--surface); border:1px solid var(--border); border-radius:8px; margin-top:6px;">
-        <!-- Ligne 1: checkboxes + temps max compacts -->
-        <div class="toolbar-row filter-row-compact">
-          <label class="quick-filter-chk">
-            <input type="checkbox" id="filter-selection-only"> Sélection
-          </label>
-          <label class="quick-filter-chk">
-            <input type="checkbox" id="filter-season-toggle"> Saison
-          </label>
-          <div class="filter-group compact">
-            <label title="Prép. max (min)">🔪</label>
-            <input type="number" id="filter-prep-max" min="0" value="" placeholder="min" style="width:50px;">
-          </div>
-          <div class="filter-group compact">
-            <label title="Cuisson max (min)">🔥</label>
-            <input type="number" id="filter-cook-max" min="0" value="" placeholder="min" style="width:50px;">
-          </div>
-        </div>
-        <!-- Ligne 2: notes -->
-        <div class="toolbar-row" style="margin-top:8px;">
-          <div class="filter-group compact" style="flex:1;">
-            <label>Notes :</label>
-            <div id="filter-rating-wrapper" style="flex:1; min-width:0;"></div>
-          </div>
-        </div>
-        <!-- Ligne 3: types de plat -->
-        <div class="toolbar-row" style="margin-top:8px;">
-          <div class="filter-group" style="flex:1; flex-wrap:wrap;">
-            <label>Types :</label>
-            <div id="filter-meal-types" style="display:flex; flex-wrap:wrap; gap:4px;"></div>
-          </div>
-        </div>
-        <!-- Filtres avancés (repliables sur mobile) -->
-        <details class="filter-advanced-toggle" style="margin-top:8px;">
-          <summary style="cursor:pointer; font-size:12px; color:var(--text-muted); padding:4px 0; list-style:none; display:flex; align-items:center; gap:4px;">
-            <span>▸</span> Filtres avancés (ingrédients, familles)
-          </summary>
-          <div style="margin-top:8px; display:flex; flex-direction:column; gap:8px;">
-            <div class="toolbar-row">
-              <div class="filter-group" style="flex:1; min-width:180px;">
-                <label>✅ Contient :</label>
-                <div id="filter-include-wrapper" style="flex:1;"></div>
-              </div>
-              <div class="filter-group" style="flex:1; min-width:180px;">
-                <label>❌ Sans :</label>
-                <div id="filter-exclude-wrapper" style="flex:1;"></div>
-              </div>
-            </div>
-            <div class="toolbar-row">
-              <div class="filter-group" style="flex:1; min-width:180px;">
-                <label>👪 Familles requises :</label>
-                <div id="filter-include-families-wrapper" style="flex:1;"></div>
-              </div>
-              <div class="filter-group" style="flex:1; min-width:180px;">
-                <label>🚫 Familles exclues :</label>
-                <div id="filter-exclude-families-wrapper" style="flex:1;"></div>
-              </div>
-            </div>
-          </div>
-        </details>
-      </div>
+      <div id="active-filter-bar" style="display:none;"></div>
     </div>
 
     <div id="recipes-container" class="recipe-list"></div>
@@ -2070,6 +2139,82 @@ service cloud.firestore {
     <div class="modal-footer">
       <button class="btn" id="confirm-modal-cancel">Annuler</button>
       <button class="btn btn-danger" id="confirm-modal-ok">Supprimer</button>
+    </div>
+  </div>
+</div>
+
+<!-- Filter bottom sheet -->
+<div class="filter-sheet-overlay" id="filter-sheet-overlay">
+  <div class="filter-sheet">
+    <div class="filter-sheet-header">
+      <span class="filter-sheet-title">Filtres</span>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <button class="btn btn-ghost btn-sm" id="btn-reset-filters">Tout effacer</button>
+        <button class="filter-sheet-close" id="filter-sheet-close" title="Fermer">✕</button>
+      </div>
+    </div>
+    <div class="filter-sheet-body">
+      <!-- Quick toggles -->
+      <div class="filter-sheet-section">
+        <div class="filter-sheet-label">Afficher</div>
+        <div style="display:flex;gap:8px;">
+          <label class="filter-toggle-pill" id="pill-selection">
+            <input type="checkbox" id="filter-selection-only"> ⭐ Sélection
+          </label>
+          <label class="filter-toggle-pill" id="pill-season">
+            <input type="checkbox" id="filter-season-toggle"> 🌿 Saison
+          </label>
+        </div>
+      </div>
+      <!-- Meal types -->
+      <div class="filter-sheet-section">
+        <div class="filter-sheet-label">Type de plat</div>
+        <div id="filter-meal-types" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
+      </div>
+      <!-- Rating -->
+      <div class="filter-sheet-section">
+        <div class="filter-sheet-label">Note</div>
+        <div id="filter-rating-wrapper"></div>
+      </div>
+      <!-- Time -->
+      <div class="filter-sheet-section">
+        <div class="filter-sheet-label">Temps (min)</div>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;">
+          <div style="display:flex;align-items:center;gap:6px;">
+            <span style="font-size:13px;color:var(--text-muted);">Préparation ≤</span>
+            <input type="number" id="filter-prep-max" min="0" step="5" placeholder="—" style="width:64px;" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" data-form-type="other">
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;">
+            <span style="font-size:13px;color:var(--text-muted);">Cuisson ≤</span>
+            <input type="number" id="filter-cook-max" min="0" step="5" placeholder="—" style="width:64px;" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" data-form-type="other">
+          </div>
+        </div>
+      </div>
+      <!-- Advanced -->
+      <details class="filter-sheet-section">
+        <summary style="cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;padding:4px 0;">
+          <span class="filter-sheet-label" style="margin:0;">Avancé (ingrédients / familles)</span>
+          <span style="color:var(--text-muted);font-size:14px;">›</span>
+        </summary>
+        <div style="padding-top:14px;display:flex;flex-direction:column;gap:14px;">
+          <div>
+            <div class="filter-sheet-label">Inclure ingrédients</div>
+            <div id="filter-include-wrapper"></div>
+          </div>
+          <div>
+            <div class="filter-sheet-label">Exclure ingrédients</div>
+            <div id="filter-exclude-wrapper"></div>
+          </div>
+          <div>
+            <div class="filter-sheet-label">Inclure familles</div>
+            <div id="filter-include-families-wrapper"></div>
+          </div>
+          <div>
+            <div class="filter-sheet-label">Exclure familles</div>
+            <div id="filter-exclude-families-wrapper"></div>
+          </div>
+        </div>
+      </details>
     </div>
   </div>
 </div>
@@ -3748,6 +3893,8 @@ function renderRecipes() {
   const total = state.recipes.length;
   const filtered = recipes.length;
   document.getElementById('recipe-count').textContent = total;
+  if (typeof updateFilterBadge === 'function') updateFilterBadge();
+  if (typeof updateActiveChips === 'function') updateActiveChips();
   const selBadge = document.getElementById('selected-badge');
   selBadge.textContent = state.selectedRecipeIds.length;
   selBadge.setAttribute('data-value', state.selectedRecipeIds.length);
@@ -4373,8 +4520,11 @@ function buildFilterBar() {
   const selChk = document.getElementById('filter-selection-only');
   if (selChk) {
     selChk.checked = !!state.filters.selectedOnly;
+    const pillSel = document.getElementById('pill-selection');
+    if (pillSel) pillSel.classList.toggle('active', !!state.filters.selectedOnly);
     selChk.onchange = e => {
       state.filters.selectedOnly = e.target.checked;
+      if (pillSel) pillSel.classList.toggle('active', e.target.checked);
       saveLocal();
       renderRecipes();
     };
@@ -4384,8 +4534,11 @@ function buildFilterBar() {
   const seasonToggle = document.getElementById('filter-season-toggle');
   if (seasonToggle) {
     seasonToggle.checked = !!state.filters.seasonOnly;
+    const pillSeason = document.getElementById('pill-season');
+    if (pillSeason) pillSeason.classList.toggle('active', !!state.filters.seasonOnly);
     seasonToggle.onchange = e => {
       state.filters.seasonOnly = e.target.checked;
+      if (pillSeason) pillSeason.classList.toggle('active', e.target.checked);
       saveLocal();
       renderRecipes();
     };
@@ -4534,11 +4687,25 @@ document.addEventListener('click', () => {
     renderRecipes();
   });
 });
+// Filter sheet open / close
+function openFilterSheet() {
+  document.getElementById('filter-sheet-overlay').classList.add('active');
+  buildFilterBar();
+}
+function closeFilterSheet() {
+  document.getElementById('filter-sheet-overlay').classList.remove('active');
+}
+document.getElementById('btn-toggle-filter').onclick = openFilterSheet;
+document.getElementById('filter-sheet-close').onclick = closeFilterSheet;
+document.getElementById('filter-sheet-overlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('filter-sheet-overlay')) closeFilterSheet();
+});
+
 document.getElementById('btn-reset-filters').onclick = () => {
   state.filters = { search: '', sort: 'name-asc', ratingValues: [], prepMax: null, cookMax: null, mealTypes: [], includeIngredients: [], excludeIngredients: [], includeFamilies: [], excludeFamilies: [], seasonOnly: false, selectedOnly: false };
   document.getElementById('search-input').value = '';
   setSortValue('name-asc');
-  ['filter-prep-max','filter-cook-max'].forEach(id => document.getElementById(id).value = '');
+  ['filter-prep-max','filter-cook-max'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
   const ss = document.getElementById('filter-season-toggle'); if (ss) ss.checked = false;
   const so = document.getElementById('filter-selection-only'); if (so) so.checked = false;
   saveLocal();
@@ -4546,13 +4713,53 @@ document.getElementById('btn-reset-filters').onclick = () => {
   renderRecipes();
 };
 
-// Toggle panneau unique de filtres
-{
+// Count active filters and update badge
+function updateFilterBadge() {
+  const f = state.filters;
+  let count = 0;
+  if (f.selectedOnly) count++;
+  if (f.seasonOnly) count++;
+  if (f.ratingValues && f.ratingValues.length) count += f.ratingValues.length;
+  if (f.mealTypes && f.mealTypes.length) count += f.mealTypes.length;
+  if (f.prepMax !== null && f.prepMax !== undefined) count++;
+  if (f.cookMax !== null && f.cookMax !== undefined) count++;
+  if (f.includeIngredients && f.includeIngredients.length) count += f.includeIngredients.length;
+  if (f.excludeIngredients && f.excludeIngredients.length) count += f.excludeIngredients.length;
+  if (f.includeFamilies && f.includeFamilies.length) count += f.includeFamilies.length;
+  if (f.excludeFamilies && f.excludeFamilies.length) count += f.excludeFamilies.length;
+  const badge = document.getElementById('filter-count-badge');
+  if (badge) {
+    badge.textContent = count;
+    badge.style.display = count > 0 ? '' : 'none';
+  }
   const btn = document.getElementById('btn-toggle-filter');
-  if (btn) btn.onclick = () => {
-    const panel = document.getElementById('filter-panel');
-    panel.style.display = panel.style.display === 'none' ? '' : 'none';
+  if (btn) btn.style.borderColor = count > 0 ? 'var(--primary)' : '';
+}
+
+// Render active-filter chips bar (tap to remove)
+function updateActiveChips() {
+  const bar = document.getElementById('active-filter-bar');
+  if (!bar) return;
+  bar.innerHTML = '';
+  const f = state.filters;
+  const addChip = (label, removeFn) => {
+    const chip = document.createElement('div');
+    chip.className = 'active-filter-chip';
+    chip.textContent = label;
+    chip.addEventListener('click', () => { removeFn(); saveLocal(); buildFilterBar(); renderRecipes(); });
+    bar.appendChild(chip);
   };
+  if (f.selectedOnly) addChip('⭐ Sélection', () => { state.filters.selectedOnly = false; });
+  if (f.seasonOnly) addChip('🌿 Saison', () => { state.filters.seasonOnly = false; });
+  (f.mealTypes || []).forEach(mt => addChip(mt, () => { state.filters.mealTypes = state.filters.mealTypes.filter(x => x !== mt); }));
+  (f.ratingValues || []).forEach(rv => addChip('★ ' + rv, () => { state.filters.ratingValues = state.filters.ratingValues.filter(x => x !== rv); }));
+  if (f.prepMax !== null && f.prepMax !== undefined) addChip('Prép. ≤ ' + f.prepMax + ' min', () => { state.filters.prepMax = null; const el = document.getElementById('filter-prep-max'); if (el) el.value = ''; });
+  if (f.cookMax !== null && f.cookMax !== undefined) addChip('Cuisson ≤ ' + f.cookMax + ' min', () => { state.filters.cookMax = null; const el = document.getElementById('filter-cook-max'); if (el) el.value = ''; });
+  (f.includeIngredients || []).forEach(id => { const n = getIngredientName(id); if (n) addChip('+ ' + n, () => { state.filters.includeIngredients = state.filters.includeIngredients.filter(x => x !== id); }); });
+  (f.excludeIngredients || []).forEach(id => { const n = getIngredientName(id); if (n) addChip('− ' + n, () => { state.filters.excludeIngredients = state.filters.excludeIngredients.filter(x => x !== id); }); });
+  (f.includeFamilies || []).forEach(id => { const n = getFamilyName(id); if (n) addChip('+ fam. ' + n, () => { state.filters.includeFamilies = state.filters.includeFamilies.filter(x => x !== id); }); });
+  (f.excludeFamilies || []).forEach(id => { const n = getFamilyName(id); if (n) addChip('− fam. ' + n, () => { state.filters.excludeFamilies = state.filters.excludeFamilies.filter(x => x !== id); }); });
+  bar.style.display = bar.children.length ? '' : 'none';
 }
 
 /* ========================================================================
