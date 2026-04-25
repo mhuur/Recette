@@ -4739,7 +4739,6 @@ document.getElementById('btn-reset-filters').onclick = () => {
 function updateFilterBadge() {
   const f = state.filters;
   let count = 0;
-  if (f.selectedOnly) count++;
   if (f.seasonOnly) count++;
   if (f.ratingValues && f.ratingValues.length) count += f.ratingValues.length;
   if (f.mealTypes && f.mealTypes.length) count += f.mealTypes.length;
@@ -4771,7 +4770,6 @@ function updateActiveChips() {
     chip.addEventListener('click', () => { removeFn(); saveLocal(); buildFilterBar(); renderRecipes(); });
     bar.appendChild(chip);
   };
-  if (f.selectedOnly) addChip('⭐ Sélection', () => { state.filters.selectedOnly = false; });
   if (f.seasonOnly) addChip('🌿 Saison', () => { state.filters.seasonOnly = false; });
   (f.mealTypes || []).forEach(mt => addChip(mt, () => { state.filters.mealTypes = state.filters.mealTypes.filter(x => x !== mt); }));
   (f.ratingValues || []).forEach(rv => addChip('★ ' + rv, () => { state.filters.ratingValues = state.filters.ratingValues.filter(x => x !== rv); }));
