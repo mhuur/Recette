@@ -3328,6 +3328,7 @@ function createChipsInput(wrapper, options) {
       div.textContent = it.name;
       div.onmousedown = ev => ev.preventDefault();
       div.onclick = ev => {
+        ev.stopPropagation();
         if (selectedValues.includes(it.name)) {
           selectedValues = selectedValues.filter(v => v !== it.name);
         } else {
@@ -3348,7 +3349,8 @@ function createChipsInput(wrapper, options) {
       c.className = 'autocomplete-create';
       c.textContent = '+ Créer « ' + input.value + ' »';
       c.onmousedown = ev => ev.preventDefault();
-      c.onclick = () => {
+      c.onclick = ev => {
+        ev.stopPropagation();
         const nm = onCreate(input.value.trim());
         if (nm) {
           selectedValues.push(nm);
@@ -3953,18 +3955,23 @@ function renderRecipes() {
     title.textContent = r.name;
     main.appendChild(title);
 
+    const buildMetaHtml = () => {
+      let html = '';
+      if (r.rating != null && r.rating !== '') {
+        html += '<span class="meta-item"><span class="rating-stars">' + ratingStars(r.rating) + '</span> <b>' + r.rating + '/10</b></span>';
+      }
+      if (r.servings) html += '<span class="meta-item">👥 ' + r.servings + '</span>';
+      if (r.prepTime) html += '<span class="meta-item">🔪 ' + formatTime(r.prepTime) + '</span>';
+      if (r.cookTime) html += '<span class="meta-item">🔥 ' + formatTime(r.cookTime) + '</span>';
+      if (r.mealTypes && r.mealTypes.length > 0) {
+        const tagsHtml = r.mealTypes.map(m => '<span class="meal-tag">' + escapeHtml(m) + '</span>').join('');
+        html += '<span class="meta-item meal-tags">' + tagsHtml + '</span>';
+      }
+      return html;
+    };
     const meta = document.createElement('div');
     meta.className = 'recipe-meta';
-    if (r.rating != null && r.rating !== '') {
-      meta.innerHTML += '<span class="meta-item"><span class="rating-stars">' + ratingStars(r.rating) + '</span> <b>' + r.rating + '/10</b></span>';
-    }
-    if (r.servings) meta.innerHTML += '<span class="meta-item">👥 ' + r.servings + '</span>';
-    if (r.prepTime) meta.innerHTML += '<span class="meta-item">🔪 ' + formatTime(r.prepTime) + '</span>';
-    if (r.cookTime) meta.innerHTML += '<span class="meta-item">🔥 ' + formatTime(r.cookTime) + '</span>';
-    if (r.mealTypes && r.mealTypes.length > 0) {
-      const tagsHtml = r.mealTypes.map(m => '<span class="meal-tag">' + escapeHtml(m) + '</span>').join('');
-      meta.innerHTML += '<span class="meta-item meal-tags">' + tagsHtml + '</span>';
-    }
+    meta.innerHTML = buildMetaHtml();
     main.appendChild(meta);
     header.appendChild(main);
 
@@ -4082,6 +4089,8 @@ function renderRecipes() {
       addBtn.title = 'Ajouter un type';
       addBtn.onclick = e => { e.stopPropagation(); showMealInput(); };
       mealChipsArea.appendChild(addBtn);
+      // Synchronise les meal-tag du header (visibles quand la carte est repliée)
+      meta.innerHTML = buildMetaHtml();
     }
     refreshMealChips();
     body.appendChild(mealRow);
