@@ -5103,6 +5103,88 @@ function openMergeIngredientDialog(sourceIng) {
   );
 }
 
+function openMergeMealTypeDialog(sourceMealType) {
+  const others = state.mealTypes.filter(m => m !== sourceMealType).sort((a,b) => a.localeCompare(b, 'fr'));
+  if (others.length === 0) { toast('Aucun autre type de plat disponible pour fusionner.', 'error'); return; }
+  const usage = state.recipes.filter(r => (r.mealTypes||[]).includes(sourceMealType)).length;
+  const items = others.map(m => {
+    const u = state.recipes.filter(r => (r.mealTypes||[]).includes(m)).length;
+    return { id: m, label: m,
+      sub: u > 0 ? u + ' recette' + (u > 1 ? 's' : '') : '',
+      detail: '« ' + sourceMealType + ' » sera remplacé par « ' + m + ' » dans ' + usage + ' recette(s). « ' + sourceMealType + ' » sera supprimé.' };
+  });
+  openMergeModal(
+    'Fusionner le type de plat',
+    'Choisir le type qui remplacera « ' + sourceMealType + ' » :',
+    sourceMealType,
+    items,
+    target => {
+      state.recipes.forEach(r => {
+        if (!r.mealTypes || !r.mealTypes.includes(sourceMealType)) return;
+        const without = r.mealTypes.filter(x => x !== sourceMealType);
+        if (!without.includes(target.id)) without.push(target.id);
+        r.mealTypes = without;
+      });
+      state.mealTypes = state.mealTypes.filter(x => x !== sourceMealType);
+      save(); rerenderAll();
+      toast('« ' + sourceMealType + ' » fusionné dans « ' + target.label + ' »', 'success');
+    }
+  );
+}
+
+function openMergeUnitDialog(sourceUnit) {
+  const others = state.units.filter(u => u.id !== sourceUnit.id).sort((a,b) => a.name.localeCompare(b.name, 'fr'));
+  if (others.length === 0) { toast('Aucune autre unité disponible pour fusionner.', 'error'); return; }
+  const usage = state.recipes.reduce((acc,r) => acc + (r.ingredients||[]).filter(i => i.unitId === sourceUnit.id).length, 0);
+  const items = others.map(u => {
+    const used = state.recipes.reduce((acc,r) => acc + (r.ingredients||[]).filter(i => i.unitId === u.id).length, 0);
+    return { id: u.id, label: u.name,
+      sub: used > 0 ? 'utilisée ' + used + ' fois' : '',
+      detail: usage + ' utilisation(s) de « ' + sourceUnit.name + ' » seront réaffectées à « ' + u.name + ' ». « ' + sourceUnit.name + ' » sera supprimée.' };
+  });
+  openMergeModal(
+    'Fusionner l\'unité',
+    'Choisir l\'unité qui remplacera « ' + sourceUnit.name + ' » :',
+    sourceUnit.name,
+    items,
+    target => {
+      state.recipes.forEach(r => (r.ingredients||[]).forEach(i => { if (i.unitId === sourceUnit.id) i.unitId = target.id; }));
+      state.units = state.units.filter(x => x.id !== sourceUnit.id);
+      save(); rerenderAll();
+      toast(usage + ' utilisation(s) réaffectée(s) à « ' + target.label + ' »', 'success');
+    }
+  );
+}
+
+function openMergeFamilyDialog(sourceFamily) {
+  const others = state.ingredientFamilies.filter(f => f.id !== sourceFamily.id).sort((a,b) => a.name.localeCompare(b.name, 'fr'));
+  if (others.length === 0) { toast('Aucune autre famille disponible pour fusionner.', 'error'); return; }
+  const usage = state.ingredients.filter(i => (i.familyIds||[]).includes(sourceFamily.id)).length;
+  const items = others.map(f => {
+    const u = state.ingredients.filter(i => (i.familyIds||[]).includes(f.id)).length;
+    return { id: f.id, label: f.name,
+      sub: u > 0 ? u + ' ingrédient' + (u > 1 ? 's' : '') : '',
+      detail: usage + ' ingrédient(s) appartenant à « ' + sourceFamily.name + ' » seront réaffectés à « ' + f.name + ' ». « ' + sourceFamily.name + ' » sera supprimée.' };
+  });
+  openMergeModal(
+    'Fusionner la famille',
+    'Choisir la famille qui remplacera « ' + sourceFamily.name + ' » :',
+    sourceFamily.name,
+    items,
+    target => {
+      state.ingredients.forEach(i => {
+        if (!i.familyIds || !i.familyIds.includes(sourceFamily.id)) return;
+        const without = i.familyIds.filter(fid => fid !== sourceFamily.id);
+        if (!without.includes(target.id)) without.push(target.id);
+        i.familyIds = without;
+      });
+      state.ingredientFamilies = state.ingredientFamilies.filter(x => x.id !== sourceFamily.id);
+      save(); rerenderAll();
+      toast(usage + ' ingrédient(s) réaffecté(s) à « ' + target.label + ' »', 'success');
+    }
+  );
+}
+
 function renderDataTab() {
   // Ingrédients
   const ingList = document.getElementById('ingredients-list');
@@ -5190,7 +5272,13 @@ function renderDataTab() {
       save();
       rerenderAll();
     };
+    const mergeUnitBtn = document.createElement('button');
+    mergeUnitBtn.className = 'btn btn-xs';
+    mergeUnitBtn.textContent = '🔗';
+    mergeUnitBtn.title = 'Fusionner avec une autre unité';
+    mergeUnitBtn.onclick = () => openMergeUnitDialog(u);
     actions.appendChild(editBtn);
+    actions.appendChild(mergeUnitBtn);
     actions.appendChild(delBtn);
     el.appendChild(actions);
     unitList.appendChild(el);
@@ -5326,8 +5414,14 @@ function renderDataTab() {
       save();
       rerenderAll();
     };
+    const mergeMealBtn = document.createElement('button');
+    mergeMealBtn.className = 'btn btn-xs';
+    mergeMealBtn.textContent = '🔗';
+    mergeMealBtn.title = 'Fusionner avec un autre type de plat';
+    mergeMealBtn.onclick = () => openMergeMealTypeDialog(m);
     const actions = document.createElement('span');
     actions.className = 'data-list-item-actions';
+    actions.appendChild(mergeMealBtn);
     actions.appendChild(delBtn);
     el.appendChild(actions);
     mealList.appendChild(el);
@@ -5389,7 +5483,13 @@ function renderDataTab() {
           save();
           rerenderAll();
         };
+        const mergeFamBtn = document.createElement('button');
+        mergeFamBtn.className = 'btn btn-xs';
+        mergeFamBtn.textContent = '🔗';
+        mergeFamBtn.title = 'Fusionner avec une autre famille';
+        mergeFamBtn.onclick = (e) => { e.stopPropagation(); openMergeFamilyDialog(f); };
         actions.appendChild(editBtn);
+        actions.appendChild(mergeFamBtn);
         actions.appendChild(delBtn);
         el.appendChild(actions);
 
