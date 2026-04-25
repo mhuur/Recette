@@ -387,8 +387,9 @@ label {
   font-size: 14px;
   font-weight: 600;
   color: var(--text);
+  flex-shrink: 0;
+  max-width: 100%;
   overflow-wrap: anywhere;
-  min-width: 0;
 }
 .recipe-meta {
   display: flex;
@@ -3990,112 +3991,119 @@ function renderRecipes() {
     expand.textContent = '▸';
     header.appendChild(expand);
 
-    header.onclick = () => card.classList.toggle('expanded');
+    header.onclick = () => {
+      if (!card.classList.contains('expanded')) ensureBody();
+      card.classList.toggle('expanded');
+    };
     card.appendChild(header);
 
-    // Body
-    const body = document.createElement('div');
-    body.className = 'recipe-body';
-    if (r.ingredients && r.ingredients.length > 0) {
-      const ul = document.createElement('ul');
-      ul.className = 'ingredients-list';
-      r.ingredients.forEach(i => {
-        const li = document.createElement('li');
-        const qty = i.quantity ? i.quantity + (i.unitId ? ' ' + getUnitName(i.unitId) : '') : '';
-        li.innerHTML = '<span class="ing-qty">' + escapeHtml(qty) + '</span><span class="ing-name">' + escapeHtml(getIngredientName(i.ingredientId)) + '</span>';
-        ul.appendChild(li);
-      });
-      body.appendChild(ul);
-    } else {
-      body.innerHTML = '<div style="color:var(--text-dim); font-style:italic;">Aucun ingrédient renseigné</div>';
-    }
+    // Body — lazy construction (only built on first expand to keep list rendering fast)
+    let bodyBuilt = false;
+    function ensureBody() {
+      if (bodyBuilt) return;
+      bodyBuilt = true;
 
-    if (r.origin && r.origin.type !== 'none') {
-      const o = document.createElement('div');
-      o.className = 'recipe-origin';
-      if (r.origin.type === 'book') {
-        o.innerHTML = '📖 ' + escapeHtml(r.origin.book || 'Livre') + (r.origin.page ? ', p. ' + escapeHtml(r.origin.page) : '');
-      } else if (r.origin.type === 'url' && r.origin.url) {
-        o.innerHTML = '🔗 <a href="' + escapeHtml(r.origin.url) + '" target="_blank" rel="noopener">' + escapeHtml(r.origin.url) + '</a>';
-      } else if (r.origin.type === 'other' && r.origin.other) {
-        o.innerHTML = 'ℹ ' + escapeHtml(r.origin.other);
-      }
-      if (o.innerHTML) body.appendChild(o);
-    }
-
-    // Types de plat : chips cliquables + bouton "+" pour ouvrir l'ajout
-    const mealRow = document.createElement('div');
-    mealRow.style.cssText = 'display:flex; flex-wrap:wrap; gap:6px; align-items:center; margin-top:10px; padding-top:10px; border-top:1px solid var(--border);';
-
-    const mealLabel = document.createElement('span');
-    mealLabel.style.cssText = 'font-size:11px; color:var(--text-muted); flex-shrink:0; margin-right:2px;';
-    mealLabel.textContent = 'Types :';
-    mealRow.appendChild(mealLabel);
-
-    const mealChipsArea = document.createElement('div');
-    mealChipsArea.style.cssText = 'display:flex; flex-wrap:wrap; gap:4px; flex:1; align-items:center;';
-    mealRow.appendChild(mealChipsArea);
-
-    // Input d'ajout, masqué par défaut
-    const addWrap = document.createElement('div');
-    addWrap.style.cssText = 'display:none; min-width:120px; max-width:180px;';
-    mealRow.appendChild(addWrap);
-    let mealCtrl = null;
-
-    function showMealInput() {
-      addWrap.style.display = '';
-      if (!mealCtrl) {
-        mealCtrl = createChipsInput(addWrap, {
-          getItems: () => state.mealTypes.map(m => ({ name: m, inSeason: (r.mealTypes||[]).includes(m) })),
-          onCreate: name => { findOrCreateMealType(name); return name; },
-          initialValues: [],
-          placeholder: '+ type...',
-          onChange: names => {
-            r.mealTypes = r.mealTypes || [];
-            names.forEach(n => {
-              if (r.mealTypes.includes(n)) r.mealTypes = r.mealTypes.filter(x => x !== n);
-              else r.mealTypes.push(n);
-            });
-            save(); fbSchedulePush(); refreshMealChips();
-            // Clear input widget after each toggle so dropdown stays open for next pick
-            setTimeout(() => { if (mealCtrl) mealCtrl.setValues([]); }, 0);
-          }
+      const body = document.createElement('div');
+      body.className = 'recipe-body';
+      if (r.ingredients && r.ingredients.length > 0) {
+        const ul = document.createElement('ul');
+        ul.className = 'ingredients-list';
+        r.ingredients.forEach(i => {
+          const li = document.createElement('li');
+          const qty = i.quantity ? i.quantity + (i.unitId ? ' ' + getUnitName(i.unitId) : '') : '';
+          li.innerHTML = '<span class="ing-qty">' + escapeHtml(qty) + '</span><span class="ing-name">' + escapeHtml(getIngredientName(i.ingredientId)) + '</span>';
+          ul.appendChild(li);
         });
+        body.appendChild(ul);
+      } else {
+        body.innerHTML = '<div style="color:var(--text-dim); font-style:italic;">Aucun ingrédient renseigné</div>';
       }
-      // focus the inner input
-      const inp = addWrap.querySelector('input');
-      if (inp) { inp.focus(); }
+
+      if (r.origin && r.origin.type !== 'none') {
+        const o = document.createElement('div');
+        o.className = 'recipe-origin';
+        if (r.origin.type === 'book') {
+          o.innerHTML = '📖 ' + escapeHtml(r.origin.book || 'Livre') + (r.origin.page ? ', p. ' + escapeHtml(r.origin.page) : '');
+        } else if (r.origin.type === 'url' && r.origin.url) {
+          o.innerHTML = '🔗 <a href="' + escapeHtml(r.origin.url) + '" target="_blank" rel="noopener">' + escapeHtml(r.origin.url) + '</a>';
+        } else if (r.origin.type === 'other' && r.origin.other) {
+          o.innerHTML = 'ℹ ' + escapeHtml(r.origin.other);
+        }
+        if (o.innerHTML) body.appendChild(o);
+      }
+
+      // Types de plat : chips cliquables + bouton "+" pour ouvrir l'ajout
+      const mealRow = document.createElement('div');
+      mealRow.style.cssText = 'display:flex; flex-wrap:wrap; gap:6px; align-items:center; margin-top:10px; padding-top:10px; border-top:1px solid var(--border);';
+
+      const mealLabel = document.createElement('span');
+      mealLabel.style.cssText = 'font-size:11px; color:var(--text-muted); flex-shrink:0; margin-right:2px;';
+      mealLabel.textContent = 'Types :';
+      mealRow.appendChild(mealLabel);
+
+      const mealChipsArea = document.createElement('div');
+      mealChipsArea.style.cssText = 'display:flex; flex-wrap:wrap; gap:4px; flex:1; align-items:center;';
+      mealRow.appendChild(mealChipsArea);
+
+      const addWrap = document.createElement('div');
+      addWrap.style.cssText = 'display:none; min-width:120px; max-width:180px;';
+      mealRow.appendChild(addWrap);
+      let mealCtrl = null;
+
+      function showMealInput() {
+        addWrap.style.display = '';
+        if (!mealCtrl) {
+          mealCtrl = createChipsInput(addWrap, {
+            getItems: () => state.mealTypes.map(m => ({ name: m, inSeason: (r.mealTypes||[]).includes(m) })),
+            onCreate: name => { findOrCreateMealType(name); return name; },
+            initialValues: [],
+            placeholder: '+ type...',
+            onChange: names => {
+              r.mealTypes = r.mealTypes || [];
+              names.forEach(n => {
+                if (r.mealTypes.includes(n)) r.mealTypes = r.mealTypes.filter(x => x !== n);
+                else r.mealTypes.push(n);
+              });
+              save(); fbSchedulePush(); refreshMealChips();
+              // Clear input widget after each toggle so dropdown stays open for next pick
+              setTimeout(() => { if (mealCtrl) mealCtrl.setValues([]); }, 0);
+            }
+          });
+        }
+        const inp = addWrap.querySelector('input');
+        if (inp) { inp.focus(); }
+      }
+
+      function refreshMealChips() {
+        mealChipsArea.innerHTML = '';
+        (r.mealTypes || []).forEach(m => {
+          const chip = document.createElement('span');
+          chip.className = 'chip';
+          chip.textContent = m + ' ×';
+          chip.title = 'Retirer';
+          chip.style.cursor = 'pointer';
+          chip.onclick = e => {
+            e.stopPropagation();
+            r.mealTypes = (r.mealTypes || []).filter(x => x !== m);
+            save(); fbSchedulePush(); refreshMealChips();
+          };
+          mealChipsArea.appendChild(chip);
+        });
+        const addBtn = document.createElement('span');
+        addBtn.style.cssText = 'font-size:18px; color:var(--primary); cursor:pointer; line-height:1; padding:2px 4px;';
+        addBtn.textContent = '+';
+        addBtn.title = 'Ajouter un type';
+        addBtn.onclick = e => { e.stopPropagation(); showMealInput(); };
+        mealChipsArea.appendChild(addBtn);
+        // Synchronise les meal-tag du header (visibles quand la carte est repliée)
+        meta.innerHTML = buildMetaHtml();
+      }
+      refreshMealChips();
+      body.appendChild(mealRow);
+
+      card.appendChild(body);
     }
 
-    function refreshMealChips() {
-      mealChipsArea.innerHTML = '';
-      (r.mealTypes || []).forEach(m => {
-        const chip = document.createElement('span');
-        chip.className = 'chip';
-        chip.textContent = m + ' ×';
-        chip.title = 'Retirer';
-        chip.style.cursor = 'pointer';
-        chip.onclick = e => {
-          e.stopPropagation();
-          r.mealTypes = (r.mealTypes || []).filter(x => x !== m);
-          save(); fbSchedulePush(); refreshMealChips();
-        };
-        mealChipsArea.appendChild(chip);
-      });
-      // Bouton "+"
-      const addBtn = document.createElement('span');
-      addBtn.style.cssText = 'font-size:18px; color:var(--primary); cursor:pointer; line-height:1; padding:2px 4px;';
-      addBtn.textContent = '+';
-      addBtn.title = 'Ajouter un type';
-      addBtn.onclick = e => { e.stopPropagation(); showMealInput(); };
-      mealChipsArea.appendChild(addBtn);
-      // Synchronise les meal-tag du header (visibles quand la carte est repliée)
-      meta.innerHTML = buildMetaHtml();
-    }
-    refreshMealChips();
-    body.appendChild(mealRow);
-
-    card.appendChild(body);
     container.appendChild(card);
   });
 }
