@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="format-detection" content="telephone=no, date=no, email=no, address=no">
 <title>🍳 Mes Recettes</title>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
@@ -486,7 +487,7 @@ label {
   display: none;
   align-items: flex-start;
   justify-content: center;
-  z-index: 100;
+  z-index: 300;
   padding: 20px;
   overflow-y: auto;
 }
@@ -509,6 +510,7 @@ label {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-shrink: 0;
 }
 .modal-title { font-size: 18px; font-weight: 600; }
 .modal-close {
@@ -527,11 +529,8 @@ label {
   display: flex;
   justify-content: space-between;
   gap: 10px;
-  position: sticky;
-  bottom: 0;
-  background: var(--bg-2);
-  z-index: 1;
   flex-shrink: 0;
+  background: var(--bg-2);
 }
 
 /* Form grid */
@@ -1436,8 +1435,10 @@ label {
     border-radius: 20px 20px 0 0;
     width: 100%;
     max-width: 100%;
+    height: 92dvh;
     max-height: 92dvh;
   }
+  .modal-body { min-height: 0; }
 
   /* ---- FAB ---- */
   .fab {
@@ -1746,7 +1747,7 @@ body.guest-mode .sidebar::after {
       <p style="font-size:13px; color:var(--text-muted);">Un ingrédient peut appartenir à plusieurs familles (ex: "Poulet" → Viande + Volaille). Sert à filtrer les recettes par famille.</p>
       <div id="families-list" class="data-list"></div>
       <div style="margin-top:10px; display:flex; gap:8px;">
-        <input type="text" id="new-family" placeholder="Nouvelle famille...">
+        <input type="text" id="new-family" placeholder="Nouvelle famille..." autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" data-form-type="other">
         <button class="btn btn-primary" id="btn-add-family">Ajouter</button>
       </div>
     </div>
@@ -1754,7 +1755,7 @@ body.guest-mode .sidebar::after {
       <h3>🍽 Types de plats <span id="meal-count-badge" class="count-badge" style="background:var(--surface);">0</span></h3>
       <div id="meals-list" class="data-list"></div>
       <div style="margin-top:10px; display:flex; gap:8px;">
-        <input type="text" id="new-meal-type" placeholder="Nouveau type de plat...">
+        <input type="text" id="new-meal-type" placeholder="Nouveau type de plat..." autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" data-form-type="other">
         <button class="btn btn-primary" id="btn-add-meal-type">Ajouter</button>
       </div>
     </div>
@@ -1811,7 +1812,7 @@ body.guest-mode .sidebar::after {
         <div id="share-link-box" style="display:none; margin-top:10px; background:var(--bg); border-radius:8px; padding:10px;">
           <div style="font-size:12px; color:var(--text-muted); margin-bottom:6px;">Envoyez ce lien à la personne souhaitée :</div>
           <div style="display:flex; gap:6px;">
-            <input type="text" id="share-link-value" readonly style="font-size:11px; font-family:monospace; background:var(--surface);">
+            <input type="text" id="share-link-value" readonly style="font-size:11px; font-family:monospace; background:var(--surface);" autocomplete="off" data-form-type="other">
             <button class="btn btn-sm" id="btn-copy-share-link">📋 Copier</button>
           </div>
         </div>
@@ -1839,7 +1840,7 @@ body.guest-mode .sidebar::after {
       <div style="background:var(--surface); padding:10px 12px; border-radius:8px; margin:10px 0;">
         <div class="form-group" style="margin-bottom:12px;">
           <label>Nom de l'espace partagé</label>
-          <input type="text" id="shared-space-name" placeholder="ex: famille-mhuur" style="font-family:monospace;">
+          <input type="text" id="shared-space-name" placeholder="ex: famille-mhuur" style="font-family:monospace;" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" data-form-type="other">
           <div style="font-size:12px; color:var(--text-muted); margin-top:4px;">💡 Les deux comptes doivent utiliser <b>exactement le même nom</b>.</div>
         </div>
         <label style="display:flex; align-items:center; gap:10px; margin:0; cursor:pointer;">
@@ -1852,7 +1853,7 @@ body.guest-mode .sidebar::after {
           <label>UIDs des comptes autorisés</label>
           <ul id="shared-uids-list" style="list-style:none; padding:0; margin-bottom:8px;"></ul>
           <div style="display:flex; gap:6px;">
-            <input type="text" id="new-uid-input" placeholder="UID du compte à ajouter…" style="font-family:monospace; font-size:12px;">
+            <input type="text" id="new-uid-input" placeholder="UID du compte à ajouter…" style="font-family:monospace; font-size:12px;" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" data-form-type="other">
             <button class="btn btn-sm" id="btn-add-uid">+ Ajouter</button>
           </div>
         </div>
@@ -1920,21 +1921,21 @@ body.guest-mode .sidebar::after {
         <div class="form-compact-item" title="Note / 10">
           <span class="form-compact-icon">⭐</span>
           <div class="rating-input">
-            <input type="number" id="recipe-rating" min="0" max="10" step="0.5" placeholder="/10">
+            <input type="number" id="recipe-rating" min="0" max="10" step="0.5" placeholder="/10" autocomplete="off" data-form-type="other">
             <span class="rating-stars-display" id="rating-preview"></span>
           </div>
         </div>
         <div class="form-compact-item" title="Nombre de personnes">
           <span class="form-compact-icon">👥</span>
-          <input type="number" id="recipe-servings" min="1" value="4">
+          <input type="number" id="recipe-servings" min="1" value="4" autocomplete="off" data-form-type="other">
         </div>
         <div class="form-compact-item" title="Temps de préparation (min)">
           <span class="form-compact-icon">🔪</span>
-          <input type="number" id="recipe-prep" min="0" placeholder="min">
+          <input type="number" id="recipe-prep" min="0" placeholder="min" autocomplete="off" data-form-type="other">
         </div>
         <div class="form-compact-item" title="Temps de cuisson (min)">
           <span class="form-compact-icon">🔥</span>
-          <input type="number" id="recipe-cook" min="0" placeholder="min">
+          <input type="number" id="recipe-cook" min="0" placeholder="min" autocomplete="off" data-form-type="other">
         </div>
       </div>
       <div class="form-group full">
@@ -1987,7 +1988,7 @@ body.guest-mode .sidebar::after {
     <div class="modal-body">
       <div class="form-group">
         <label>Nom de l'ingrédient *</label>
-        <input type="text" id="new-ing-name">
+        <input type="text" id="new-ing-name" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" data-form-type="other">
       </div>
       <div class="form-group">
         <label>Type (catégorie / rayon)</label>
@@ -2023,7 +2024,7 @@ body.guest-mode .sidebar::after {
     <div class="modal-body">
       <div class="form-group">
         <label id="rename-modal-label">Nouveau nom</label>
-        <input type="text" id="rename-modal-input">
+        <input type="text" id="rename-modal-input" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" data-form-type="other">
       </div>
       <div id="rename-modal-info" style="font-size:12px; color:var(--text-muted); margin-top:4px;"></div>
     </div>
@@ -3072,6 +3073,12 @@ function createAutocomplete(wrapper, options) {
   input.type = 'text';
   input.placeholder = placeholder || 'Rechercher...';
   input.value = initialText;
+  input.autocomplete = 'off';
+  input.setAttribute('autocorrect', 'off');
+  input.setAttribute('autocapitalize', 'none');
+  input.setAttribute('spellcheck', 'false');
+  input.setAttribute('data-form-type', 'other');
+  input.setAttribute('data-form-type', 'other');
   wrapper.appendChild(input);
 
   const dropdown = document.createElement('div');
@@ -3198,6 +3205,7 @@ function createChipsInput(wrapper, options) {
   input.setAttribute('autocorrect', 'off');
   input.setAttribute('autocapitalize', 'none');
   input.setAttribute('spellcheck', 'false');
+  input.setAttribute('data-form-type', 'other');
 
   function renderChips() {
     // Retire tous les chips mais conserve l'input
@@ -4189,6 +4197,11 @@ function addIngRow(existing = null) {
   qtyInput.type = 'text';
   qtyInput.placeholder = 'Qté';
   qtyInput.value = rowData.quantity;
+  qtyInput.autocomplete = 'off';
+  qtyInput.setAttribute('autocorrect', 'off');
+  qtyInput.setAttribute('autocapitalize', 'none');
+  qtyInput.setAttribute('spellcheck', 'false');
+  qtyInput.setAttribute('data-form-type', 'other');
   qtyInput.oninput = () => { rowData.quantity = qtyInput.value; };
 
   const unitWrap = document.createElement('div');
