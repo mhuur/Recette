@@ -387,9 +387,11 @@ label {
   font-size: 14px;
   font-weight: 600;
   color: var(--text);
-  flex-shrink: 0;
-  max-width: 100%;
-  overflow-wrap: anywhere;
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .recipe-meta {
   display: flex;
@@ -444,6 +446,12 @@ label {
   font-size: 13px;
 }
 .recipe-card.expanded .recipe-body { display: block; }
+.recipe-card.expanded .recipe-title {
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+  overflow-wrap: anywhere;
+}
 .ingredients-list {
   list-style: none;
   display: flex;
@@ -3954,6 +3962,7 @@ function renderRecipes() {
     const title = document.createElement('div');
     title.className = 'recipe-title';
     title.textContent = r.name;
+    title.title = r.name;
     main.appendChild(title);
 
     const buildMetaHtml = () => {
