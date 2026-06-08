@@ -1,82 +1,58 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Guide pour Claude Code sur ce projet.
 
-## Stack & structure
+## Projet
+- App de gestion de **recettes** (usage perso/familial) : recettes, liste de courses, ingrédients de saison.
+- Multi-comptes via partage Firestore + mode invité lecture seule.
+- État : **en prod**, utilisée au quotidien sur mobile et desktop.
 
-Single-file app: **tout le code est dans `index.html`** (~6 200 lignes). Pas de build, pas de bundler, pas de dépendances npm. On modifie `index.html` directement.
+## Stack & versions
+- **Single-file** : tout (HTML + CSS + JS) dans un seul `.html`. Pas de build, bundler, ni npm.
+- Vanilla JS ; CSS dark « néon » (variables `--bg`, `--primary`…) ; polices Google Inter + Tilt Neon.
+- CDN dans `<head>` : Firebase compat **10.12.5** (app/auth/firestore), SheetJS **xlsx 0.18.5** (import Excel).
+- Données : `localStorage` + sync temps réel Firestore.
 
-Dépendances CDN (dans le `<head>`) :
-- Firebase compat SDK v10.12.5 (`firebase-app-compat`, `firebase-auth-compat`, `firebase-firestore-compat`)
-- SheetJS `xlsx@0.18.5` pour l'import Excel
+## Fichiers du dossier
+- `index - <timestamp>.html` — titre « 🍳 Mes Recettes », ~7 600 lignes = **l'app Recettes** (le fichier qu'on modifie). Nom horodaté car re-téléchargé ; c'est toujours le plus volumineux / titre Recettes.
+- `index - <autre timestamp>.html` — titre « Devis Photo » = **autre outil**, gardé comme **référence de design** (sidebar, menu « Signaler un bug »). Ne pas le modifier ni le confondre.
 
-Structure interne de `index.html` :
-1. `<head>` — CDN scripts
-2. `<style>` — CSS complet (~1 100 lignes), thème dark avec variables CSS `--bg`, `--primary`, etc.
-3. `<body>` — HTML des onglets + modals
-4. `<script>` — toute la logique JS (~4 700 lignes)
+## Commandes
+- **Aucun build / install / lint / test.** On édite le `.html` directement.
+- Test local : `py -m http.server 8000` dans le dossier → `http://localhost:8000/<fichier>.html`.
+- Le **login Google exige `http://localhost`** (échoue en `file://`).
 
-## Architecture JS
-
-**État global unique** (`state`, ~ligne 2 104) — objet mutable avec `recipes`, `ingredients`, `units`, `ingredientTypes`, `ingredientFamilies`, `mealTypes`, `filters`, `notes`, `selectedRecipeIds`, `checkedShoppingItems`.
-
-**Persistance à deux niveaux** :
-- `save()` → `localStorage` + planifie un push Firestore (debounce 5 s)
-- `saveLocal()` → `localStorage` uniquement (pour les filtres/préférences)
-- `fbSchedulePush()` → `fbDocRef.set({...state, lastModified})` après debounce
-
-**Sync Firestore** :
-- `fbDocRef` pointe sur `users/{uid}/app/data` (mode perso) ou `sharedData/{spaceName}` (mode partagé)
-- `onSnapshot` écoute en temps réel ; ignoré si `fbSkipNextSnapshot` ou si `fbSaveTimer` est actif (écriture locale en cours)
-- `visibilitychange` force un `get()` à la reprise de session
-- `applyCloudData(data)` applique les données cloud, appelle toujours `renderSeasonTab()` et met à jour l'éditeur de notes (même si l'onglet n'est pas actif)
-
-**Modes d'accès** :
-- Authentifié perso (Google Sign-In)
-- Mode partagé (`sharedMode`) — espace nommé dans Firestore, UIDs autorisés
-- Mode invité (`guestMode`) — lecture seule, accès via hash URL `#invite=...`
-
-**Rendus par onglet** :
-- `renderRecipes()` — filtre via `getFilteredRecipes()`, construit les cartes DOM
-- `renderSeasonTab()` — grille mois × ingrédients
-- `renderShopping()` — liste de courses groupée par famille
-- `renderDataTab()` — gestion ingrédients / unités / types / familles
-- `rerenderAll()` — appelé après sync cloud, re-rend tous les onglets actifs
-
-**Composants réutilisables** :
-- `createAutocomplete(wrapper, options)` — input avec dropdown simple (retourne `{ setValue, getValue }`)
-- `createChipsInput(wrapper, options)` — input multi-valeurs avec chips (retourne `{ getValues, setValues }`). Le dropdown est appendé à `document.body` en `position:fixed`.
-- `showConfirm(title, msg, okLabel, onOk)` — modal de confirmation in-app (remplace `confirm()`)
-- `openMergeModal(...)` — modal de fusion en 2 étapes (remplace `prompt()`)
+## Architecture (fichier Recettes)
+- Ordre interne : `<head>` CDN → `<style>` (~1900 lignes : thème + responsive `@media (max-width:768px)`) → `<body>` (sidebar + onglets + modals) → `<script>`.
+- **État unique** `state` : `recipes`, `ingredients`, `units`, `ingredientTypes`, `ingredientFamilies`, `mealTypes`, `filters`, `notes`, `bugs`, sélection… IDs via `uid()`.
+- **Persistance** : `save()` = localStorage + push Firestore débouncé (5 s) ; `saveLocal()` = local seul (filtres/UI).
+- **Sync** : `fbDocRef` → `users/{uid}/app/data` (perso) ou `sharedData/{espace}` (partagé) ; `onSnapshot` temps réel ; `applyCloudData()` applique le cloud.
+- **Onglets** : Recettes, Courses, Saison, Données, Réglages, **Debug**. Bascule via `switchTab(id)` ; chaque onglet a son `render*()`.
+- **Onglet Debug** = « Notes & Remarques » (bugs/idées à transmettre à Claude) : `state.bugs.items`, rendu par `renderDebug()`, copie presse-papier.
+- **Accès** : Google perso, mode partagé (`getSharedMode()`), mode invité lecture seule (`#invite=` dans l'URL).
 
 ## Conventions
+- Échappement HTML : **`escapeHtml()`** — il n'existe **pas** de `esc()` (piège fréquent en portant du code de « Devis Photo »).
+- Composants réutilisables : `createAutocomplete()`, `createChipsInput()`. Modals in-app `showConfirm()`, `openMergeModal()` au lieu de `confirm()`/`prompt()` natifs.
+- Inputs texte : `autocomplete/autocorrect/autocapitalize=off`, `spellcheck=false` (anti AutoFill iOS).
+- Sidebar : desktop = onglets primaires (Recettes/Courses/Saison) visibles, secondaires (Données/Réglages/Debug) dans le menu « Mon compte » ; mobile = tous dans la barre du bas.
+- Hauteurs en `dvh` (gère le clavier iOS).
 
-**Branches Git** : développement sur `claude/fix-mobile-login-visibility-sSNoW`, merge vers `main` via PR. Nommage : `claude/<description>`.
+## Workflows
+- **Feature / fix** : éditer le `.html` → tester via serveur local → vérifier à la main les onglets touchés + un cycle save/sync.
+- **Debug headless (pas de console accessible facilement)** : copier le fichier, injecter une sonde qui écrit le résultat dans `document.title`, lancer `chrome --headless=new --dump-dom`, lire le `<title>`. (Méthode utilisée pour traquer le bug `esc`/`escapeHtml`.)
+- Pas de CI ni de tests auto.
 
-**IDs** : générés par `uid()` = `Date.now().toString(36) + random`. Jamais d'index tableau comme identifiant.
+## Pièges connus
+- `fbSaveTimer` : remettre à `null` **avant** `fbDocRef.set()` dans le timer, sinon les snapshots cloud entrants restent bloqués.
+- `authStateResolved` : flag anti-flash de l'overlay de login au boot — ne pas retirer.
+- `fbDocRef` doit être assigné **avant** `renderFirebaseUI()`.
+- `.autocomplete-dropdown` est appendé à `document.body` : le listener `click` global de fermeture doit l'ignorer.
+- `applyCloudData()` : appeler `renderSeasonTab()` inconditionnellement (sinon vide sur mobile après sync).
+- **Code mort Notes** : `#notes-editor`, `initNotesTab()`, `notesUndo/Redo` subsistent mais l'onglet Notes a été **remplacé par Debug** ; ne pas s'y fier.
 
-**Lookup helpers** : `getIngredientName(id)`, `getUnitName(id)`, `getTypeName(id)`, `getFamilyName(id)` — retournent `''` si non trouvé. `findOrCreate*()` pour créer à la volée.
-
-**CSS** : variables `--bg`, `--bg-2`, `--surface`, `--primary`, `--accent`, `--danger`, `--text`, `--text-muted`. Breakpoint mobile : `@media (max-width: 768px)`. Unité de hauteur : `dvh` (dynamic viewport height, gère le clavier iOS).
-
-**Formulaires** : tous les inputs texte ont `autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false"` pour éviter la barre AutoFill iOS.
-
-## Pièges spécifiques
-
-**`fbSaveTimer`** : doit être reset à `null` **avant** d'appeler `fbDocRef.set()` dans le timer, sinon les snapshots cloud entrants sont bloqués indéfiniment.
-
-**`authStateResolved`** : flag qui empêche le flash de l'overlay de login au chargement. Ne pas supprimer la logique qui le set dans `onAuthStateChanged`.
-
-**`fbDocRef` doit être assigné AVANT `renderFirebaseUI()`** dans `onAuthStateChanged` — sinon le chemin de synchro affiché dans les réglages est vide.
-
-**Dropdown `.autocomplete-dropdown`** : appendé à `document.body`, donc **en dehors** de `.recipe-card`. Le listener `click` global qui ferme les cartes doit ignorer les clics sur `.autocomplete-dropdown` (déjà géré — ne pas retirer ce guard).
-
-**`applyCloudData`** : toujours appeler `renderSeasonTab()` et mettre à jour `#notes-editor` inconditionnellement (pas seulement si l'onglet est actif), sinon les données ne s'affichent pas sur mobile après un sync.
-
-**`setValues([])` sur `mealCtrl`** : ne déclenche pas `onChange` — sûr à appeler pour vider le widget sans effet de bord.
-
-## Ne pas toucher
-
-- La config Firebase hardcodée (`DEFAULT_FIREBASE_CONFIG`) — elle pointe sur le projet Firebase de prod.
-- `STORAGE_KEY = 'mhuur_recipes_app_v1'` — changer la clé efface toutes les données locales des utilisateurs.
-- `migrateRecipes()` — migration one-shot des anciens formats de données, appelée au `load()`.
+## Hors-périmètre (ne PAS modifier sans demander)
+- `DEFAULT_FIREBASE_CONFIG` (projet Firebase de prod).
+- `STORAGE_KEY = 'mhuur_recipes_app_v1'` (changer efface les données locales des utilisateurs).
+- `migrateRecipes()` (migration one-shot appelée au `load()`).
+- `state.notes` (conservé pour compat même si son UI a disparu).

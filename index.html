@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="format-detection" content="telephone=no, date=no, email=no, address=no">
 <title>🍳 Mes Recettes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Tilt+Neon&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
@@ -13,19 +16,26 @@
 :root {
   --bg: #0a1628;
   --bg-2: #0f2240;
+  --bg-3: #06101d;
   --surface: #122a4d;
   --surface-2: #1a3a66;
   --border: #224a7a;
   --border-light: #2c5a92;
+  --border-soft: #1b3a60;
   --primary: #4a9eff;
   --primary-dark: #2b7ad9;
+  --primary-soft: rgba(74,158,255,.12);
   --accent: #5eead4;
   --text: #e8f0fb;
   --text-muted: #8fa8c9;
-  --text-dim: #5e7a9c;
+  --text-dim: #7c96b8;
   --success: #22c55e;
+  --success-dark: #16a34a;
+  --success-soft: rgba(34,197,94,.13);
   --danger: #ef4444;
+  --danger-soft: rgba(239,68,68,.13);
   --warning: #f59e0b;
+  --warning-soft: rgba(245,158,11,.14);
   --star: #fbbf24;
   --shadow: 0 4px 20px rgba(0,0,0,0.4);
   --radius: 10px;
@@ -33,14 +43,100 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html, body { height: 100%; }
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   background: linear-gradient(180deg, var(--bg) 0%, #06101d 100%);
   background-attachment: fixed;
   color: var(--text);
   min-height: 100vh;
   font-size: 14px;
   line-height: 1.5;
+  font-variant-numeric: tabular-nums;
 }
+
+/* ===================================================================
+   THÈME NÉON — inspiré de « Devis Photo », même palette bleue
+   =================================================================== */
+/* Titre néon en haut de la sidebar */
+.sidebar > nav::before {
+  content: "🍳 Mes Recettes";
+  display: block;
+  font-family: 'Tilt Neon', sans-serif;
+  font-size: 19px; font-weight: 400; letter-spacing: .05em; text-transform: uppercase;
+  color: #cfe3ff; line-height: 1.15; text-align: left;
+  padding: 4px 12px 14px; margin: 0 0 10px;
+  border-bottom: 1px solid rgba(74,158,255,.25);
+  text-shadow: 0 0 4px rgba(74,158,255,.9), 0 0 12px rgba(74,158,255,.5), 0 0 24px rgba(74,158,255,.25);
+}
+/* Titres (login, en-têtes d'onglet) en Tilt Neon glow */
+h1, h2 {
+  font-family: 'Tilt Neon', sans-serif; font-weight: 400; letter-spacing: .03em;
+  color: #cfe3ff;
+  text-shadow: 0 0 4px rgba(74,158,255,.8), 0 0 14px rgba(74,158,255,.45), 0 0 30px rgba(74,158,255,.18);
+}
+/* Onglet actif : fond surface + barre néon à gauche + halo */
+.tab-btn.active {
+  background: var(--surface) !important;
+  color: #fff !important;
+  box-shadow: inset 3px 0 0 var(--primary), 0 0 14px rgba(74,158,255,.16);
+}
+.tab-btn.active .tab-icon { filter: drop-shadow(0 0 6px rgba(74,158,255,.6)); }
+.tab-btn:hover { box-shadow: 0 0 10px rgba(74,158,255,.10); }
+/* Boutons primaires : glow néon */
+.btn-primary, #btn-sign-in, #btn-login-google {
+  box-shadow: 0 0 14px rgba(74,158,255,.30);
+}
+.btn-primary:hover, #btn-sign-in:hover, #btn-login-google:hover {
+  box-shadow: 0 0 24px rgba(74,158,255,.5);
+}
+/* Cartes recette : halo au survol et à la sélection */
+.recipe-card:hover { box-shadow: 0 0 12px rgba(74,158,255,.12); }
+.recipe-card.selected { box-shadow: 0 0 0 1px var(--primary), 0 0 16px rgba(74,158,255,.32); }
+/* Badges « pills » lumineux */
+.count-badge {
+  border: 1px solid rgba(74,158,255,.4);
+  box-shadow: 0 0 8px rgba(74,158,255,.22);
+  letter-spacing: .04em;
+}
+/* Focus inputs : liseré + glow néon */
+input:focus, textarea:focus, select:focus, [contenteditable]:focus {
+  box-shadow: 0 0 0 1px var(--primary), 0 0 12px rgba(74,158,255,.22);
+}
+
+/* ============ FINITION NÉON POUSSÉE ============ */
+@keyframes neon-title-pulse {
+  0%, 100% { text-shadow: 0 0 4px rgba(74,158,255,.8), 0 0 10px rgba(74,158,255,.55), 0 0 24px rgba(74,158,255,.30), 0 0 48px rgba(74,158,255,.15); }
+  50%      { text-shadow: 0 0 6px rgba(74,158,255,1),  0 0 16px rgba(74,158,255,.90), 0 0 36px rgba(74,158,255,.55), 0 0 64px rgba(74,158,255,.28); }
+}
+/* Le titre de la sidebar respire */
+.sidebar > nav::before { animation: neon-title-pulse 4s ease-in-out infinite; }
+/* Gros titre néon en tête de chaque onglet (seul l'onglet actif est visible) */
+.tab::before {
+  display: block;
+  font-family: 'Tilt Neon', sans-serif; font-weight: 400;
+  font-size: clamp(24px, 4.5vw, 32px); letter-spacing: .05em; text-transform: uppercase;
+  color: #cfe3ff; line-height: 1.1; margin: 2px 0 22px;
+  animation: neon-title-pulse 4s ease-in-out infinite;
+}
+#tab-recipes::before  { content: "Recettes"; }
+#tab-shopping::before { content: "Liste de courses"; }
+#tab-season::before   { content: "Saison"; }
+#tab-data::before     { content: "Données"; }
+#tab-settings::before { content: "Réglages"; }
+#tab-debug::before    { content: "Debug"; }
+/* En-têtes de section (Données…) façon Devis Photo : majuscules + filet néon */
+.data-section h3 {
+  text-transform: uppercase; letter-spacing: .05em; font-size: 13px;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border); padding-bottom: 6px;
+}
+/* Sous-titres descriptifs (h2) en glow doux qui respire */
+h2 { animation: neon-title-pulse 5s ease-in-out infinite; }
+/* Onglet actif : barre latérale néon qui pulse légèrement */
+@keyframes neon-bar-pulse {
+  0%, 100% { box-shadow: inset 3px 0 0 var(--primary), 0 0 10px rgba(74,158,255,.12); }
+  50%      { box-shadow: inset 3px 0 0 var(--primary), 0 0 18px rgba(74,158,255,.28); }
+}
+.tab-btn.active { animation: neon-bar-pulse 3.2s ease-in-out infinite; }
 
 /* Layout avec sidebar */
 .app-layout {
@@ -98,24 +194,23 @@ html, body { overflow-x: hidden; }
 }
 .sidebar nav button:hover { color: var(--text); background: var(--surface); }
 .sidebar nav button.active { background: var(--primary); color: white; }
+/* Onglets secondaires (Données / Réglages / Debug) : cachés de la nav desktop
+   — ils sont accessibles via le menu utilisateur en bas. Réaffichés en barre mobile. */
+.sidebar nav .tab-btn-secondary { display: none; }
 .sidebar-footer {
-  margin-top: auto;
   padding: 8px;
   font-size: 12px;
   color: var(--text-dim);
-  border-top: 1px solid var(--border);
-  padding-top: 14px;
+  text-align: center;
 }
+/* === Section utilisateur (style « Devis Photo » : trigger + menu déplié au-dessus) === */
 .sidebar-user {
-  font-size: 12px;
-  color: var(--text-muted);
-  padding: 8px;
-  background: var(--surface);
-  border-radius: 8px;
+  margin-top: auto;
+  border-top: 1px solid var(--border);
+  margin-left: -14px; margin-right: -14px; /* pleine largeur dans la sidebar paddée */
+  padding-top: 6px;
   display: none;
   flex-direction: column;
-  align-items: center;
-  gap: 4px;
 }
 .sidebar-user.active { display: flex; }
 
@@ -124,48 +219,81 @@ html, body { overflow-x: hidden; }
   width: 100%;
   display: flex;
   flex-direction: column;
-  align-items: center;
 }
+/* Menu déplié — placé AVANT le trigger dans le DOM → apparaît au-dessus */
 .user-menu {
   display: none;
-  background: var(--bg-2);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 6px;
-  margin-top: 8px;
-  width: 100%;
   flex-direction: column;
-  gap: 2px;
 }
-.user-avatar-wrapper.open .user-menu {
-  display: flex;
-}
+.user-avatar-wrapper.open .user-menu { display: flex; }
 .user-menu-header {
-  padding: 6px 8px;
-  border-bottom: 1px solid var(--border);
-  margin-bottom: 4px;
-  font-size: 11px;
-  word-break: break-word;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border-soft);
+  background: rgba(74,158,255,.04);
 }
+.user-menu-name {
+  font-size: 13px; font-weight: 600; color: #cfe3ff;
+  text-shadow: 0 0 4px rgba(74,158,255,.4);
+  word-break: break-word; line-height: 1.3;
+}
+.user-menu-email {
+  font-size: 11px; color: var(--text-muted); margin-top: 3px;
+  line-height: 1.3; word-break: break-all;
+}
+.user-menu-sep { height: 1px; background: var(--border-soft); margin: 4px 0; }
 .user-menu-item {
-  display: block;
+  display: flex; align-items: center; gap: 11px;
   width: 100%;
   text-align: left;
   background: transparent;
-  color: var(--text);
+  color: var(--text-muted);
   border: none;
-  padding: 6px 8px;
-  border-radius: 5px;
-  font-size: 12px;
+  border-left: 3px solid transparent;
+  padding: 9px 16px;
+  font-size: 13px;
   cursor: pointer;
   font-family: inherit;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  transition: background .12s, color .12s;
 }
-.user-menu-item:hover {
-  background: var(--surface);
+.user-menu-item span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.user-menu-item:hover { background: var(--surface); color: var(--text); }
+.user-menu-item.danger:hover { color: var(--danger); }
+.user-menu-item .um-badge {
+  flex: 0 0 auto;
+  font-size: 10px; font-weight: 700; color: var(--accent);
+  background: rgba(94,234,212,.12); border: 1px solid rgba(94,234,212,.30);
+  border-radius: 6px; padding: 1px 6px;
 }
+/* Trigger : avatar + « Mon compte », full-width comme un onglet */
+.sidebar-user-trigger {
+  display: flex; align-items: center; gap: 11px;
+  width: 100%;
+  background: none; border: 0;
+  border-left: 3px solid transparent;
+  color: var(--text-muted);
+  padding: 10px 16px;
+  text-align: left; cursor: pointer;
+  font: inherit; font-size: 13px;
+  transition: background .12s, color .12s;
+}
+.sidebar-user-trigger:hover { background: var(--surface); color: var(--text); }
+.user-avatar-wrapper.open .sidebar-user-trigger { background: var(--surface); color: #fff; }
+.sidebar-user-avatar {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: var(--primary); border: 1px solid rgba(74,158,255,.35);
+  display: inline-flex; align-items: center; justify-content: center;
+  font-weight: 600; color: #fff; font-size: 12px;
+  flex-shrink: 0; overflow: hidden;
+  background-size: cover; background-position: center;
+}
+.user-avatar-wrapper.open .sidebar-user-avatar,
+.sidebar-user-trigger:hover .sidebar-user-avatar {
+  border-color: var(--primary); box-shadow: 0 0 8px rgba(74,158,255,.35);
+}
+.sidebar-user-trigger-label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; }
+.sidebar-user-chevron { flex-shrink: 0; color: var(--text-dim); font-size: 11px; transition: transform .15s; }
+.user-avatar-wrapper.open .sidebar-user-chevron { transform: rotate(180deg); }
+.sidebar-sync { font-size: 10px; color: var(--success); text-align: center; padding: 3px 8px 6px; }
 .count-badge {
   display: inline-block;
   background: rgba(255,255,255,0.15);
@@ -753,6 +881,22 @@ label {
   font-weight: 500;
   font-size: 14px;
 }
+/* Portions par recette (steppers) */
+.serving-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 5px 6px; border-bottom: 1px solid var(--border); }
+.serving-row:last-child { border-bottom: none; }
+.serving-name { font-size: 14px; color: var(--text); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.serving-stepper { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
+.serving-btn { width: 28px; height: 28px; border: 1px solid var(--border); background: var(--surface); color: var(--text); border-radius: 6px; cursor: pointer; font-size: 17px; line-height: 1; display: flex; align-items: center; justify-content: center; padding: 0; }
+.serving-btn:hover { border-color: var(--primary); color: var(--primary); }
+.serving-val { min-width: 62px; text-align: center; font-size: 13px; color: var(--text-muted); }
+.serving-val.serving-modified { color: var(--primary); font-weight: 600; }
+/* Ajout manuel d'articles */
+.manual-add-row { display: flex; gap: 8px; align-items: center; margin: 0 0 14px; flex-wrap: wrap; }
+.manual-add-row .autocomplete { flex: 1; min-width: 180px; }
+.manual-add-qty { width: 120px; flex-shrink: 0; }
+.manual-del { border: none; background: transparent; color: var(--text-dim); cursor: pointer; font-size: 14px; flex-shrink: 0; padding: 2px 6px; border-radius: 4px; align-self: center; }
+.manual-del:hover { color: var(--danger); background: rgba(239,68,68,0.12); }
+.shopping-item-name .manual-tag { font-size: 10px; color: var(--text-dim); font-weight: 400; margin-left: 4px; }
 .shopping-group {
   background: var(--bg-2);
   border: 1px solid var(--border);
@@ -1260,6 +1404,147 @@ label {
 .notes-editor ul, .notes-editor ol { padding-left: 24px; margin: 8px 0; }
 .notes-editor p { margin: 6px 0; }
 
+/* ===================================================================
+   ONGLET DEBUG — Notes & Remarques (porté de « Devis Photo »)
+   =================================================================== */
+.fb-bar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;flex-wrap:wrap;max-width:760px}
+.fb-title{color:var(--accent);font-size:13px;font-weight:700}
+.fb-subtitle{color:var(--text-dim);font-size:13px;margin-bottom:10px;max-width:760px;line-height:1.5}
+.fb-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:6px;max-width:760px;transition:opacity .15s,background .15s}
+.fb-card.fb-done{opacity:.55;background:var(--surface-2)}
+.fb-check{border:1.5px solid var(--border-light);background:transparent;color:transparent;width:20px;height:20px;border-radius:5px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .12s;padding:0;font-size:13px;line-height:1}
+.fb-check:hover{border-color:var(--success)}
+.fb-check.on{background:var(--success);border-color:var(--success);color:#fff}
+.fb-text{flex:1;border:0;background:transparent;font-family:inherit;font-size:13px;font-weight:600;color:var(--text);outline:none;padding:5px 7px;border-radius:4px;min-width:0}
+.fb-step{display:flex;align-items:center;gap:6px;padding:2px 0 2px 28px;margin-top:3px}
+.fb-step-bul{color:var(--text-dim);font-size:13px;flex-shrink:0;font-weight:700}
+.fb-step-text{flex:1;border:0;background:transparent;font-family:inherit;font-size:13px;color:var(--text-muted);outline:none;padding:3px 6px;border-radius:3px;min-width:0}
+.fb-step-text:hover{background:rgba(74,158,255,.06)}
+.fb-step-text:focus{background:rgba(74,158,255,.10);color:var(--text)}
+.fb-step-text-readonly{flex:1;font-size:13px;color:var(--text-muted);padding:3px 6px}
+.fb-step-del{border:0;background:transparent;color:var(--text-dim);cursor:pointer;font-size:13px;flex-shrink:0;padding:2px 5px;border-radius:3px;transition:all .12s}
+.fb-step-del:hover{color:var(--danger);background:var(--danger-soft)}
+.fb-add-step{border:0;background:transparent;color:var(--text-dim);font-family:inherit;font-size:11px;cursor:pointer;padding:2px 8px;border-radius:4px;font-weight:500;transition:all .12s}
+.fb-add-step:hover{background:var(--primary-soft);color:var(--primary)}
+.fb-copy-btn{display:inline-flex;align-items:center;gap:5px;padding:6px 14px;border-radius:6px;border:1px solid var(--border-light);background:var(--surface);color:var(--text-muted);font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s}
+.fb-copy-btn:hover{border-color:var(--primary);color:var(--primary);background:var(--primary-soft)}
+.fb-copy-btn.copied{border-color:var(--success);color:var(--success);background:var(--success-soft)}
+
+/* Barre de stats + progress bar + toggle validées */
+.bug-stats-bar{display:flex;align-items:center;gap:8px;max-width:760px;margin-bottom:14px;flex-wrap:wrap}
+.bug-stat{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:18px;background:var(--primary-soft);color:var(--primary);font-size:13px;font-weight:600;border:1px solid transparent}
+.bug-stat .bug-stat-num{font-size:14px;font-weight:700}
+.bug-stat-toggle{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:18px;background:var(--surface);color:var(--text-muted);font-size:13px;font-weight:500;border:1px solid var(--border-soft);cursor:pointer;font-family:inherit;transition:all .12s}
+.bug-stat-toggle:hover{border-color:var(--success);color:var(--success)}
+.bug-stat-toggle.active{background:var(--success-soft);color:var(--success);border-color:var(--success)}
+.bug-stat-toggle .bug-stat-num{font-size:14px;font-weight:700}
+.bug-progress{display:inline-flex;align-items:center;gap:8px;flex:1;min-width:120px;cursor:help}
+.bug-progress-bar{flex:1;height:6px;background:var(--surface-2);border-radius:3px;overflow:hidden;min-width:60px}
+.bug-progress-fill{height:100%;background:linear-gradient(90deg,var(--success) 0%,var(--success-dark) 100%);transition:width .35s ease}
+.bug-progress-pct{font-size:11px;font-weight:700;color:var(--text-muted);font-variant-numeric:tabular-nums;min-width:32px;text-align:right}
+.fb-check.anim-toggle{animation:bugCheckPulse .4s ease}
+@keyframes bugCheckPulse{0%{transform:scale(1)}40%{transform:scale(1.25) rotate(8deg)}100%{transform:scale(1) rotate(0)}}
+
+/* Formulaire compact (replié par défaut, étendu au focus) */
+.bug-form{max-width:760px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px;margin-bottom:14px;box-shadow:0 2px 10px rgba(0,0,0,.14);transition:box-shadow .2s,border-color .2s}
+.bug-form:focus-within,.bug-form.has-content{border-color:var(--primary);box-shadow:0 4px 18px rgba(0,0,0,.22),0 0 0 3px var(--primary-soft)}
+.bug-form-quick{display:flex;align-items:center;gap:6px}
+.bug-form-tab-quick{height:36px;padding:0 8px;border:1px solid var(--border-light);border-radius:6px;background:var(--bg-2);color:var(--text);font:inherit;font-size:12px;font-weight:600;max-width:150px;flex-shrink:0;cursor:pointer;width:auto}
+.bug-form-tab-quick:focus{outline:none;border-color:var(--primary)}
+.bug-form-title-quick{flex:1;height:36px;padding:0 12px;border:1px solid transparent;border-radius:6px;background:var(--bg-2);color:var(--text);font:inherit;font-size:13px;font-weight:600;min-width:0;width:auto}
+.bug-form-title-quick::placeholder{color:var(--text-dim);font-weight:500}
+.bug-form-title-quick:focus{outline:none;border-color:var(--primary)}
+.bug-form-next-num{display:inline-flex;align-items:center;justify-content:center;height:28px;padding:0 10px;background:var(--surface-2);color:var(--text-muted);font-size:11px;font-weight:700;border-radius:6px;flex-shrink:0;letter-spacing:.02em}
+.bug-form-add-btn{width:36px;height:36px;border:0;border-radius:6px;background:var(--primary);color:#fff;cursor:pointer;font-size:18px;font-weight:700;display:flex;align-items:center;justify-content:center;transition:background .12s;flex-shrink:0}
+.bug-form-add-btn:hover{background:var(--primary-dark)}
+.bug-form-extra{max-height:0;opacity:0;overflow:hidden;transition:max-height .25s ease,opacity .2s ease,margin-top .25s ease,padding-top .25s ease;display:flex;flex-direction:column;gap:8px}
+.bug-form:focus-within .bug-form-extra,.bug-form.has-content .bug-form-extra{max-height:900px;opacity:1;margin-top:8px;padding-top:8px;border-top:1px solid var(--border-soft)}
+.bug-form-text-quick{padding:10px 12px;border:1px solid var(--border-light);border-radius:6px;background:var(--bg-2);color:var(--text);font:inherit;font-size:13px;resize:vertical;min-height:180px;line-height:1.55;width:100%}
+.bug-form-text-quick:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 2px var(--primary-soft)}
+.bug-form-text-quick::placeholder{color:var(--text-dim)}
+.bug-form-hint{font-size:12px;color:var(--text-muted);line-height:1.55;padding:8px 12px;background:rgba(74,158,255,.08);border-radius:6px;border-left:3px solid var(--primary)}
+.bug-form-hint code{background:var(--bg-3);color:var(--accent);padding:1px 6px;border-radius:3px;font-size:11px;font-family:monospace}
+.bug-form-hint strong{color:var(--primary);font-weight:700}
+
+/* Barre de filtres (chips onglet + recherche + tri) */
+.bug-filter-bar{display:flex;align-items:center;gap:10px;max-width:760px;margin-bottom:12px;flex-wrap:wrap}
+.bug-filter-chips{display:flex;gap:6px;flex-wrap:wrap;flex:1;min-width:0}
+.bug-chip{display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:14px;background:transparent;color:var(--text-muted);font-size:12px;font-weight:600;border:1px solid var(--border-light);cursor:pointer;font-family:inherit;transition:all .12s;white-space:nowrap}
+.bug-chip:hover{border-color:var(--primary);color:var(--primary)}
+.bug-chip.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+.bug-chip.active.bug-chip-recipes{background:#4a9eff;border-color:#4a9eff}
+.bug-chip.active.bug-chip-shopping{background:#22c55e;border-color:#22c55e}
+.bug-chip.active.bug-chip-season{background:#5eead4;border-color:#5eead4;color:#022}
+.bug-chip.active.bug-chip-data{background:#a78bfa;border-color:#a78bfa}
+.bug-chip.active.bug-chip-settings{background:#f59e0b;border-color:#f59e0b}
+.bug-chip.active.bug-chip-debug,.bug-chip.active.bug-chip-autres{background:var(--text-muted);border-color:var(--text-muted)}
+.bug-chip-n{font-size:11px;font-weight:700;background:rgba(255,255,255,.18);padding:1px 7px;border-radius:8px;color:inherit}
+.bug-chip:not(.active) .bug-chip-n{background:var(--surface-2);color:var(--text-dim)}
+.bug-search{padding:7px 12px;border:1px solid var(--border-light);border-radius:6px;background:var(--bg-2);color:var(--text);font:inherit;font-size:13px;width:200px;flex-shrink:0}
+.bug-search:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-soft)}
+.bug-search::placeholder{color:var(--text-dim)}
+.bug-sort-btn{display:inline-flex;align-items:center;gap:4px;padding:6px 12px;border:1px solid var(--border-light);border-radius:6px;background:var(--bg-2);color:var(--text-muted);font:inherit;font-size:12px;font-weight:600;cursor:pointer;transition:all .12s;flex-shrink:0;white-space:nowrap}
+.bug-sort-btn:hover{border-color:var(--primary);color:var(--primary);background:var(--primary-soft)}
+
+/* États vides */
+.bug-empty{max-width:760px;text-align:center;padding:42px 24px;background:var(--surface);border:1px dashed var(--border-light);border-radius:8px;color:var(--text-muted)}
+.bug-empty-icon{font-size:42px;margin-bottom:10px;opacity:.7}
+.bug-empty-title{font-size:14px;font-weight:600;color:var(--text);margin-bottom:6px}
+.bug-empty-hint{font-size:13px;line-height:1.5}
+.bug-empty-action{background:transparent;border:0;color:var(--primary);font:inherit;font-size:13px;font-weight:600;cursor:pointer;text-decoration:underline;padding:0}
+.bug-empty-action:hover{color:var(--primary-dark)}
+
+/* Cartes v3 (header cliquable + corps déplié) */
+.bug-num-badge{font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;background:var(--bg-3);color:var(--accent);font-variant-numeric:tabular-nums;cursor:help}
+.fb-card.bug-card-v3{padding:0;animation:bugCardIn .25s ease;overflow:hidden}
+@keyframes bugCardIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
+.fb-card.bug-card-v3 .bug-card-head{display:flex;align-items:center;gap:8px;padding:8px 12px;cursor:pointer;transition:background .12s}
+.fb-card.bug-card-v3 .bug-card-head:hover{background:rgba(74,158,255,.04)}
+.fb-card.bug-card-v3.expanded .bug-card-head{border-bottom:1px solid var(--border-soft)}
+.fb-card.bug-card-v3 .bug-card-title-quick{flex:1;font-weight:600;font-size:13px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.fb-card.bug-card-v3.fb-done .bug-card-title-quick{text-decoration:line-through;color:var(--text-muted)}
+.fb-card.bug-card-v3 .bug-card-title{flex:1;min-width:0}
+.fb-card.bug-card-v3 .bug-card-chevron{flex-shrink:0;color:var(--text-dim);font-size:13px;transition:color .12s;width:16px;text-align:center}
+.fb-card.bug-card-v3 .bug-card-head:hover .bug-card-chevron{color:var(--primary)}
+.fb-card.bug-card-v3 .bug-card-body{padding:10px 14px 12px;display:flex;flex-direction:column;gap:8px;background:var(--bg-2)}
+.fb-card.bug-card-v3 .bug-card-meta-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.fb-card.bug-card-v3 .bug-card-actions-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:4px;padding-top:8px;border-top:1px solid var(--border-soft)}
+.fb-card.bug-card-v3 .bug-card-actions-row .fb-add-step{margin:0;font-size:11px;color:var(--text-muted);padding:4px 10px}
+.fb-card.bug-card-v3 .bug-card-actions-row .bug-card-copy{padding:4px 10px;width:auto;height:auto;font-size:11px;font-weight:500;display:inline-flex;align-items:center;gap:4px}
+.fb-card.bug-card-v3 .bug-card-actions-row .fb-del-text{margin-left:auto;background:transparent;border:1px solid transparent;color:var(--text-dim);cursor:pointer;font:inherit;font-size:11px;padding:4px 10px;border-radius:4px;transition:all .12s}
+.fb-card.bug-card-v3 .bug-card-actions-row .fb-del-text:hover{color:var(--danger);background:var(--danger-soft);border-color:var(--danger)}
+.bug-card-edit-btn{flex-shrink:0;background:transparent;border:1px solid transparent;color:var(--text-dim);cursor:pointer;font-size:16px;line-height:1;width:24px;height:24px;border-radius:4px;display:inline-flex;align-items:center;justify-content:center;padding:0;transition:all .12s}
+.bug-card-edit-btn:hover{color:var(--primary);background:var(--primary-soft);border-color:var(--primary)}
+.bug-card-edit-btn.editing{color:var(--success);border-color:var(--success);background:var(--success-soft);font-size:13px;font-weight:700}
+.bug-card-text-full{font-size:13px;color:var(--text);line-height:1.55;white-space:pre-wrap;word-break:break-word;padding:2px 0}
+.bug-card-text-empty{font-size:12px;color:var(--text-dim);font-style:italic;padding:2px 0}
+.bug-card-title{font-weight:700;font-size:13px}
+.bug-card-text{width:100%;border:1px solid var(--border-light);background:var(--surface);color:var(--text);font:inherit;font-size:13px;outline:none;padding:10px 12px;border-radius:6px;min-width:0;resize:vertical;min-height:160px;line-height:1.55;box-sizing:border-box}
+.bug-card-text:focus{border-color:var(--primary);box-shadow:0 0 0 2px var(--primary-soft)}
+.bug-card-copy{border:1px solid var(--border-light);background:var(--surface);color:var(--text-muted);cursor:pointer;font-size:13px;border-radius:5px;transition:all .15s}
+.bug-card-copy:hover{border-color:var(--primary);color:var(--primary);background:var(--primary-soft)}
+.bug-card-copy.copied{border-color:var(--success);color:var(--success);background:var(--success-soft)}
+
+/* Badge onglet (lecture + select éditable) */
+.bug-tab-badge{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;padding:2px 8px;border-radius:10px}
+select.bug-tab-select{appearance:none;-webkit-appearance:none;border:0;cursor:pointer;font:inherit;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;padding:2px 16px 2px 8px;border-radius:10px;line-height:1.6;width:auto;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'><path d='M0 1l4 5 4-5z' fill='%23aaa' opacity='.7'/></svg>");background-position:right 4px center;background-repeat:no-repeat;background-size:7px}
+select.bug-tab-select:hover{filter:brightness(1.15)}
+select.bug-tab-select:focus{outline:none;box-shadow:0 0 0 2px var(--primary-soft)}
+select.bug-tab-select option{background:var(--bg-2);color:var(--text);font-weight:500;text-transform:none;letter-spacing:0}
+.bug-tab-badge.bug-tab-recipes{background:rgba(74,158,255,.14);color:#4a9eff}
+.bug-tab-badge.bug-tab-shopping{background:rgba(34,197,94,.16);color:#22c55e}
+.bug-tab-badge.bug-tab-season{background:rgba(94,234,212,.16);color:#5eead4}
+.bug-tab-badge.bug-tab-data{background:rgba(167,139,250,.18);color:#a78bfa}
+.bug-tab-badge.bug-tab-settings{background:rgba(245,158,11,.18);color:#f59e0b}
+.bug-tab-badge.bug-tab-debug{background:var(--surface-2);color:var(--text-muted)}
+.bug-tab-badge.bug-tab-autres{background:var(--surface-2);color:var(--text-dim)}
+
+/* Status pill + date relative */
+.bug-status-pill{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;padding:2px 8px;border-radius:10px;display:inline-flex;align-items:center;gap:3px}
+.bug-status-open{background:var(--warning-soft);color:var(--warning)}
+.bug-status-done{background:var(--success-soft);color:var(--success)}
+.bug-card-date{font-size:11px;color:var(--text-dim);margin-left:auto;font-style:italic;cursor:help}
+
 /* FAB (désactivé : remplacé par bouton Ajouter inline) */
 .fab {
   display: none;
@@ -1316,6 +1601,9 @@ label {
     gap: 0;
     align-items: stretch;
   }
+
+  /* En bas d'écran, tous les onglets (y compris secondaires) sont dans la barre */
+  .sidebar nav .tab-btn-secondary { display: flex; }
 
   /* Chaque bouton d'onglet = une colonne égale */
   .sidebar nav .tab-btn {
@@ -1597,7 +1885,7 @@ body.guest-mode .fab { display: none !important; }
 body.guest-mode .recipe-actions { display: none !important; }
 body.guest-mode .tab-btn[data-tab="data"],
 body.guest-mode .tab-btn[data-tab="settings"],
-body.guest-mode .tab-btn[data-tab="notes"],
+body.guest-mode .tab-btn[data-tab="debug"],
 body.guest-mode .tab-btn[data-tab="shopping"] { display: none !important; }
 body.guest-mode .sidebar::after {
   content: '👁 Lecture seule';
@@ -1614,32 +1902,38 @@ body.guest-mode .sidebar::after {
 
 <div class="app-layout">
 <aside class="sidebar">
-  <nav>
-    <button class="tab-btn active" data-tab="recipes"><span class="tab-icon">🍳</span><span class="tab-label">Recettes</span> <span class="count-badge" id="recipe-count">0</span></button>
-    <button class="tab-btn" data-tab="shopping"><span class="tab-icon">🛒</span><span class="tab-label">Courses</span> <span class="count-badge hide-if-zero" id="selected-badge">0</span></button>
-    <button class="tab-btn" data-tab="season"><span class="tab-icon">🌿</span><span class="tab-label">Saison</span></button>
-    <button class="tab-btn" data-tab="data"><span class="tab-icon">📋</span><span class="tab-label">Données</span></button>
-    <button class="tab-btn" data-tab="settings"><span class="tab-icon">⚙️</span><span class="tab-label">Réglages</span></button>
-    <button class="tab-btn" data-tab="notes"><span class="tab-icon">📝</span><span class="tab-label">Notes</span></button>
+  <nav role="tablist" aria-label="Navigation principale">
+    <button class="tab-btn active" data-tab="recipes" role="tab" aria-selected="true"><span class="tab-icon" aria-hidden="true">🍳</span><span class="tab-label">Recettes</span> <span class="count-badge" id="recipe-count">0</span></button>
+    <button class="tab-btn" data-tab="shopping" role="tab" aria-selected="false"><span class="tab-icon" aria-hidden="true">🛒</span><span class="tab-label">Courses</span> <span class="count-badge hide-if-zero" id="selected-badge">0</span></button>
+    <button class="tab-btn" data-tab="season" role="tab" aria-selected="false"><span class="tab-icon" aria-hidden="true">🌿</span><span class="tab-label">Saison</span></button>
+    <button class="tab-btn tab-btn-secondary" data-tab="data" role="tab" aria-selected="false"><span class="tab-icon" aria-hidden="true">📋</span><span class="tab-label">Données</span></button>
+    <button class="tab-btn tab-btn-secondary" data-tab="settings" role="tab" aria-selected="false"><span class="tab-icon" aria-hidden="true">⚙️</span><span class="tab-label">Réglages</span></button>
+    <button class="tab-btn tab-btn-secondary" data-tab="debug" role="tab" aria-selected="false"><span class="tab-icon" aria-hidden="true">🐞</span><span class="tab-label">Debug</span> <span class="count-badge hide-if-zero" id="debug-count">0</span></button>
     <button class="btn btn-primary" id="mobile-login-btn">🔑 Connexion</button>
   </nav>
   <div class="sidebar-user" id="sidebar-user">
     <div class="user-avatar-wrapper" id="user-avatar-wrapper">
-      <div id="sidebar-user-avatar" style="width:36px; height:36px; border-radius:50%; background:var(--primary); display:flex; align-items:center; justify-content:center; font-weight:600; color:white; overflow:hidden; cursor:pointer;"></div>
-      <div class="user-menu" id="user-menu">
+      <div class="user-menu" id="user-menu" role="menu">
         <div class="user-menu-header">
-          <div id="user-menu-name" style="font-weight:500; color:var(--text);">—</div>
-          <div id="user-menu-email" style="font-size:11px; color:var(--text-dim); word-break:break-all;">—</div>
+          <div class="user-menu-name" id="user-menu-name">—</div>
+          <div class="user-menu-email" id="user-menu-email">—</div>
         </div>
-        <button class="user-menu-item" id="menu-push-cloud">⬆ Envoyer vers le cloud</button>
-        <button class="user-menu-item" id="menu-pull-cloud">⬇ Recharger depuis le cloud</button>
-        <button class="user-menu-item" id="menu-sign-out">🚪 Se déconnecter</button>
+        <button class="user-menu-item" role="menuitem" data-go="data">📋 <span>Données</span></button>
+        <button class="user-menu-item" role="menuitem" data-go="settings">⚙️ <span>Réglages</span></button>
+        <button class="user-menu-item" role="menuitem" data-go="debug">🐞 <span>Debug</span> <span class="um-badge hide-if-zero" id="menu-debug-count">0</span></button>
+        <div class="user-menu-sep"></div>
+        <button class="user-menu-item" role="menuitem" id="menu-push-cloud">⬆ <span>Envoyer vers le cloud</span></button>
+        <button class="user-menu-item" role="menuitem" id="menu-pull-cloud">⬇ <span>Recharger depuis le cloud</span></button>
+        <div class="user-menu-sep"></div>
+        <button class="user-menu-item danger" role="menuitem" id="menu-sign-out">🚪 <span>Se déconnecter</span></button>
       </div>
+      <button class="sidebar-user-trigger" id="sidebar-user-trigger" type="button" aria-label="Mon compte">
+        <span class="sidebar-user-avatar" id="sidebar-user-avatar"></span>
+        <span class="sidebar-user-trigger-label">Mon compte</span>
+        <span class="sidebar-user-chevron" aria-hidden="true">▾</span>
+      </button>
     </div>
-    <div class="sync-status" id="sidebar-sync-status" style="font-size:10px; color:var(--success); text-align:center; margin-top:4px;">☁</div>
-  </div>
-  <div class="sidebar-footer">
-    Stockage local + Cloud
+    <div class="sidebar-sync" id="sidebar-sync-status">☁</div>
   </div>
 </aside>
 
@@ -1684,11 +1978,17 @@ body.guest-mode .sidebar::after {
       </div>
       <div style="display:flex; gap:8px; flex-wrap:wrap;">
         <label style="display:flex; align-items:center; gap:6px; font-size:14px; color:var(--text-muted); margin:0;">
-          <input type="checkbox" id="group-by-type" checked style="width:auto;"> Grouper par type
+          <input type="checkbox" id="group-by-type" checked style="width:auto;"> Grouper par rayon
         </label>
+        <button class="btn btn-sm" id="btn-print-shopping">🖨 Imprimer</button>
         <button class="btn btn-sm" id="btn-clear-checks">Décocher tout</button>
         <button class="btn btn-sm" id="btn-clear-selection">Vider sélection</button>
       </div>
+    </div>
+    <div class="manual-add-row">
+      <div class="manual-add-name" id="manual-add-name"></div>
+      <input type="text" id="manual-add-qty" class="manual-add-qty" placeholder="Qté (ex: 2 rouleaux)" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" data-form-type="other">
+      <button class="btn btn-sm btn-primary" id="btn-add-manual">+ Ajouter</button>
     </div>
     <div id="shopping-container"></div>
   </section>
@@ -1702,41 +2002,9 @@ body.guest-mode .sidebar::after {
     <div id="season-months-grid" class="season-grid"></div>
   </section>
 
-  <!-- Onglet Notes et bugs -->
-  <section id="tab-notes" class="tab">
-    <div style="margin-bottom:14px;">
-      <h2 style="font-size:18px; font-weight:600;">Notes, idées d'amélioration et bugs</h2>
-      <p style="color:var(--text-muted); font-size:13px; margin-top:4px;">Espace libre pour tes notes. Sauvegarde automatique (local + cloud si connecté).</p>
-    </div>
-    <div class="notes-editor-wrapper">
-      <div class="notes-toolbar">
-        <button type="button" class="note-btn" data-cmd="undo" title="Annuler (Ctrl+Z)">↶</button>
-        <button type="button" class="note-btn" data-cmd="redo" title="Rétablir (Ctrl+Y)">↷</button>
-        <span class="note-sep"></span>
-        <button type="button" class="note-btn" data-cmd="bold" title="Gras (Ctrl+B)"><b>B</b></button>
-        <button type="button" class="note-btn" data-cmd="italic" title="Italique (Ctrl+I)"><i>I</i></button>
-        <button type="button" class="note-btn" data-cmd="underline" title="Souligné (Ctrl+U)"><u>U</u></button>
-        <button type="button" class="note-btn" data-cmd="strikeThrough" title="Barré"><s>S</s></button>
-        <span class="note-sep"></span>
-        <div class="note-color-menu-wrapper">
-          <button type="button" class="note-btn" id="note-color-btn" title="Couleur du texte"><span id="note-color-indicator" style="border-bottom:3px solid #e8f0fb; padding:0 2px; display:inline-block;">A</span>▾</button>
-          <div class="note-color-popup" id="note-color-popup"></div>
-        </div>
-        <span class="note-sep"></span>
-        <button type="button" class="note-btn" data-cmd="insertUnorderedList" title="Liste à puces">• Liste</button>
-        <button type="button" class="note-btn" data-cmd="insertOrderedList" title="Liste numérotée">1. Liste</button>
-        <span class="note-sep"></span>
-        <button type="button" class="note-btn" data-cmd="formatBlock" data-arg="H2" title="Titre">H</button>
-        <button type="button" class="note-btn" data-cmd="formatBlock" data-arg="P" title="Paragraphe">¶</button>
-        <span class="note-sep"></span>
-        <button type="button" class="note-btn" data-cmd="removeFormat" title="Retirer le formatage">✕ format</button>
-      </div>
-      <div id="notes-editor" class="notes-editor" contenteditable="true" placeholder="Commence à écrire tes notes ici..."></div>
-    </div>
-    <div style="margin-top:8px; display:flex; justify-content:space-between; align-items:center; font-size:12px; color:var(--text-muted);">
-      <span id="notes-status">💾 Sauvegardé automatiquement</span>
-      <span id="notes-wordcount">0 caractère</span>
-    </div>
+  <!-- Onglet Debug — Notes & Remarques (à transmettre à Claude) -->
+  <section id="tab-debug" class="tab">
+    <div id="debug-container"></div>
   </section>
 
   <!-- Onglet Données -->
@@ -1751,6 +2019,7 @@ body.guest-mode .sidebar::after {
     </div>
     <div class="data-section">
       <h3>🏷 Types d'ingrédients <span id="type-count-badge" class="count-badge" style="background:var(--surface);">0</span></h3>
+      <p style="font-size:13px; color:var(--text-muted);">Les types servent de <b>rayons</b> dans la liste de courses. Réordonne-les avec ▲▼ pour suivre ton parcours en magasin.</p>
       <div id="types-list" class="data-list"></div>
     </div>
     <div class="data-section">
@@ -1768,6 +2037,14 @@ body.guest-mode .sidebar::after {
       <div style="margin-top:10px; display:flex; gap:8px;">
         <input type="text" id="new-meal-type" placeholder="Nouveau type de plat..." autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" data-form-type="other">
         <button class="btn btn-primary" id="btn-add-meal-type">Ajouter</button>
+      </div>
+    </div>
+    <div class="data-section">
+      <h3>🗑 Corbeille <span id="trash-count-badge" class="count-badge" style="background:var(--surface);">0</span></h3>
+      <p style="font-size:13px; color:var(--text-muted);">Les recettes supprimées arrivent ici. Tu peux les <b>restaurer</b> ou les supprimer définitivement.</p>
+      <div id="trash-list" class="data-list"></div>
+      <div style="margin-top:10px;">
+        <button class="btn btn-sm btn-danger" id="btn-empty-trash">Vider la corbeille</button>
       </div>
     </div>
   </section>
@@ -2264,7 +2541,11 @@ let state = {
   mealTypes: [...DEFAULT_MEAL_TYPES],
   selectedRecipeIds: [],
   checkedShoppingItems: [],
+  recipeServings: {},
+  manualShoppingItems: [],
+  trash: [],
   notes: '',
+  bugs: { items: [], lastNum: 0 },
   filters: {
     search: '',
     sort: 'name-asc',
@@ -2293,6 +2574,10 @@ function rerenderAll() {
   } catch (e) { console.error(e); }
   try {
     if (document.getElementById('tab-season')?.classList.contains('active')) renderSeasonTab();
+  } catch (e) { console.error(e); }
+  try {
+    updateDebugBadges();
+    if (document.getElementById('tab-debug')?.classList.contains('active')) renderDebug();
   } catch (e) { console.error(e); }
 }
 
@@ -2499,7 +2784,11 @@ function applyCloudData(data) {
   state.mealTypes = data.mealTypes && data.mealTypes.length ? data.mealTypes : [...DEFAULT_MEAL_TYPES];
   state.selectedRecipeIds = data.selectedRecipeIds || [];
   state.checkedShoppingItems = data.checkedShoppingItems || [];
+  state.recipeServings = data.recipeServings || {};
+  state.manualShoppingItems = data.manualShoppingItems || [];
+  state.trash = data.trash || [];
   state.notes = data.notes || '';
+  state.bugs = (data.bugs && Array.isArray(data.bugs.items)) ? data.bugs : { items: [], lastNum: 0 };
   state.lastModified = data.lastModified || Date.now();
   state.filters = currentFilters;
   // Migration des ingrédients
@@ -2514,8 +2803,8 @@ function applyCloudData(data) {
   buildFilterBar();
   if (document.getElementById('tab-shopping').classList.contains('active')) renderShopping();
   renderSeasonTab();
-  const notesEd = document.getElementById('notes-editor');
-  if (notesEd) notesEd.innerHTML = state.notes || '';
+  try { updateDebugBadges(); } catch {}
+  try { if (document.getElementById('tab-debug')?.classList.contains('active')) renderDebug(); } catch {}
 }
 
 function fbSchedulePush() {
@@ -2545,7 +2834,11 @@ window.addEventListener('beforeunload', () => {
         mealTypes: state.mealTypes,
         selectedRecipeIds: state.selectedRecipeIds,
         checkedShoppingItems: state.checkedShoppingItems,
+        recipeServings: state.recipeServings,
+        manualShoppingItems: state.manualShoppingItems,
+        trash: state.trash,
         notes: state.notes || '',
+        bugs: state.bugs || { items: [], lastNum: 0 },
         lastModified: state.lastModified
       });
     } catch (e) {}
@@ -2568,7 +2861,11 @@ async function pushToCloud() {
       mealTypes: state.mealTypes,
       selectedRecipeIds: state.selectedRecipeIds,
       checkedShoppingItems: state.checkedShoppingItems,
+      recipeServings: state.recipeServings,
+      manualShoppingItems: state.manualShoppingItems,
+      trash: state.trash,
       notes: state.notes || '',
+      bugs: state.bugs || { items: [], lastNum: 0 },
       lastModified: state.lastModified
     });
     setSyncStatus('☁ Synchronisé', 'success');
@@ -2774,10 +3071,10 @@ document.getElementById('btn-sign-out').onclick = () => {
     if (!confirm('Cela va remplacer tes données locales par celles du cloud. Continuer ?')) return;
     pullFromCloud();
   };
-  // Toggle le menu au clic sur l'avatar (pour mobile où :hover n'existe pas)
-  const avatar = document.getElementById('sidebar-user-avatar');
-  if (avatar) {
-    avatar.onclick = e => {
+  // Toggle le menu au clic sur le trigger (avatar + « Mon compte »)
+  const trigger = document.getElementById('sidebar-user-trigger');
+  if (trigger) {
+    trigger.onclick = e => {
       e.stopPropagation();
       document.getElementById('user-avatar-wrapper').classList.toggle('open');
     };
@@ -3015,6 +3312,10 @@ function load() {
       if (state.filters.selectionMode === undefined) state.filters.selectionMode = 'all';
       if (!state.selectedRecipeIds) state.selectedRecipeIds = [];
       if (!state.checkedShoppingItems) state.checkedShoppingItems = [];
+      if (!state.recipeServings || typeof state.recipeServings !== 'object') state.recipeServings = {};
+      if (!Array.isArray(state.manualShoppingItems)) state.manualShoppingItems = [];
+      if (!Array.isArray(state.trash)) state.trash = [];
+      if (!state.bugs || !Array.isArray(state.bugs.items)) state.bugs = { items: [], lastNum: 0 };
       migrateRecipes();
     } else {
       // Initialisation par défaut
@@ -3528,16 +3829,473 @@ function getTypeName(id) {
 /* ========================================================================
    NAVIGATION ONGLETS
    ======================================================================== */
-document.querySelectorAll('.tab-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    const tabId = btn.dataset.tab;
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b === btn));
-    document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.id === 'tab-' + tabId));
-    if (tabId === 'shopping') renderShopping();
-    if (tabId === 'data') renderDataTab();
-    if (tabId === 'season') renderSeasonTab();
-    if (tabId === 'notes') initNotesTab();
+// Bascule d'onglet — utilisable par la nav ET par les items du menu utilisateur.
+function switchTab(tabId) {
+  // Suit le dernier onglet visité avant Debug → pré-remplit « Onglet concerné ».
+  const current = document.querySelector('.tab.active');
+  if (tabId === 'debug' && current && current.id !== 'tab-debug') {
+    lastTabBeforeDebug = (current.id || '').replace('tab-', '') || null;
+  }
+  document.querySelectorAll('.tab-btn').forEach(b => {
+    const on = b.dataset.tab === tabId;
+    b.classList.toggle('active', on);
+    b.setAttribute('aria-selected', on ? 'true' : 'false');
   });
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.id === 'tab-' + tabId));
+  if (tabId === 'shopping') renderShopping();
+  if (tabId === 'data') renderDataTab();
+  if (tabId === 'season') renderSeasonTab();
+  if (tabId === 'debug') renderDebug();
+}
+
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+});
+
+// Items du menu utilisateur qui ouvrent un onglet secondaire (Données / Réglages / Debug)
+document.querySelectorAll('.user-menu-item[data-go]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    switchTab(btn.dataset.go);
+    const wrap = document.getElementById('user-avatar-wrapper');
+    if (wrap) wrap.classList.remove('open');
+  });
+});
+
+/* ========================================================================
+   ONGLET DEBUG — Notes & Remarques (porté de « Devis Photo »)
+   Système de remarques/bugs à transmettre à Claude : formulaire compact,
+   catégorisation par onglet, filtres, validation, copie presse-papier.
+   ======================================================================== */
+// Alias local : l'outil Recettes expose escapeHtml() (et non esc() comme l'outil photo).
+function esc(s) { return escapeHtml(s); }
+
+// Onglets disponibles pour catégoriser une remarque (clé = id d'onglet).
+const BUG_TAB_OPTIONS = [
+  ["recipes",  "Recettes"],
+  ["shopping", "Courses"],
+  ["season",   "Saison"],
+  ["data",     "Données"],
+  ["settings", "Réglages"],
+  ["debug",    "Debug"],
+  ["autres",   "Autres"]
+];
+
+let lastTabBeforeDebug = null;
+let bugDraft = { tab: "", title: "", text: "" };
+let bugFilters = { tab: "all", q: "", showValidated: false, sortDir: "desc" };
+let bugCardEditingId = null;
+let bugCardExpandedId = null;
+
+function bugTabLabel(k) {
+  const found = BUG_TAB_OPTIONS.find(o => o[0] === k);
+  return found ? found[1] : "—";
+}
+
+// Date relative humaine : « à l'instant », « il y a 5 min », « hier »…
+function bugRelativeTime(ts) {
+  if (!ts) return "";
+  const diff = Date.now() - ts;
+  if (diff < 60 * 1000) return "à l'instant";
+  const min = Math.floor(diff / 60000);
+  if (min < 60) return `il y a ${min} min`;
+  const h = Math.floor(min / 60);
+  if (h < 24) return `il y a ${h} h`;
+  const d = Math.floor(h / 24);
+  if (d === 1) return "hier";
+  if (d < 7) return `il y a ${d} j`;
+  if (d < 30) return `il y a ${Math.floor(d / 7)} sem`;
+  return new Date(ts).toLocaleDateString("fr-FR");
+}
+
+// Met à jour les badges « nombre de remarques en cours » (nav + menu user).
+function updateDebugBadges() {
+  const open = ((state.bugs && state.bugs.items) || []).filter(it => !it.validated).length;
+  ["debug-count", "menu-debug-count"].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = open;
+    el.setAttribute("data-value", String(open));
+    el.style.display = open > 0 ? "" : "none";
+  });
+}
+
+function bugDraftSet(field, val) { bugDraft[field] = val; }
+window.bugDraftSet = bugDraftSet;
+
+window.bugAutoResize = function(el) {
+  if (!el) return;
+  el.style.height = "auto";
+  el.style.height = (el.scrollHeight + 4) + "px";
+};
+
+window.bugCardToggleExpand = function(id) {
+  if (bugCardExpandedId === id) { bugCardExpandedId = null; bugCardEditingId = null; }
+  else { bugCardExpandedId = id; }
+  renderDebug();
+};
+window.bugCardEditStart = function(id) {
+  bugCardEditingId = id;
+  bugCardExpandedId = id;
+  renderDebug();
+  requestAnimationFrame(() => {
+    const ta = document.querySelector(`.fb-card[data-bug-id="${id}"] .bug-card-text`);
+    if (ta) { bugAutoResize(ta); ta.focus(); try { ta.setSelectionRange(ta.value.length, ta.value.length); } catch (e) {} }
+  });
+};
+window.bugCardEditEnd = function() { bugCardEditingId = null; renderDebug(); };
+
+// Render avec préservation du focus pour la recherche (évite de perdre le caret).
+function bugRenderPreserveSearch() {
+  const active = document.activeElement;
+  const isSearch = active && active.id === "bugSearchInput";
+  const start = isSearch ? active.selectionStart : null;
+  const end = isSearch ? active.selectionEnd : null;
+  renderDebug();
+  if (isSearch) {
+    requestAnimationFrame(() => {
+      const el = document.getElementById("bugSearchInput");
+      if (el) { el.focus(); try { el.setSelectionRange(start, end); } catch (e) {} }
+    });
+  }
+}
+
+window.bugFilterSetTab = function(k) { bugFilters.tab = k || "all"; renderDebug(); };
+window.bugFilterSetQ = function(v) { bugFilters.q = v || ""; bugRenderPreserveSearch(); };
+window.bugFilterToggleValidated = function() { bugFilters.showValidated = !bugFilters.showValidated; renderDebug(); };
+window.bugFilterToggleSort = function() { bugFilters.sortDir = bugFilters.sortDir === "desc" ? "asc" : "desc"; renderDebug(); };
+
+function bugTabCounts() {
+  const counts = {};
+  for (const it of (state.bugs && state.bugs.items) || []) {
+    if (it.validated) continue;
+    const t = it.tab || "autres";
+    counts[t] = (counts[t] || 0) + 1;
+  }
+  return counts;
+}
+
+function bugFilteredItems() {
+  const items = (state.bugs && state.bugs.items) || [];
+  const q = (bugFilters.q || "").toLowerCase().trim();
+  return items.filter(it => {
+    if (!bugFilters.showValidated && it.validated) return false;
+    if (bugFilters.tab !== "all" && (it.tab || "autres") !== bugFilters.tab) return false;
+    if (q) {
+      const hay = ((it.title || "") + " " + (it.text || "") + " " + (it.steps || []).join(" ")).toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  });
+}
+
+function bugAdd() {
+  const title = (bugDraft.title || "").trim();
+  const text = (bugDraft.text || "").trim();
+  if (!title && !text) { toast("Renseigne au moins un nom ou une description.", "error"); return; }
+  if (!state.bugs || !Array.isArray(state.bugs.items)) state.bugs = { items: [], lastNum: 0 };
+  const maxNum = state.bugs.items.reduce((m, it) => {
+    const n = parseInt(it.num, 10);
+    return isFinite(n) && n > m ? n : m;
+  }, state.bugs.lastNum || 0);
+  const newNum = maxNum + 1;
+  state.bugs.lastNum = newNum;
+  state.bugs.items.unshift({
+    id: uid(), num: newNum,
+    tab: bugDraft.tab || lastTabBeforeDebug || "autres",
+    title, text, steps: [], validated: false, createdAt: Date.now()
+  });
+  bugDraft = { tab: "", title: "", text: "" };
+  save();
+  renderDebug();
+  requestAnimationFrame(() => { const el = document.getElementById("bugTitleInput"); if (el) el.focus(); });
+}
+window.bugAdd = bugAdd;
+
+function bugDel(id) {
+  state.bugs.items = (state.bugs.items || []).filter(x => x.id !== id);
+  save(); renderDebug();
+}
+window.bugDel = bugDel;
+
+function bugUpdateTitle(id, v) { const it = (state.bugs.items || []).find(x => x.id === id); if (!it) return; it.title = v; save(); }
+window.bugUpdateTitle = bugUpdateTitle;
+
+function bugUpdateTab(id, v) {
+  const it = (state.bugs.items || []).find(x => x.id === id);
+  if (!it) return;
+  it.tab = v;
+  if (bugCardEditingId === id && bugFilters.tab !== "all" && bugFilters.tab !== v) bugFilters.tab = v;
+  save(); renderDebug();
+}
+window.bugUpdateTab = bugUpdateTab;
+
+function bugToggleValid(id) {
+  const it = (state.bugs.items || []).find(x => x.id === id);
+  if (!it) return;
+  it.validated = !it.validated;
+  save(); renderDebug();
+  requestAnimationFrame(() => {
+    const btn = document.querySelector(`.fb-card[data-bug-id="${id}"] .fb-check`);
+    if (btn) { btn.classList.add("anim-toggle"); setTimeout(() => btn.classList.remove("anim-toggle"), 400); }
+  });
+}
+window.bugToggleValid = bugToggleValid;
+
+function bugUpdateText(id, v) { const it = (state.bugs.items || []).find(x => x.id === id); if (!it) return; it.text = v; save(); }
+window.bugUpdateText = bugUpdateText;
+
+function bugAddStep(id) {
+  const it = (state.bugs.items || []).find(x => x.id === id);
+  if (!it) return;
+  if (!Array.isArray(it.steps)) it.steps = [];
+  it.steps.push("");
+  save(); renderDebug();
+  requestAnimationFrame(() => {
+    const els = document.querySelectorAll(`[data-bug-step^="${id}-"]`);
+    if (els.length) els[els.length - 1].focus();
+  });
+}
+window.bugAddStep = bugAddStep;
+
+function bugUpdateStep(id, idx, v) { const it = (state.bugs.items || []).find(x => x.id === id); if (!it || !Array.isArray(it.steps)) return; it.steps[idx] = v; save(); }
+window.bugUpdateStep = bugUpdateStep;
+
+function bugDelStep(id, idx) { const it = (state.bugs.items || []).find(x => x.id === id); if (!it || !Array.isArray(it.steps)) return; it.steps.splice(idx, 1); save(); renderDebug(); }
+window.bugDelStep = bugDelStep;
+
+// Formate UN item en texte (pour copie individuelle ou globale).
+function bugItemToText(it, idx) {
+  const lines = [];
+  const head = it.title ? it.title.trim() : (it.text || "").trim().split("\n")[0].slice(0, 80) || "(sans titre)";
+  const tabLbl = it.tab ? bugTabLabel(it.tab) : "";
+  const prefix = (typeof idx === "number") ? `${idx + 1}. ` : "";
+  const numTag = it.num ? `#${it.num} ` : "";
+  lines.push(`${prefix}${numTag}${head}${tabLbl ? ` [${tabLbl}]` : ""}`);
+  if (it.text && it.title && it.text.trim()) it.text.trim().split("\n").forEach(l => lines.push(`   ${l}`));
+  (it.steps || []).forEach(s => { const st = (s || "").trim(); if (st) lines.push(`   - ${st}`); });
+  if (it.num) lines.push(`   📎 captures éventuelles : note-${it.num}*.png`);
+  return lines.join("\n");
+}
+
+function bugBuildText() {
+  const items = ((state.bugs && state.bugs.items) || []).filter(it => !it.validated && ((it.title || "").trim() || (it.text || "").trim()));
+  if (!items.length) return "";
+  return items.map((it, i) => bugItemToText(it, i)).join("\n");
+}
+
+window.bugCopyOne = function(id) {
+  const it = ((state.bugs && state.bugs.items) || []).find(x => x.id === id);
+  if (!it) return;
+  const txt = bugItemToText(it);
+  const btn = document.querySelector(`[data-bug-copy="${id}"]`);
+  const flash = () => {
+    if (!btn) return;
+    const old = btn.textContent;
+    btn.textContent = "✓"; btn.classList.add("copied");
+    setTimeout(() => { btn.textContent = old; btn.classList.remove("copied"); }, 1500);
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(flash).catch(() => bugCopyFallback(txt, flash));
+  else bugCopyFallback(txt, flash);
+};
+
+function bugCopy() {
+  const txt = bugBuildText();
+  const btn = document.getElementById("bug-copy-btn");
+  if (!txt) {
+    if (btn) { const old = btn.textContent; btn.textContent = "Aucune action en cours"; setTimeout(() => { btn.textContent = old; }, 1500); }
+    return;
+  }
+  const done = () => {
+    if (btn) { const old = btn.textContent; btn.textContent = "✓ Copié !"; btn.classList.add("copied"); setTimeout(() => { btn.textContent = old; btn.classList.remove("copied"); }, 1800); }
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(done).catch(() => bugCopyFallback(txt, done));
+  else bugCopyFallback(txt, done);
+}
+window.bugCopy = bugCopy;
+
+function bugCopyFallback(txt, done) {
+  try {
+    const ta = document.createElement("textarea");
+    ta.value = txt; ta.style.position = "fixed"; ta.style.left = "-9999px";
+    document.body.appendChild(ta); ta.select(); document.execCommand("copy"); document.body.removeChild(ta);
+    done();
+  } catch (e) {
+    window.prompt("Copie manuellement :", txt);
+  }
+}
+
+function renderDebug() {
+  const root = document.getElementById("debug-container");
+  if (!root) return;
+  if (!state.bugs || !Array.isArray(state.bugs.items)) state.bugs = { items: [], lastNum: 0 };
+
+  const draftTab = bugDraft.tab || lastTabBeforeDebug || "";
+  const tabOptions = BUG_TAB_OPTIONS.map(([k, lbl]) =>
+    `<option value="${esc(k)}" ${k === draftTab ? "selected" : ""}>${esc(lbl)}</option>`
+  ).join("");
+
+  const allItems = state.bugs.items;
+  const nOpen = allItems.filter(it => !it.validated).length;
+  const nDone = allItems.filter(it => it.validated).length;
+
+  let h = `<div class="fb-bar">
+    <div class="fb-title">Notes &amp; Remarques</div>
+    <button class="fb-copy-btn" onclick="bugCopy()" id="bug-copy-btn">📋 Copier toutes les actions en cours</button>
+  </div>`;
+  h += `<div class="fb-subtitle">Note ici les remarques ou bugs à transmettre à Claude. Chaque remarque peut être détaillée (onglet, étapes), copiée individuellement, validée ou supprimée. Sauvegarde automatique (local + cloud).</div>`;
+
+  // Barre de stats + progress
+  const totalAll = nOpen + nDone;
+  const progressPct = totalAll > 0 ? Math.round((nDone / totalAll) * 100) : 0;
+  h += `<div class="bug-stats-bar">
+    <div class="bug-stat ${!bugFilters.showValidated ? "active" : ""}"><span class="bug-stat-num">${nOpen}</span> en cours</div>
+    <button class="bug-stat-toggle ${bugFilters.showValidated ? "active" : ""}" onclick="bugFilterToggleValidated()" title="${bugFilters.showValidated ? "Masquer les validées" : "Afficher les validées"}">
+      <span class="bug-stat-num">${nDone}</span> validée${nDone > 1 ? "s" : ""} ${bugFilters.showValidated ? "👁" : "👁‍🗨"}
+    </button>
+    ${totalAll > 0 ? `<div class="bug-progress" title="${nDone} validée${nDone > 1 ? "s" : ""} sur ${totalAll}">
+      <div class="bug-progress-bar"><div class="bug-progress-fill" style="width:${progressPct}%"></div></div>
+      <span class="bug-progress-pct">${progressPct}%</span>
+    </div>` : ""}
+  </div>`;
+
+  // Formulaire compact
+  const hasDraftContent = !!(bugDraft.title || bugDraft.text);
+  const nextNum = (allItems || []).reduce((m, it) => {
+    const n = parseInt(it.num, 10);
+    return isFinite(n) && n > m ? n : m;
+  }, state.bugs.lastNum || 0) + 1;
+
+  h += `<div class="bug-form ${hasDraftContent ? "has-content" : ""}">
+    <div class="bug-form-quick">
+      <select class="bug-form-tab-quick" onchange="bugDraftSet('tab', this.value)" title="Onglet concerné">
+        <option value="" ${!draftTab ? "selected" : ""}>📂 —</option>
+        ${tabOptions}
+      </select>
+      <input id="bugTitleInput" class="bug-form-title-quick" type="text" placeholder="Nouvelle remarque…  (Alt+N)" title="Raccourci : Alt+N" value="${esc(bugDraft.title || "")}" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" oninput="bugDraftSet('title', this.value)" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();bugAdd()}">
+      <span class="bug-form-next-num" title="Numéro qui sera attribué">#${nextNum}</span>
+      <button class="bug-form-add-btn" onclick="bugAdd()" title="Ajouter (Entrée)" aria-label="Ajouter">＋</button>
+    </div>
+    <div class="bug-form-extra">
+      <textarea class="bug-form-text-quick" rows="8" placeholder="Description (optionnelle) — étapes pour reproduire, ce qui s'est passé, ce que tu attendais…" oninput="bugDraftSet('text', this.value)">${esc(bugDraft.text || "")}</textarea>
+      <div class="bug-form-hint" style="display:flex;align-items:flex-start;gap:6px">
+        <span style="flex-shrink:0">💡</span>
+        <span><strong>Capture :</strong> renomme-la selon <code>note-${nextNum}.png</code> et envoie-la par mail.</span>
+      </div>
+    </div>
+  </div>`;
+
+  // Barre de filtres
+  if (allItems.length > 0) {
+    const counts = bugTabCounts();
+    const usedTabs = BUG_TAB_OPTIONS.filter(([k]) => counts[k] > 0).map(([k, lbl]) => ({ k, lbl, n: counts[k] }));
+    h += `<div class="bug-filter-bar">
+      <div class="bug-filter-chips">
+        <button class="bug-chip ${bugFilters.tab === "all" ? "active" : ""}" onclick="bugFilterSetTab('all')">Toutes <span class="bug-chip-n">${nOpen}</span></button>
+        ${usedTabs.map(t => `<button class="bug-chip bug-chip-${esc(t.k)} ${bugFilters.tab === t.k ? "active" : ""}" onclick="bugFilterSetTab('${esc(t.k)}')">${esc(t.lbl)} <span class="bug-chip-n">${t.n}</span></button>`).join("")}
+      </div>
+      <input id="bugSearchInput" class="bug-search" type="text" placeholder="Rechercher…  (/)" title="Raccourci : /" value="${esc(bugFilters.q || "")}" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" oninput="bugFilterSetQ(this.value)">
+      <button class="bug-sort-btn" onclick="bugFilterToggleSort()" title="${bugFilters.sortDir === "desc" ? "Récent → Ancien" : "Ancien → Récent"}">${bugFilters.sortDir === "desc" ? "↓ récent" : "↑ ancien"}</button>
+    </div>`;
+  }
+
+  // Liste des cartes
+  const sortMul = bugFilters.sortDir === "asc" ? -1 : 1;
+  const items = [...bugFilteredItems()].sort((a, b) => {
+    if (!!a.validated !== !!b.validated) return a.validated ? 1 : -1;
+    return ((b.createdAt || 0) - (a.createdAt || 0)) * sortMul;
+  });
+
+  if (!items.length) {
+    if (allItems.length === 0) {
+      h += `<div class="bug-empty"><div class="bug-empty-icon">📝</div><div class="bug-empty-title">Aucune remarque pour l'instant</div><div class="bug-empty-hint">Utilise le formulaire ci-dessus pour signaler un bug ou noter une idée d'amélioration.</div></div>`;
+    } else if (bugFilters.q) {
+      h += `<div class="bug-empty"><div class="bug-empty-icon">🔎</div><div class="bug-empty-title">Aucun résultat pour « ${esc(bugFilters.q)} »</div><div class="bug-empty-hint"><button class="bug-empty-action" onclick="bugFilterSetQ('')">Effacer la recherche</button></div></div>`;
+    } else if (bugFilters.tab !== "all") {
+      h += `<div class="bug-empty"><div class="bug-empty-icon">📂</div><div class="bug-empty-title">Aucune remarque pour ${esc(bugTabLabel(bugFilters.tab))}</div><div class="bug-empty-hint"><button class="bug-empty-action" onclick="bugFilterSetTab('all')">Voir toutes les remarques</button></div></div>`;
+    } else {
+      h += `<div class="bug-empty"><div class="bug-empty-icon">✓</div><div class="bug-empty-title">Toutes les remarques sont validées</div><div class="bug-empty-hint"><button class="bug-empty-action" onclick="bugFilterToggleValidated()">Afficher les validées</button></div></div>`;
+    }
+  }
+
+  items.forEach(it => {
+    const tabKey = it.tab || "autres";
+    const tabBadge = `<select class="bug-tab-badge bug-tab-${esc(tabKey)} bug-tab-select" onclick="event.stopPropagation()" onmousedown="event.stopPropagation()" onchange="event.stopPropagation();bugUpdateTab('${it.id}', this.value)" title="Changer l'onglet">
+      ${BUG_TAB_OPTIONS.map(([k, l]) => `<option value="${esc(k)}" ${k === tabKey ? "selected" : ""}>${esc(l)}</option>`).join("")}
+    </select>`;
+    const numBadge = it.num ? `<span class="bug-num-badge" title="Pour les captures : note-${it.num}.png">#${it.num}</span>` : "";
+    const statusPill = it.validated
+      ? `<span class="bug-status-pill bug-status-done">✓ Validée</span>`
+      : `<span class="bug-status-pill bug-status-open">À traiter</span>`;
+    const dateRel = it.createdAt
+      ? `<span class="bug-card-date" title="${esc(new Date(it.createdAt).toLocaleString("fr-FR"))}">${esc(bugRelativeTime(it.createdAt))}</span>`
+      : "";
+    const expanded = bugCardExpandedId === it.id;
+    const editing = expanded && bugCardEditingId === it.id;
+    const titleText = (it.title || "").trim() || "(sans titre)";
+    const tabBadgeReadOnly = `<span class="bug-tab-badge bug-tab-${esc(tabKey)}">${esc(bugTabLabel(tabKey))}</span>`;
+    const tabBadgeFinal = editing ? tabBadge : tabBadgeReadOnly;
+    const titleHtml = editing
+      ? `<input class="fb-text bug-card-title" value="${esc(it.title || "")}" placeholder="Titre…" oninput="bugUpdateTitle('${it.id}',this.value)" onclick="event.stopPropagation()">`
+      : `<span class="bug-card-title-quick">${esc(titleText)}</span>`;
+    let descHtml = "";
+    if (editing) {
+      descHtml = `<textarea class="bug-card-text" rows="8" placeholder="Description…" oninput="bugUpdateText('${it.id}',this.value);bugAutoResize(this)" onfocus="bugAutoResize(this)">${esc(it.text || "")}</textarea>`;
+    } else if (it.text && it.text.trim()) {
+      descHtml = `<div class="bug-card-text-full">${esc(it.text)}</div>`;
+    } else {
+      descHtml = `<div class="bug-card-text-empty">Aucune description.</div>`;
+    }
+    const steps = (it.steps || []).filter(s => (s || "").trim());
+    const chevron = `<span class="bug-card-chevron">${expanded ? "▾" : "▸"}</span>`;
+    const editBtn = expanded
+      ? (editing
+          ? `<button class="bug-card-edit-btn editing" onclick="event.stopPropagation();bugCardEditEnd()" title="Terminer la modification">✓</button>`
+          : `<button class="bug-card-edit-btn" onclick="event.stopPropagation();bugCardEditStart('${it.id}')" title="Modifier">⋮</button>`)
+      : "";
+
+    h += `<div class="fb-card bug-card-v3 ${it.validated ? "fb-done" : ""} ${expanded ? "expanded" : ""} ${editing ? "editing" : ""}" data-bug-id="${esc(it.id)}">
+      <div class="bug-card-head" onclick="bugCardToggleExpand('${it.id}')">
+        <button class="fb-check ${it.validated ? "on" : ""}" onclick="event.stopPropagation();bugToggleValid('${it.id}')" title="${it.validated ? "Marquer en cours" : "Valider"}">✓</button>
+        ${numBadge}
+        ${tabBadgeFinal}
+        ${titleHtml}
+        ${editBtn}
+        ${chevron}
+      </div>
+      ${expanded ? `<div class="bug-card-body" onclick="event.stopPropagation()">
+        <div class="bug-card-meta-row">${statusPill}${dateRel}</div>
+        ${descHtml}
+        ${editing
+          ? (it.steps || []).map((st, idx) => `<div class="fb-step">
+              <span class="fb-step-bul">↳</span>
+              <input class="fb-step-text" data-bug-step="${it.id}-${idx}" value="${esc(st || "")}" placeholder="Étape complémentaire…" oninput="bugUpdateStep('${it.id}',${idx},this.value)" onkeydown="if(event.key==='Enter'){event.preventDefault();bugAddStep('${it.id}')}">
+              <button class="fb-step-del" onclick="bugDelStep('${it.id}',${idx})" title="Supprimer étape">✕</button>
+            </div>`).join("")
+          : steps.map(st => `<div class="fb-step"><span class="fb-step-bul">↳</span><span class="fb-step-text-readonly">${esc(st)}</span></div>`).join("")}
+        <div class="bug-card-actions-row">
+          ${editing ? `<button class="fb-add-step" onclick="bugAddStep('${it.id}')" title="Ajouter une étape complémentaire">＋ étape</button>` : ""}
+          <button class="bug-card-copy" data-bug-copy="${it.id}" onclick="bugCopyOne('${it.id}')" title="Copier cette remarque">📋 Copier</button>
+          <button class="fb-del-text" onclick="bugDel('${it.id}')" title="Supprimer">× Supprimer</button>
+        </div>
+      </div>` : ""}
+    </div>`;
+  });
+
+  root.innerHTML = h;
+  updateDebugBadges();
+}
+
+// Raccourcis clavier dans l'onglet Debug : Alt+N (nouvelle remarque), / (recherche)
+document.addEventListener("keydown", e => {
+  const debugActive = document.getElementById("tab-debug")?.classList.contains("active");
+  if (!debugActive) return;
+  const tag = (e.target && e.target.tagName) || "";
+  if (e.altKey && (e.key === "n" || e.key === "N")) {
+    e.preventDefault();
+    const el = document.getElementById("bugTitleInput"); if (el) el.focus();
+  } else if (e.key === "/" && tag !== "INPUT" && tag !== "TEXTAREA" && tag !== "SELECT") {
+    const el = document.getElementById("bugSearchInput"); if (el) { e.preventDefault(); el.focus(); }
+  }
 });
 
 function initNotesTab() {
@@ -4497,16 +5255,87 @@ document.getElementById('btn-save-recipe').onclick = () => {
 document.getElementById('btn-delete-recipe').onclick = () => {
   if (!currentRecipeId) return;
   const r = state.recipes.find(x => x.id === currentRecipeId);
-  showConfirm('Supprimer la recette', 'Supprimer définitivement « ' + (r ? r.name : 'cette recette') + ' » ?', 'Supprimer', () => {
-    state.recipes = state.recipes.filter(r => r.id !== currentRecipeId);
-    state.selectedRecipeIds = state.selectedRecipeIds.filter(id => id !== currentRecipeId);
+  showConfirm('Supprimer la recette', 'Mettre « ' + (r ? r.name : 'cette recette') + ' » à la corbeille ?', 'Supprimer', () => {
+    trashRecipe(currentRecipeId);
     closeAllModals();
     save();
     renderRecipes();
     buildFilterBar();
-    toast('Recette supprimée', 'success');
+    toast('Recette mise à la corbeille', 'success');
   });
 };
+
+// ---- Corbeille (recettes) ----
+function trashRecipe(recipeId) {
+  const r = state.recipes.find(x => x.id === recipeId);
+  if (!r) return;
+  if (!Array.isArray(state.trash)) state.trash = [];
+  state.trash.unshift({ id: uid(), name: r.name, data: r, deletedAt: Date.now() });
+  state.recipes = state.recipes.filter(x => x.id !== recipeId);
+  state.selectedRecipeIds = state.selectedRecipeIds.filter(id => id !== recipeId);
+  if (state.recipeServings) delete state.recipeServings[recipeId];
+}
+function restoreFromTrash(trashId) {
+  const i = (state.trash || []).findIndex(t => t.id === trashId);
+  if (i < 0) return;
+  const entry = state.trash[i];
+  if (entry.data && !state.recipes.some(r => r.id === entry.data.id)) state.recipes.push(entry.data);
+  state.trash.splice(i, 1);
+  save();
+  rerenderAll();
+  toast('Recette restaurée', 'success');
+}
+function purgeFromTrash(trashId) {
+  state.trash = (state.trash || []).filter(t => t.id !== trashId);
+  save();
+  renderDataTab();
+}
+function emptyTrash() {
+  const n = (state.trash || []).length;
+  if (!n) return;
+  showConfirm('Vider la corbeille', 'Supprimer définitivement ' + n + ' recette(s) ? Action irréversible.', 'Vider', () => {
+    state.trash = [];
+    save();
+    renderDataTab();
+    toast('Corbeille vidée', 'success');
+  });
+}
+function renderTrash() {
+  const list = document.getElementById('trash-list');
+  const badge = document.getElementById('trash-count-badge');
+  if (!list) return;
+  const trash = state.trash || [];
+  if (badge) badge.textContent = trash.length;
+  if (trash.length === 0) {
+    list.innerHTML = '<div style="padding:14px; color:var(--text-dim); text-align:center;">Corbeille vide</div>';
+    return;
+  }
+  list.innerHTML = '';
+  trash.forEach(t => {
+    const el = document.createElement('div');
+    el.className = 'data-list-item';
+    const d = new Date(t.deletedAt);
+    const dateStr = isNaN(d.getTime()) ? '' : d.toLocaleDateString('fr-FR');
+    const ingCount = (t.data && Array.isArray(t.data.ingredients)) ? t.data.ingredients.length : 0;
+    el.innerHTML = '<span>' + escapeHtml(t.name || 'Sans nom') + ' <span style="color:var(--text-dim); font-size:12px;">(' + ingCount + ' ingrédient(s)' + (dateStr ? ' · supprimée le ' + dateStr : '') + ')</span></span>';
+    const actions = document.createElement('span');
+    actions.className = 'data-list-item-actions';
+    const restoreBtn = document.createElement('button');
+    restoreBtn.className = 'btn btn-xs';
+    restoreBtn.textContent = '↩ Restaurer';
+    restoreBtn.onclick = () => restoreFromTrash(t.id);
+    const purgeBtn = document.createElement('button');
+    purgeBtn.className = 'btn btn-xs btn-danger';
+    purgeBtn.textContent = '🗑';
+    purgeBtn.title = 'Supprimer définitivement';
+    purgeBtn.onclick = () => showConfirm('Supprimer définitivement', 'Supprimer « ' + (t.name || 'cette recette') + ' » définitivement ?', 'Supprimer', () => purgeFromTrash(t.id));
+    actions.appendChild(restoreBtn);
+    actions.appendChild(purgeBtn);
+    el.appendChild(actions);
+    list.appendChild(el);
+  });
+}
+document.getElementById('btn-empty-trash').onclick = emptyTrash;
 
 function closeAllModals() {
   document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('active'));
@@ -4802,6 +5631,180 @@ function updateActiveChips() {
 /* ========================================================================
    LISTE DE COURSES
    ======================================================================== */
+
+// ---- Portions : facteur d'échelle par recette ----
+function recipeBaseServings(r) {
+  return (r && r.servings != null && Number(r.servings) > 0) ? Number(r.servings) : 4;
+}
+function getRecipeServings(r) {
+  const ov = state.recipeServings[r.id];
+  return (ov != null && !isNaN(ov) && Number(ov) > 0) ? Number(ov) : recipeBaseServings(r);
+}
+function setRecipeServings(r, n) {
+  n = Math.max(1, Math.round(Number(n) || 1));
+  if (n === recipeBaseServings(r)) delete state.recipeServings[r.id];
+  else state.recipeServings[r.id] = n;
+  save();
+  renderShopping();
+}
+function scaleQuantity(q, factor) {
+  if (factor === 1) return q;
+  const n = parseFloat(String(q).replace(',', '.'));
+  if (isNaN(n)) return q; // quantité non numérique (« un peu ») → inchangée
+  const scaled = n * factor;
+  return Number.isInteger(scaled) ? scaled : parseFloat(scaled.toFixed(3));
+}
+
+// ---- Conversion métrique des unités (masse: mg/g/kg ; volume: ml/cl/dl/l) ----
+const UNIT_CONVERSIONS = {
+  'mg': ['mass', 0.001],
+  'g': ['mass', 1], 'gr': ['mass', 1], 'gramme': ['mass', 1], 'grammes': ['mass', 1],
+  'kg': ['mass', 1000], 'kilo': ['mass', 1000], 'kilos': ['mass', 1000], 'kilogramme': ['mass', 1000], 'kilogrammes': ['mass', 1000],
+  'ml': ['vol', 1], 'millilitre': ['vol', 1], 'millilitres': ['vol', 1],
+  'cl': ['vol', 10], 'centilitre': ['vol', 10], 'centilitres': ['vol', 10],
+  'dl': ['vol', 100], 'decilitre': ['vol', 100], 'decilitres': ['vol', 100],
+  'l': ['vol', 1000], 'litre': ['vol', 1000], 'litres': ['vol', 1000]
+};
+function getUnitConversion(unitId) {
+  const name = normalizeText(getUnitName(unitId));
+  return UNIT_CONVERSIONS[name] || null; // [famille, facteur vers unité de base] ou null
+}
+function formatMeasure(totalBase, family) {
+  const round = n => Number.isInteger(n) ? n : parseFloat(n.toFixed(3));
+  if (family === 'mass') {
+    return totalBase >= 1000 ? { qty: round(totalBase / 1000), unit: 'kg' } : { qty: round(totalBase), unit: 'g' };
+  }
+  return totalBase >= 1000 ? { qty: round(totalBase / 1000), unit: 'l' } : { qty: round(totalBase), unit: 'ml' };
+}
+
+// ---- Construction des lignes de la liste de courses (recettes + articles manuels) ----
+function getShoppingItems() {
+  const selected = state.recipes.filter(r => state.selectedRecipeIds.includes(r.id));
+  const aggregated = {}; // clé: ingId + '|' + unitId (brut)  ou  ingId + '|measure|' + famille (converti)
+  selected.forEach(r => {
+    const factor = getRecipeServings(r) / recipeBaseServings(r);
+    (r.ingredients || []).forEach(ing => {
+      const rawQty = scaleQuantity(ing.quantity, factor);
+      const num = parseFloat(String(rawQty).replace(',', '.'));
+      const conv = getUnitConversion(ing.unitId);
+      if (conv && !isNaN(num)) {
+        // Unité métrique + quantité numérique → conversion vers l'unité de base, agrégation par famille
+        const key = ing.ingredientId + '|measure|' + conv[0];
+        if (!aggregated[key]) {
+          aggregated[key] = { kind: 'measure', ingredientId: ing.ingredientId, measure: conv[0], base: 0, sources: [] };
+        }
+        aggregated[key].base += num * conv[1];
+        aggregated[key].sources.push(r.name);
+      } else {
+        const key = ing.ingredientId + '|' + (ing.unitId || '');
+        if (!aggregated[key]) {
+          aggregated[key] = { kind: 'raw', ingredientId: ing.ingredientId, unitId: ing.unitId, quantities: [], sources: [] };
+        }
+        aggregated[key].quantities.push(rawQty);
+        aggregated[key].sources.push(r.name);
+      }
+    });
+  });
+  const items = Object.entries(aggregated).map(([key, agg]) => {
+    const ing = state.ingredients.find(i => i.id === agg.ingredientId);
+    let qtyStr, unitName;
+    if (agg.kind === 'measure') {
+      const f = formatMeasure(agg.base, agg.measure);
+      qtyStr = f.qty + '';
+      unitName = f.unit;
+    } else {
+      const numericQtys = agg.quantities.map(q => parseFloat(String(q).replace(',', '.'))).filter(n => !isNaN(n));
+      if (numericQtys.length === agg.quantities.length && agg.quantities.length > 0) {
+        const sum = numericQtys.reduce((a,b) => a+b, 0);
+        qtyStr = (Number.isInteger(sum) ? sum : parseFloat(sum.toFixed(3))) + '';
+      } else {
+        qtyStr = agg.quantities.filter(q => q).join(' + ');
+      }
+      unitName = getUnitName(agg.unitId);
+    }
+    return {
+      key,
+      name: getIngredientName(agg.ingredientId),
+      typeId: ing ? ing.typeId : null,
+      typeName: getTypeName(ing ? ing.typeId : null),
+      unitName,
+      qtyStr,
+      sources: agg.sources
+    };
+  });
+  // Articles ajoutés manuellement (hors recette)
+  (state.manualShoppingItems || []).forEach(m => {
+    items.push({
+      key: 'manual|' + m.id,
+      name: m.name,
+      typeId: m.typeId,
+      typeName: getTypeName(m.typeId),
+      unitName: getUnitName(m.unitId),
+      qtyStr: m.qty != null ? String(m.qty) : '',
+      sources: [],
+      manual: true,
+      manualId: m.id
+    });
+  });
+  return items;
+}
+
+// ---- Tri des groupes selon l'ordre des rayons (state.ingredientTypes) ; non-classés en dernier ----
+function orderedRayonGroups(groupNames) {
+  const typeOrder = {};
+  state.ingredientTypes.forEach((t, i) => { typeOrder[t.name] = i; });
+  const collator = new Intl.Collator('fr', { sensitivity: 'base' });
+  return groupNames.sort((a, b) => {
+    const oa = a in typeOrder ? typeOrder[a] : Infinity;
+    const ob = b in typeOrder ? typeOrder[b] : Infinity;
+    if (oa !== ob) return oa - ob;
+    return collator.compare(a, b);
+  });
+}
+
+// ---- Impression de la liste de courses (fenêtre dédiée) ----
+function buildShoppingPrintHtml() {
+  const items = getShoppingItems().filter(it => !state.checkedShoppingItems.includes(it.key));
+  const collator = new Intl.Collator('fr', { sensitivity: 'base' });
+  const groups = {};
+  items.forEach(it => { const g = it.typeName || 'Sans rayon'; if (!groups[g]) groups[g] = []; groups[g].push(it); });
+  const ordered = orderedRayonGroups(Object.keys(groups));
+  let body = '';
+  ordered.forEach(g => {
+    const list = groups[g].sort((a, b) => collator.compare(a.name, b.name));
+    body += '<h2>' + escapeHtml(g) + '</h2><ul>';
+    list.forEach(it => {
+      const qty = it.qtyStr ? (it.qtyStr + (it.unitName ? ' ' + it.unitName : '')) : '';
+      body += '<li><span class="box"></span><span class="nm">' + escapeHtml(it.name) + '</span>' + (qty ? '<span class="q">' + escapeHtml(qty) + '</span>' : '') + '</li>';
+    });
+    body += '</ul>';
+  });
+  if (!ordered.length) body = '<p>Liste vide.</p>';
+  const recipeNames = state.recipes.filter(r => state.selectedRecipeIds.includes(r.id)).map(r => r.name);
+  const today = new Date().toLocaleDateString('fr-FR');
+  return '<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Liste de courses</title><style>'
+    + 'body{font-family:Arial,Helvetica,sans-serif;color:#111;max-width:680px;margin:24px auto;padding:0 16px;}'
+    + 'h1{font-size:20px;margin:0 0 4px;}.sub{color:#666;font-size:12px;margin-bottom:18px;}'
+    + 'h2{font-size:13px;text-transform:uppercase;letter-spacing:.05em;color:#444;border-bottom:1px solid #ccc;padding-bottom:3px;margin:18px 0 6px;}'
+    + 'ul{list-style:none;padding:0;margin:0;}li{padding:5px 0;font-size:14px;display:flex;align-items:center;gap:8px;}'
+    + '.box{width:13px;height:13px;border:1.5px solid #333;border-radius:3px;flex-shrink:0;}'
+    + '.nm{flex:1;}.q{color:#555;}@media print{body{margin:0;}}'
+    + '</style></head><body>'
+    + '<h1>🛒 Liste de courses</h1>'
+    + '<div class="sub">' + escapeHtml(today) + (recipeNames.length ? ' &middot; ' + escapeHtml(recipeNames.join(', ')) : '') + '</div>'
+    + body + '</body></html>';
+}
+function printShoppingList() {
+  const w = window.open('', '_blank');
+  if (!w) { toast('Autorise les pop-ups pour imprimer la liste', 'error'); return; }
+  w.document.open();
+  w.document.write(buildShoppingPrintHtml());
+  w.document.close();
+  w.focus();
+  w.onload = () => { try { w.print(); } catch (e) {} };
+  setTimeout(() => { try { w.print(); } catch (e) {} }, 400);
+}
+
 function renderShopping() {
   const container = document.getElementById('shopping-container');
   const countEl = document.getElementById('shopping-selected-count');
@@ -4809,51 +5812,39 @@ function renderShopping() {
 
   const selected = state.recipes.filter(r => state.selectedRecipeIds.includes(r.id));
   countEl.textContent = selected.length + ' recette' + (selected.length > 1 ? 's' : '') + ' sélectionnée' + (selected.length > 1 ? 's' : '');
-  listEl.innerHTML = selected.map(r => '<span class="meal-tag" style="margin:2px;">' + escapeHtml(r.name) + '</span>').join(' ');
+  // Liste des recettes sélectionnées avec réglage des portions
+  listEl.innerHTML = '';
+  selected.forEach(r => {
+    const row = document.createElement('div');
+    row.className = 'serving-row';
+    const name = document.createElement('span');
+    name.className = 'serving-name';
+    name.textContent = r.name;
+    const stepper = document.createElement('span');
+    stepper.className = 'serving-stepper';
+    const minus = document.createElement('button');
+    minus.className = 'serving-btn'; minus.type = 'button'; minus.textContent = '−'; minus.title = 'Moins de portions';
+    minus.onclick = () => setRecipeServings(r, getRecipeServings(r) - 1);
+    const val = document.createElement('span');
+    val.className = 'serving-val';
+    const cur = getRecipeServings(r);
+    const base = recipeBaseServings(r);
+    val.textContent = cur + ' pers.';
+    if (cur !== base) { val.classList.add('serving-modified'); val.title = 'Recette prévue pour ' + base + ' pers.'; }
+    const plus = document.createElement('button');
+    plus.className = 'serving-btn'; plus.type = 'button'; plus.textContent = '+'; plus.title = 'Plus de portions';
+    plus.onclick = () => setRecipeServings(r, getRecipeServings(r) + 1);
+    stepper.appendChild(minus); stepper.appendChild(val); stepper.appendChild(plus);
+    row.appendChild(name); row.appendChild(stepper);
+    listEl.appendChild(row);
+  });
 
-  if (selected.length === 0) {
-    container.innerHTML = '<div class="empty"><div class="empty-icon">🛒</div><div>Aucune recette sélectionnée.<br>Retourne à l\'onglet <b>Recettes</b> et coche les recettes à inclure dans ta liste de courses.</div></div>';
+  if (selected.length === 0 && (state.manualShoppingItems || []).length === 0) {
+    container.innerHTML = '<div class="empty"><div class="empty-icon">🛒</div><div>Aucune recette sélectionnée.<br>Coche des recettes dans l\'onglet <b>Recettes</b>, ou ajoute un article ci-dessus.</div></div>';
     return;
   }
 
-  // Agréger les ingrédients par (ingredientId + unitId)
-  const aggregated = {}; // clé: ingId + '|' + (unitId ou '')
-  selected.forEach(r => {
-    (r.ingredients || []).forEach(ing => {
-      const key = ing.ingredientId + '|' + (ing.unitId || '');
-      if (!aggregated[key]) {
-        aggregated[key] = {
-          ingredientId: ing.ingredientId,
-          unitId: ing.unitId,
-          quantities: [],
-          sources: []
-        };
-      }
-      aggregated[key].quantities.push(ing.quantity);
-      aggregated[key].sources.push(r.name);
-    });
-  });
-
-  const items = Object.entries(aggregated).map(([key, agg]) => {
-    // Somme des quantités numériques, sinon concaténation
-    const numericQtys = agg.quantities.map(q => parseFloat(String(q).replace(',', '.'))).filter(n => !isNaN(n));
-    let qtyStr;
-    if (numericQtys.length === agg.quantities.length && agg.quantities.length > 0) {
-      const sum = numericQtys.reduce((a,b) => a+b, 0);
-      qtyStr = (Number.isInteger(sum) ? sum : parseFloat(sum.toFixed(3))) + '';
-    } else {
-      qtyStr = agg.quantities.filter(q => q).join(' + ');
-    }
-    return {
-      key,
-      name: getIngredientName(agg.ingredientId),
-      typeId: state.ingredients.find(i => i.id === agg.ingredientId)?.typeId,
-      typeName: getTypeName(state.ingredients.find(i => i.id === agg.ingredientId)?.typeId),
-      unitName: getUnitName(agg.unitId),
-      qtyStr,
-      sources: agg.sources
-    };
-  });
+  const items = getShoppingItems();
 
   const groupByType = document.getElementById('group-by-type').checked;
   const collator = new Intl.Collator('fr', { sensitivity: 'base' });
@@ -4867,11 +5858,11 @@ function renderShopping() {
   if (groupByType) {
     const groups = {};
     uncheckedItems.forEach(it => {
-      if (!groups[it.typeName]) groups[it.typeName] = [];
-      groups[it.typeName].push(it);
+      const g = it.typeName || 'Sans rayon';
+      if (!groups[g]) groups[g] = [];
+      groups[g].push(it);
     });
-    const sortedGroups = Object.keys(groups).sort(collator.compare);
-    sortedGroups.forEach(g => {
+    orderedRayonGroups(Object.keys(groups)).forEach(g => {
       container.appendChild(buildGroupEl(g, groups[g]));
     });
   } else {
@@ -4928,6 +5919,12 @@ function buildGroupEl(title, items, allChecked = false) {
     const name = document.createElement('div');
     name.className = 'shopping-item-name';
     name.textContent = it.name;
+    if (it.manual) {
+      const tag = document.createElement('span');
+      tag.className = 'manual-tag';
+      tag.textContent = '(ajouté)';
+      name.appendChild(tag);
+    }
     content.appendChild(name);
     if (it.qtyStr) {
       const q = document.createElement('div');
@@ -4942,6 +5939,20 @@ function buildGroupEl(title, items, allChecked = false) {
       content.appendChild(s);
     }
     li.appendChild(content);
+    if (it.manual) {
+      const del = document.createElement('button');
+      del.className = 'manual-del';
+      del.type = 'button';
+      del.textContent = '✕';
+      del.title = 'Retirer cet article';
+      del.onclick = () => {
+        state.manualShoppingItems = state.manualShoppingItems.filter(x => x.id !== it.manualId);
+        state.checkedShoppingItems = state.checkedShoppingItems.filter(k => k !== it.key);
+        save();
+        renderShopping();
+      };
+      li.appendChild(del);
+    }
     ul.appendChild(li);
   });
   wrap.appendChild(ul);
@@ -4949,19 +5960,56 @@ function buildGroupEl(title, items, allChecked = false) {
 }
 
 document.getElementById('group-by-type').onchange = renderShopping;
+document.getElementById('btn-print-shopping').onclick = printShoppingList;
 document.getElementById('btn-clear-checks').onclick = () => {
   state.checkedShoppingItems = [];
   save();
   renderShopping();
 };
 document.getElementById('btn-clear-selection').onclick = () => {
-  if (!confirm('Vider la sélection de recettes ?')) return;
-  state.selectedRecipeIds = [];
-  state.checkedShoppingItems = [];
-  save();
-  renderShopping();
-  renderRecipes();
+  showConfirm('Vider la sélection', 'Vider la sélection de recettes ?', 'Vider', () => {
+    state.selectedRecipeIds = [];
+    state.checkedShoppingItems = [];
+    save();
+    renderShopping();
+    renderRecipes();
+  });
 };
+
+// Ajout manuel d'articles à la liste de courses
+let manualAddCtrl = null;
+(function initManualAdd() {
+  const nameWrap = document.getElementById('manual-add-name');
+  if (!nameWrap) return;
+  manualAddCtrl = createAutocomplete(nameWrap, {
+    placeholder: '+ Article (ex: Sacs poubelle)',
+    getItems: () => state.ingredients
+      .map(i => ({ name: i.name, id: i.id, typeHint: getTypeName(i.typeId) }))
+      .sort((a, b) => a.name.localeCompare(b.name, 'fr')),
+    onSelect: () => {},
+    onCreate: (name) => ({ name })
+  });
+  const qtyInput = document.getElementById('manual-add-qty');
+  function doAdd() {
+    const name = manualAddCtrl.getValue();
+    if (!name) { manualAddCtrl.focus(); return; }
+    const match = state.ingredients.find(i => normalizeText(i.name) === normalizeText(name));
+    state.manualShoppingItems.push({
+      id: uid(),
+      name: match ? match.name : name,
+      qty: qtyInput.value.trim(),
+      unitId: null,
+      typeId: match ? match.typeId : null
+    });
+    manualAddCtrl.setValue('');
+    qtyInput.value = '';
+    save();
+    renderShopping();
+    manualAddCtrl.focus();
+  }
+  document.getElementById('btn-add-manual').onclick = doAdd;
+  qtyInput.addEventListener('keydown', e => { if (e.key === 'Enter') doAdd(); });
+})();
 
 /* ========================================================================
    ONGLET DONNÉES
@@ -5185,6 +6233,17 @@ function openMergeFamilyDialog(sourceFamily) {
   );
 }
 
+// Réordonne un type d'ingrédient dans state.ingredientTypes (= ordre des rayons en courses)
+function moveIngredientType(idx, dir) {
+  const arr = state.ingredientTypes;
+  const j = idx + dir;
+  if (j < 0 || j >= arr.length) return;
+  [arr[idx], arr[j]] = [arr[j], arr[idx]];
+  save();
+  renderDataTab();
+  if (document.getElementById('tab-shopping')?.classList.contains('active')) renderShopping();
+}
+
 function renderDataTab() {
   // Ingrédients
   const ingList = document.getElementById('ingredients-list');
@@ -5265,12 +6324,13 @@ function renderDataTab() {
     delBtn.className = 'btn btn-xs btn-danger';
     delBtn.textContent = '🗑';
     delBtn.onclick = () => {
-      if (!confirm('Supprimer l\'unité « ' + u.name + ' » ? Les ingrédients l\'utilisant n\'auront plus d\'unité.')) return;
-      el.remove(); // retrait immédiat
-      state.units = state.units.filter(x => x.id !== u.id);
-      state.recipes.forEach(r => (r.ingredients||[]).forEach(i => { if (i.unitId === u.id) i.unitId = null; }));
-      save();
-      rerenderAll();
+      showConfirm('Supprimer l\'unité', 'Supprimer l\'unité « ' + u.name + ' » ? Les ingrédients l\'utilisant n\'auront plus d\'unité.', 'Supprimer', () => {
+        el.remove();
+        state.units = state.units.filter(x => x.id !== u.id);
+        state.recipes.forEach(r => (r.ingredients||[]).forEach(i => { if (i.unitId === u.id) i.unitId = null; }));
+        save();
+        rerenderAll();
+      });
     };
     const mergeUnitBtn = document.createElement('button');
     mergeUnitBtn.className = 'btn btn-xs';
@@ -5288,7 +6348,7 @@ function renderDataTab() {
   const typeList = document.getElementById('types-list');
   document.getElementById('type-count-badge').textContent = state.ingredientTypes.length;
   typeList.innerHTML = '';
-  [...state.ingredientTypes].sort((a,b) => a.name.localeCompare(b.name, 'fr')).forEach(t => {
+  state.ingredientTypes.forEach((t, idx) => {
     const wrapEl = document.createElement('div');
     wrapEl.className = 'family-block';
     const memberIngs = state.ingredients.filter(i => i.typeId === t.id);
@@ -5327,13 +6387,30 @@ function renderDataTab() {
     delBtn.title = 'Supprimer';
     delBtn.onclick = (e) => {
       e.stopPropagation();
-      if (!confirm('Supprimer le type « ' + t.name + ' » ?\nLes ingrédients qui l\'utilisent n\'auront plus de type.')) return;
-      wrapEl.remove();
-      state.ingredientTypes = state.ingredientTypes.filter(x => x.id !== t.id);
-      state.ingredients.forEach(i => { if (i.typeId === t.id) i.typeId = null; });
-      save();
-      rerenderAll();
+      showConfirm('Supprimer le type', 'Supprimer le type « ' + t.name + ' » ? Les ingrédients qui l\'utilisent n\'auront plus de type.', 'Supprimer', () => {
+        wrapEl.remove();
+        state.ingredientTypes = state.ingredientTypes.filter(x => x.id !== t.id);
+        state.ingredients.forEach(i => { if (i.typeId === t.id) i.typeId = null; });
+        save();
+        rerenderAll();
+      });
     };
+    const upBtn = document.createElement('button');
+    upBtn.className = 'btn btn-xs';
+    upBtn.textContent = '▲';
+    upBtn.title = 'Monter (ordre des rayons en courses)';
+    upBtn.disabled = idx === 0;
+    if (upBtn.disabled) upBtn.style.opacity = '0.3';
+    upBtn.onclick = (e) => { e.stopPropagation(); moveIngredientType(idx, -1); };
+    const downBtn = document.createElement('button');
+    downBtn.className = 'btn btn-xs';
+    downBtn.textContent = '▼';
+    downBtn.title = 'Descendre (ordre des rayons en courses)';
+    downBtn.disabled = idx === state.ingredientTypes.length - 1;
+    if (downBtn.disabled) downBtn.style.opacity = '0.3';
+    downBtn.onclick = (e) => { e.stopPropagation(); moveIngredientType(idx, 1); };
+    actions.appendChild(upBtn);
+    actions.appendChild(downBtn);
     actions.appendChild(editBtn);
     actions.appendChild(mergeBtn);
     actions.appendChild(delBtn);
@@ -5407,12 +6484,13 @@ function renderDataTab() {
     delBtn.className = 'btn btn-xs btn-danger';
     delBtn.textContent = '🗑';
     delBtn.onclick = () => {
-      if (!confirm('Supprimer « ' + m + ' » des types de plats ?')) return;
-      el.remove();
-      state.mealTypes = state.mealTypes.filter(x => x !== m);
-      state.recipes.forEach(r => { r.mealTypes = (r.mealTypes||[]).filter(x => x !== m); });
-      save();
-      rerenderAll();
+      showConfirm('Supprimer le type de plat', 'Supprimer « ' + m + ' » des types de plats ?', 'Supprimer', () => {
+        el.remove();
+        state.mealTypes = state.mealTypes.filter(x => x !== m);
+        state.recipes.forEach(r => { r.mealTypes = (r.mealTypes||[]).filter(x => x !== m); });
+        save();
+        rerenderAll();
+      });
     };
     const mergeMealBtn = document.createElement('button');
     mergeMealBtn.className = 'btn btn-xs';
@@ -5476,12 +6554,13 @@ function renderDataTab() {
         delBtn.title = 'Supprimer';
         delBtn.onclick = (e) => {
           e.stopPropagation();
-          if (!confirm('Supprimer la famille « ' + f.name + ' » ?\nLes ingrédients qui y appartenaient n\'auront plus cette famille.')) return;
-          wrapEl.remove();
-          state.ingredientFamilies = state.ingredientFamilies.filter(x => x.id !== f.id);
-          state.ingredients.forEach(i => { i.familyIds = (i.familyIds || []).filter(fid => fid !== f.id); });
-          save();
-          rerenderAll();
+          showConfirm('Supprimer la famille', 'Supprimer la famille « ' + f.name + ' » ? Les ingrédients qui y appartenaient n\'auront plus cette famille.', 'Supprimer', () => {
+            wrapEl.remove();
+            state.ingredientFamilies = state.ingredientFamilies.filter(x => x.id !== f.id);
+            state.ingredients.forEach(i => { i.familyIds = (i.familyIds || []).filter(fid => fid !== f.id); });
+            save();
+            rerenderAll();
+          });
         };
         const mergeFamBtn = document.createElement('button');
         mergeFamBtn.className = 'btn btn-xs';
@@ -5569,6 +6648,9 @@ function renderDataTab() {
       });
     }
   }
+
+  // Corbeille (recettes supprimées)
+  renderTrash();
 }
 
 function editIngredient(ing) {
@@ -6556,6 +7638,7 @@ load();
 setSortValue(state.filters.sort || 'name-asc');
 buildFilterBar();
 renderRecipes();
+updateDebugBadges();
 renderFirebaseUI(); // affiche le bouton mobile dès le démarrage
 initFirebase();
 </script>
