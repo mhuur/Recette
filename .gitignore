@@ -1,0 +1,6 @@
+# Outil de référence « Devis Photo » (design only) — gardé en local, hors repo
+index - *.html
+
+# Téléchargements / sauvegardes éventuels
+*.bak
+__*

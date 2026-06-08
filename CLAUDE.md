@@ -14,12 +14,13 @@ Guide pour Claude Code sur ce projet.
 - Données : `localStorage` + sync temps réel Firestore.
 
 ## Fichiers du dossier
-- `index - <timestamp>.html` — titre « 🍳 Mes Recettes », ~7 600 lignes = **l'app Recettes** (le fichier qu'on modifie). Nom horodaté car re-téléchargé ; c'est toujours le plus volumineux / titre Recettes.
-- `index - <autre timestamp>.html` — titre « Devis Photo » = **autre outil**, gardé comme **référence de design** (sidebar, menu « Signaler un bug »). Ne pas le modifier ni le confondre.
+- `index.html` — **l'app Recettes** (titre « 🍳 Mes Recettes », ~7 600 lignes), suivi par git.
+- `index - <timestamp>.html` (titre « Devis Photo ») — **autre outil**, gardé en local comme **référence de design** (sidebar, menu « Signaler un bug ») ; **gitignored** (hors repo). Ne pas le confondre avec l'app.
 
 ## Commandes
-- **Aucun build / install / lint / test.** On édite le `.html` directement.
-- Test local : `py -m http.server 8000` dans le dossier → `http://localhost:8000/<fichier>.html`.
+- **Aucun build / install / lint / test.** On édite `index.html` directement.
+- **Dépôt git lié** : ce dossier est un clone de `github.com/mhuur/Recette` (branche `main`). Workflow : éditer `index.html` → `git add/commit/push` direct (le dossier vit dans OneDrive, comme le projet todolist).
+- Test local : `py -m http.server 8000` dans le dossier → `http://localhost:8000/index.html`.
 - Le **login Google exige `http://localhost`** (échoue en `file://`).
 
 ## Architecture (fichier Recettes)
