@@ -56,3 +56,21 @@ Guide pour Claude Code sur ce projet.
 - `STORAGE_KEY = 'mhuur_recipes_app_v1'` (changer efface les données locales des utilisateurs).
 - `migrateRecipes()` (migration one-shot appelée au `load()`).
 - `state.notes` (conservé pour compat même si son UI a disparu).
+
+## Auto-maintenance
+Règles que je suis à chaque session sur ce fichier.
+
+- **Auto-alimentation** : en fin de tâche, si une convention non documentée, un piège ou une commande non triviale a été découvert → l'ajouter ici en 1-2 lignes max.
+- **Critère d'ajout strict** : une info entre dans ce fichier seulement si (a) non déductible du code en < 30 s, **et** (b) utile dans une future session. Sinon, ne rien écrire.
+- **Diagnostic périodique** : tous les ~10 commits, ou si le fichier dépasse 300 lignes / ~4000 tokens, relancer un diagnostic (sections obsolètes/redondantes/triviales) et proposer un nettoyage.
+- **Nettoyage** : supprimer sans hésiter l'obsolète, le redondant, le trivial. Court et juste > long et flou.
+- **Format** : phrases courtes, listes à puces. Pas de « il est important de noter que ».
+
+## Efficacité
+Méthodes pour aller vite et juste sur ce projet.
+
+- **Lecture ciblée** : `grep`/`glob` avant `read`. Sur ce fichier unique de ~7600 lignes, ne jamais lire en entier — repérer la zone puis lire ~50 lignes autour.
+- **Outils projet** : pas de linter/formatter/test auto. Avant de déclarer une tâche finie → vérif manuelle (onglets touchés + un cycle save/sync) ; pour un doute JS, sonde headless (cf. Workflows).
+- **Économie de tokens** : résumer plutôt que citer ; ne pas réafficher de gros blocs sans nécessité ; grouper les modifs liées en un seul tour.
+- **Veille MCP & skills** : ~1×/semaine en usage actif, vérifier si un nouveau MCP server ou une skill Anthropic réduirait le coût/la qualité sur les tâches récurrentes ici. Si oui, le proposer.
+- **Audit trimestriel** : ~tous les 3 mois, proposer une revue — quelles règles de ce fichier ralentissent, quels nouveaux outils existent côté Claude Code.
