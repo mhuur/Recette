@@ -1070,20 +1070,20 @@ label {
 
 /* Filter bottom sheet */
 .filter-toggle-pill {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 10px 16px;
-  background: var(--surface);
-  border: 1.5px solid var(--border);
-  border-radius: 10px;
+  gap: 7px;
+  padding: 6px 13px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 8px;
   cursor: pointer;
-  font-size: 14px;
-  flex: 1;
+  font-size: 13px;
+  color: var(--text-muted);
   user-select: none;
-  transition: background 0.15s, border-color 0.15s;
+  transition: background 0.12s, border-color 0.12s, color 0.12s;
 }
+.filter-toggle-pill:hover { background: var(--surface); color: var(--text); }
 .filter-toggle-pill input[type="checkbox"] { display: none; }
 .filter-toggle-pill .tb-ico { display: inline-flex; align-items: center; }
 .filter-toggle-pill .tb-ico svg { width: 16px; height: 16px; }
@@ -1093,13 +1093,70 @@ label {
   border-color: rgba(74,158,255,.55);
 }
 .filter-sheet-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   font-size: 11px;
   font-weight: 700;
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  margin-bottom: 8px;
+  margin-bottom: 7px;
 }
+.filter-sheet-label .sec-ico { display: inline-flex; color: var(--text-dim); }
+.filter-sheet-label .sec-ico svg { width: 14px; height: 14px; }
+/* Avancé — champ unifié requis(+)/interdit(−) */
+.reqex-field { display: flex; flex-direction: column; gap: 7px; }
+.reqex-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.reqex-chip {
+  display: inline-flex; align-items: center; gap: 4px;
+  border: 1px solid; border-radius: 8px;
+  padding: 2px 4px 2px 2px; font-size: 12px;
+}
+.reqex-chip.req { background: rgba(34,197,94,.10); border-color: rgba(34,197,94,.35); color: #bbf7d0; }
+.reqex-chip.exc { background: rgba(248,113,113,.10); border-color: rgba(248,113,113,.35); color: #fecaca; }
+.reqex-sign {
+  width: 18px; height: 18px; flex-shrink: 0;
+  border: 0; border-radius: 6px; cursor: pointer;
+  font-size: 14px; font-weight: 700; line-height: 1;
+  display: inline-flex; align-items: center; justify-content: center;
+  color: #fff;
+}
+.reqex-chip.req .reqex-sign { background: rgba(34,197,94,.85); }
+.reqex-chip.exc .reqex-sign { background: rgba(248,113,113,.85); }
+.reqex-name { padding: 0 2px; }
+.reqex-rm { background: none; border: 0; color: inherit; cursor: pointer; font-size: 14px; line-height: 1; padding: 0 2px; opacity: .7; }
+.reqex-rm:hover { opacity: 1; }
+.reqex-input {
+  width: 100%; box-sizing: border-box;
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: 8px; padding: 7px 10px;
+  color: var(--text); font: inherit; font-size: 13px;
+}
+.reqex-input:focus { outline: none; }
+.reqex-hint { font-size: 11px; color: var(--text-dim); }
+/* Filtre Temps — presets rapides en deux lignes */
+.time-presets-group { display: flex; flex-direction: column; gap: 9px; }
+.time-row { display: flex; align-items: center; gap: 10px; }
+.time-row-label { font-size: 12px; color: var(--text-muted); width: 84px; flex-shrink: 0; }
+.time-presets { display: flex; flex-wrap: wrap; gap: 6px; }
+/* Filtre Note — sélecteur d'étoiles « ≥ » */
+.rating-filter { display: flex; align-items: center; gap: 3px; }
+.star-btn {
+  background: none; border: 0; padding: 2px;
+  font-size: 24px; line-height: 1; cursor: pointer;
+  color: var(--border-light);
+  transition: color .12s, text-shadow .12s, transform .08s;
+}
+.star-btn:hover { transform: scale(1.12); }
+.star-btn.on { color: var(--star); text-shadow: 0 0 10px rgba(250,204,21,.5); }
+.rating-min-label { margin-left: 10px; font-size: 13px; color: var(--text-muted); }
+.rating-unrated {
+  display: flex; align-items: center; gap: 7px;
+  margin-top: 10px; font-size: 12px; color: var(--text-muted); cursor: pointer;
+}
+.rating-unrated input { accent-color: var(--primary); cursor: pointer; }
+.rating-unrated:has(input:disabled) { opacity: .5; cursor: default; }
 /* Boutons de sélection (type de plat) — langage tonal néon, actif = .on */
 .filter-pick {
   font: inherit;
@@ -1259,8 +1316,8 @@ label {
   min-height: 0;
   -webkit-overflow-scrolling: touch;
 }
-.filter-sheet-section { margin-bottom: 18px; }
-.filter-sheet-section:last-child { margin-bottom: 6px; }
+.filter-sheet-section { margin-bottom: 14px; }
+.filter-sheet-section:last-child { margin-bottom: 4px; }
 /* Footer du panneau : compteur live + CTA d'application */
 .filter-sheet-footer {
   flex-shrink: 0;
@@ -2505,7 +2562,7 @@ service cloud.firestore {
     <div class="filter-sheet-body">
       <!-- Quick toggles -->
       <div class="filter-sheet-section">
-        <div class="filter-sheet-label">Afficher</div>
+        <div class="filter-sheet-label"><span class="sec-ico" data-icon="eye"></span>Afficher</div>
         <div style="display:flex;gap:8px;">
           <label class="filter-toggle-pill" id="pill-season">
             <input type="checkbox" id="filter-season-toggle"><span class="tb-ico" data-icon="leaf"></span> Saison
@@ -2514,26 +2571,20 @@ service cloud.firestore {
       </div>
       <!-- Meal types -->
       <div class="filter-sheet-section">
-        <div class="filter-sheet-label">Type de plat</div>
+        <div class="filter-sheet-label"><span class="sec-ico" data-icon="utensils"></span>Type de plat</div>
         <div id="filter-meal-types" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
       </div>
       <!-- Rating -->
       <div class="filter-sheet-section">
-        <div class="filter-sheet-label">Note</div>
+        <div class="filter-sheet-label"><span class="sec-ico" data-icon="star"></span>Note</div>
         <div id="filter-rating-wrapper"></div>
       </div>
       <!-- Time -->
       <div class="filter-sheet-section">
-        <div class="filter-sheet-label">Temps (min)</div>
-        <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;">
-          <div style="display:flex;align-items:center;gap:6px;">
-            <span style="font-size:13px;color:var(--text-muted);">Préparation ≤</span>
-            <input type="number" id="filter-prep-max" min="0" step="5" placeholder="—" style="width:64px;" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" data-form-type="other">
-          </div>
-          <div style="display:flex;align-items:center;gap:6px;">
-            <span style="font-size:13px;color:var(--text-muted);">Cuisson ≤</span>
-            <input type="number" id="filter-cook-max" min="0" step="5" placeholder="—" style="width:64px;" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" data-form-type="other">
-          </div>
+        <div class="filter-sheet-label"><span class="sec-ico" data-icon="clock"></span>Temps (min)</div>
+        <div class="time-presets-group">
+          <div class="time-row"><span class="time-row-label">Préparation</span><div class="time-presets" id="filter-prep-presets"></div></div>
+          <div class="time-row"><span class="time-row-label">Cuisson</span><div class="time-presets" id="filter-cook-presets"></div></div>
         </div>
       </div>
       <!-- Advanced -->
@@ -2544,21 +2595,14 @@ service cloud.firestore {
         </summary>
         <div style="padding-top:14px;display:flex;flex-direction:column;gap:14px;">
           <div>
-            <div class="filter-sheet-label">Inclure ingrédients</div>
-            <div id="filter-include-wrapper"></div>
+            <div class="filter-sheet-label"><span class="sec-ico" data-icon="carrot"></span>Ingrédients</div>
+            <div id="filter-ingredients-wrapper"></div>
           </div>
           <div>
-            <div class="filter-sheet-label">Exclure ingrédients</div>
-            <div id="filter-exclude-wrapper"></div>
+            <div class="filter-sheet-label"><span class="sec-ico" data-icon="layers"></span>Familles</div>
+            <div id="filter-families-wrapper"></div>
           </div>
-          <div>
-            <div class="filter-sheet-label">Inclure familles</div>
-            <div id="filter-include-families-wrapper"></div>
-          </div>
-          <div>
-            <div class="filter-sheet-label">Exclure familles</div>
-            <div id="filter-exclude-families-wrapper"></div>
-          </div>
+          <div class="reqex-hint"><b style="color:var(--success)">+</b> requis &nbsp;·&nbsp; <b style="color:var(--danger)">−</b> interdit &nbsp;— clique le signe pour basculer</div>
         </div>
       </details>
     </div>
@@ -2612,7 +2656,8 @@ let state = {
   filters: {
     search: '',
     sort: 'name-asc',
-    ratingValues: [],
+    ratingMin: null,
+    includeUnrated: false,
     prepMax: null,
     cookMax: null,
     mealTypes: [],
@@ -3340,7 +3385,7 @@ function load() {
       if (!state.mealTypes.some(m => normalizeText(m) === 'aucun')) {
         state.mealTypes.unshift('Aucun');
       }
-      if (!state.filters) state.filters = { search: '', sort: 'name-asc', ratingValues: [], prepMax: null, cookMax: null, mealTypes: [], includeIngredients: [], excludeIngredients: [], includeFamilies: [], excludeFamilies: [], seasonOnly: false, selectedOnly: false };
+      if (!state.filters) state.filters = { search: '', sort: 'name-asc', ratingMin: null, includeUnrated: false, prepMax: null, cookMax: null, mealTypes: [], includeIngredients: [], excludeIngredients: [], includeFamilies: [], excludeFamilies: [], seasonOnly: false, selectedOnly: false };
       // Migration : ajouter nouveaux champs filtres s'ils manquent
       if (!state.filters.includeFamilies) state.filters.includeFamilies = [];
       if (!state.filters.excludeFamilies) state.filters.excludeFamilies = [];
@@ -3361,17 +3406,22 @@ function load() {
         if (!i.familyIds) i.familyIds = [];
         if (!i.seasonMonths) i.seasonMonths = [];
       });
-      // Migration depuis les anciens formats de filtre note
-      if (state.filters.ratingMin !== undefined || state.filters.ratingMax !== undefined || state.filters.includeUnrated !== undefined) {
-        state.filters.ratingValues = [];
-        delete state.filters.ratingMin;
+      // Modèle note = seuil minimal (ratingMin /10) + inclure les non notées.
+      // Migration depuis l'ancien modèle "valeurs exactes" (ratingValues) : on dérive
+      // le seuil de la plus petite valeur numérique sélectionnée, sinon on repart à vide.
+      if (Array.isArray(state.filters.ratingValues)) {
+        const nums = state.filters.ratingValues.map(v => parseFloat(v)).filter(v => !isNaN(v));
+        if (state.filters.ratingMin === undefined) {
+          state.filters.ratingMin = nums.length ? Math.min(...nums) : null;
+        }
+        if (state.filters.includeUnrated === undefined) {
+          state.filters.includeUnrated = state.filters.ratingValues.includes('Non noté');
+        }
+        delete state.filters.ratingValues;
         delete state.filters.ratingMax;
-        delete state.filters.includeUnrated;
       }
-      // ratingValues doit être en chaînes (migration depuis nombres)
-      if (state.filters.ratingValues && state.filters.ratingValues.some(v => typeof v === 'number')) {
-        state.filters.ratingValues = state.filters.ratingValues.map(v => String(v));
-      }
+      if (state.filters.ratingMin === undefined) state.filters.ratingMin = null;
+      if (state.filters.includeUnrated === undefined) state.filters.includeUnrated = false;
       if (state.filters.selectionMode === undefined) state.filters.selectionMode = 'all';
       if (!state.selectedRecipeIds) state.selectedRecipeIds = [];
       if (!state.checkedShoppingItems) state.checkedShoppingItems = [];
@@ -4677,13 +4727,15 @@ function getFilteredRecipes() {
       const inMeal = (r.mealTypes || []).some(m => normalizeText(m).includes(q));
       if (!inName && !inIng && !inMeal) return false;
     }
-    // Filtre notes : si la liste est non vide, ne garder que les recettes dont la note matche
-    // (incluant "Non noté" pour les recettes sans note)
-    if (f.ratingValues && f.ratingValues.length > 0) {
+    // Filtre note : seuil minimal /10. Les non notées passent seulement si includeUnrated.
+    if (f.ratingMin != null) {
       const rating = r.rating;
       const isUnrated = rating == null || rating === '';
-      const label = isUnrated ? 'Non noté' : String(Math.round(rating));
-      if (!f.ratingValues.includes(label)) return false;
+      if (isUnrated) {
+        if (!f.includeUnrated) return false;
+      } else if (Number(rating) < f.ratingMin) {
+        return false;
+      }
     }
     if (f.prepMax != null && f.prepMax !== '' && !isNaN(f.prepMax)) {
       if ((r.prepTime || 0) > f.prepMax) return false;
@@ -5469,7 +5521,167 @@ if (btnNewInline) btnNewInline.onclick = () => openRecipeModal();
 /* ========================================================================
    BARRE DE FILTRES
    ======================================================================== */
-let includeCtrl = null, excludeCtrl = null;
+
+// Positionne un dropdown `position:fixed` sous (ou au-dessus si pas la place) un input,
+// clampé au viewport. Même logique que le dropdown des chips (anti hors-champ).
+function clampFixedDropdown(dd, input) {
+  const rect = input.getBoundingClientRect();
+  const vw = window.innerWidth, vh = window.innerHeight, margin = 8;
+  const width = Math.max(rect.width, 180);
+  let left = rect.left;
+  if (left + width > vw - margin) left = vw - margin - width;
+  if (left < margin) left = margin;
+  dd.style.width = width + 'px';
+  dd.style.left = left + 'px';
+  const below = vh - rect.bottom - margin, above = rect.top - margin;
+  if (below >= 160 || below >= above) {
+    dd.style.maxHeight = Math.max(120, Math.min(260, below)) + 'px';
+    dd.style.top = (rect.bottom + 2) + 'px';
+  } else {
+    dd.style.maxHeight = Math.max(120, Math.min(260, above)) + 'px';
+    dd.style.top = Math.max(margin, rect.top - 2 - dd.offsetHeight) + 'px';
+  }
+}
+
+// Champ « requis(+) / interdit(−) » unifié : chips à bascule + input d'ajout avec dropdown.
+// opts: { getItems:()=>[{name,id}], includeKey, excludeKey, idToName, placeholder }
+function createReqExInput(wrapper, opts) {
+  if (!wrapper) return;
+  wrapper.innerHTML = '';
+  const container = document.createElement('div');
+  container.className = 'reqex-field';
+  const chipsArea = document.createElement('div');
+  chipsArea.className = 'reqex-chips';
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.className = 'reqex-input';
+  input.placeholder = opts.placeholder || 'Ajouter…';
+  input.autocomplete = 'off';
+  input.setAttribute('autocorrect', 'off');
+  input.setAttribute('autocapitalize', 'none');
+  input.setAttribute('spellcheck', 'false');
+  input.setAttribute('data-form-type', 'other');
+  container.appendChild(chipsArea);
+  container.appendChild(input);
+  wrapper.appendChild(container);
+
+  let dropdown = null;
+  const inc = () => (state.filters[opts.includeKey] = state.filters[opts.includeKey] || []);
+  const exc = () => (state.filters[opts.excludeKey] = state.filters[opts.excludeKey] || []);
+  const commit = () => { saveLocal(); renderRecipes(); };
+
+  function renderChips() {
+    chipsArea.innerHTML = '';
+    const I = inc(), E = exc();
+    const mk = (id, mode) => {
+      const chip = document.createElement('span');
+      chip.className = 'reqex-chip ' + (mode === '+' ? 'req' : 'exc');
+      const sign = document.createElement('button');
+      sign.type = 'button';
+      sign.className = 'reqex-sign';
+      sign.textContent = mode === '+' ? '+' : '−';
+      sign.title = mode === '+' ? 'Requis — cliquer pour interdire' : 'Interdit — cliquer pour requérir';
+      sign.onclick = () => {
+        if (mode === '+') {
+          state.filters[opts.includeKey] = I.filter(x => x !== id);
+          state.filters[opts.excludeKey] = [...E, id];
+        } else {
+          state.filters[opts.excludeKey] = E.filter(x => x !== id);
+          state.filters[opts.includeKey] = [...I, id];
+        }
+        commit(); renderChips();
+      };
+      const name = document.createElement('span');
+      name.className = 'reqex-name';
+      name.textContent = opts.idToName(id) || '?';
+      const rm = document.createElement('button');
+      rm.type = 'button';
+      rm.className = 'reqex-rm';
+      rm.textContent = '×';
+      rm.onclick = () => {
+        state.filters[opts.includeKey] = I.filter(x => x !== id);
+        state.filters[opts.excludeKey] = E.filter(x => x !== id);
+        commit(); renderChips();
+      };
+      chip.append(sign, name, rm);
+      return chip;
+    };
+    I.forEach(id => chipsArea.appendChild(mk(id, '+')));
+    E.forEach(id => chipsArea.appendChild(mk(id, '-')));
+    chipsArea.style.display = (I.length || E.length) ? '' : 'none';
+  }
+
+  const available = () => {
+    const used = new Set([...inc(), ...exc()]);
+    return opts.getItems().filter(it => !used.has(it.id));
+  };
+  const reflow = () => { if (dropdown) clampFixedDropdown(dropdown, input); };
+
+  function hideDropdown() {
+    if (dropdown) {
+      window.removeEventListener('scroll', reflow, true);
+      window.removeEventListener('resize', reflow);
+      dropdown.remove();
+      dropdown = null;
+    }
+  }
+
+  function buildItems() {
+    const q = normalizeText(input.value);
+    const items = available().filter(it => !q || normalizeText(it.name).includes(q));
+    dropdown.innerHTML = '';
+    if (!items.length) {
+      const e = document.createElement('div');
+      e.className = 'autocomplete-empty';
+      e.textContent = 'Aucun élément';
+      dropdown.appendChild(e);
+    } else {
+      items.slice(0, 100).forEach(it => {
+        const d = document.createElement('div');
+        d.className = 'autocomplete-item';
+        d.textContent = it.name;
+        d.onmousedown = ev => ev.preventDefault();
+        d.onclick = () => {
+          inc().push(it.id);
+          input.value = '';
+          commit(); renderChips(); buildItems(); input.focus();
+        };
+        dropdown.appendChild(d);
+      });
+    }
+    clampFixedDropdown(dropdown, input);
+  }
+
+  function showDropdown() {
+    if (dropdown) { buildItems(); return; }
+    dropdown = document.createElement('div');
+    dropdown.className = 'autocomplete-dropdown active';
+    dropdown.style.position = 'fixed';
+    dropdown.style.zIndex = '1000';
+    dropdown.style.overflowY = 'auto';
+    document.body.appendChild(dropdown);
+    buildItems();
+    window.addEventListener('scroll', reflow, true);
+    window.addEventListener('resize', reflow);
+  }
+
+  input.addEventListener('focus', showDropdown);
+  input.addEventListener('input', () => { dropdown ? buildItems() : showDropdown(); });
+  input.addEventListener('blur', () => setTimeout(() => {
+    if (dropdown && !dropdown.matches(':hover')) hideDropdown();
+  }, 200));
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+      if (dropdown) { e.stopPropagation(); hideDropdown(); }
+      input.blur();
+    } else if (e.key === 'Enter') {
+      const first = dropdown && dropdown.querySelector('.autocomplete-item');
+      if (first) { e.preventDefault(); first.click(); }
+    }
+  });
+
+  renderChips();
+}
 
 function buildFilterBar() {
   const collator = new Intl.Collator('fr', { sensitivity: 'base' });
@@ -5502,22 +5714,49 @@ function buildFilterBar() {
     };
   }
 
-  // Filtre Notes : chip input avec liste "Non noté", 10, 9, ..., 1
-  const ratingItems = [{ name: 'Non noté' }];
-  for (let n = 10; n >= 1; n--) ratingItems.push({ name: String(n) });
-  createChipsInput(
-    document.getElementById('filter-rating-wrapper'),
-    {
-      getItems: () => ratingItems,
-      initialValues: state.filters.ratingValues || [],
-      placeholder: 'Toutes...',
-      onChange: values => {
-        state.filters.ratingValues = values;
-        saveLocal();
-        renderRecipes();
-      }
-    }
-  );
+  // Filtre Note : sélecteur d'étoiles « note minimale ≥ » (chaque étoile = 2/10)
+  const ratingWrap = document.getElementById('filter-rating-wrapper');
+  ratingWrap.innerHTML = '';
+  const min = state.filters.ratingMin;
+  const starsRow = document.createElement('div');
+  starsRow.className = 'rating-filter';
+  for (let i = 1; i <= 5; i++) {
+    const val = i * 2; // 2,4,6,8,10
+    const star = document.createElement('button');
+    star.type = 'button';
+    star.className = 'star-btn' + (min != null && val <= min ? ' on' : '');
+    star.textContent = '★';
+    star.title = '≥ ' + val + '/10';
+    star.setAttribute('aria-label', 'Note minimale ' + val + ' sur 10');
+    star.onclick = () => {
+      state.filters.ratingMin = (state.filters.ratingMin === val) ? null : val;
+      if (state.filters.ratingMin == null) state.filters.includeUnrated = false;
+      saveLocal();
+      buildFilterBar();
+      renderRecipes();
+    };
+    starsRow.appendChild(star);
+  }
+  const lbl = document.createElement('span');
+  lbl.className = 'rating-min-label';
+  lbl.textContent = min != null ? '≥ ' + min + '/10' : 'Toutes les notes';
+  starsRow.appendChild(lbl);
+  ratingWrap.appendChild(starsRow);
+  // « Inclure les non notées » — pertinent seulement quand un seuil est posé
+  const unratedLbl = document.createElement('label');
+  unratedLbl.className = 'rating-unrated';
+  const cb = document.createElement('input');
+  cb.type = 'checkbox';
+  cb.checked = !!state.filters.includeUnrated;
+  cb.disabled = min == null;
+  cb.onchange = () => { state.filters.includeUnrated = cb.checked; saveLocal(); renderRecipes(); };
+  unratedLbl.appendChild(cb);
+  unratedLbl.appendChild(document.createTextNode(' Inclure les non notées'));
+  ratingWrap.appendChild(unratedLbl);
+
+  // Filtre Temps : presets pour préparation et cuisson
+  renderTimePresets('filter-prep-presets', 'prepMax');
+  renderTimePresets('filter-cook-presets', 'cookMax');
 
   // Meal types : triés alphabétiquement
   const mtCont = document.getElementById('filter-meal-types');
@@ -5543,69 +5782,21 @@ function buildFilterBar() {
     mtCont.appendChild(btn);
   });
 
-  // Include / exclude ingredients
-  includeCtrl = createChipsInput(
-    document.getElementById('filter-include-wrapper'),
-    {
-      getItems: () => state.ingredients.map(i => ({ name: i.name, id: i.id })),
-      initialValues: state.filters.includeIngredients.map(id => getIngredientName(id)),
-      placeholder: 'Ingrédient requis...',
-      onChange: names => {
-        state.filters.includeIngredients = names
-          .map(n => state.ingredients.find(i => i.name === n)?.id)
-          .filter(Boolean);
-        saveLocal();
-        renderRecipes();
-      }
-    }
-  );
-  excludeCtrl = createChipsInput(
-    document.getElementById('filter-exclude-wrapper'),
-    {
-      getItems: () => state.ingredients.map(i => ({ name: i.name, id: i.id })),
-      initialValues: state.filters.excludeIngredients.map(id => getIngredientName(id)),
-      placeholder: 'Ingrédient interdit...',
-      onChange: names => {
-        state.filters.excludeIngredients = names
-          .map(n => state.ingredients.find(i => i.name === n)?.id)
-          .filter(Boolean);
-        saveLocal();
-        renderRecipes();
-      }
-    }
-  );
-
-  // Filtres familles
-  createChipsInput(
-    document.getElementById('filter-include-families-wrapper'),
-    {
-      getItems: () => state.ingredientFamilies.map(f => ({ name: f.name, id: f.id })),
-      initialValues: (state.filters.includeFamilies || []).map(id => getFamilyName(id)).filter(Boolean),
-      placeholder: 'Famille requise...',
-      onChange: names => {
-        state.filters.includeFamilies = names
-          .map(n => state.ingredientFamilies.find(f => f.name === n)?.id)
-          .filter(Boolean);
-        saveLocal();
-        renderRecipes();
-      }
-    }
-  );
-  createChipsInput(
-    document.getElementById('filter-exclude-families-wrapper'),
-    {
-      getItems: () => state.ingredientFamilies.map(f => ({ name: f.name, id: f.id })),
-      initialValues: (state.filters.excludeFamilies || []).map(id => getFamilyName(id)).filter(Boolean),
-      placeholder: 'Famille interdite...',
-      onChange: names => {
-        state.filters.excludeFamilies = names
-          .map(n => state.ingredientFamilies.find(f => f.name === n)?.id)
-          .filter(Boolean);
-        saveLocal();
-        renderRecipes();
-      }
-    }
-  );
+  // Avancé : champs unifiés requis(+)/interdit(−) pour ingrédients et familles
+  createReqExInput(document.getElementById('filter-ingredients-wrapper'), {
+    getItems: () => state.ingredients.map(i => ({ name: i.name, id: i.id })),
+    includeKey: 'includeIngredients',
+    excludeKey: 'excludeIngredients',
+    idToName: getIngredientName,
+    placeholder: 'Ajouter un ingrédient…'
+  });
+  createReqExInput(document.getElementById('filter-families-wrapper'), {
+    getItems: () => state.ingredientFamilies.map(f => ({ name: f.name, id: f.id })),
+    includeKey: 'includeFamilies',
+    excludeKey: 'excludeFamilies',
+    idToName: getFamilyName,
+    placeholder: 'Ajouter une famille…'
+  });
 }
 
 document.getElementById('search-input').addEventListener('input', e => {
@@ -5637,14 +5828,28 @@ document.getElementById('sort-popup').addEventListener('click', e => {
 document.addEventListener('click', () => {
   document.getElementById('sort-popup')?.classList.remove('active');
 });
-['filter-prep-max','filter-cook-max'].forEach(id => {
-  document.getElementById(id).addEventListener('input', e => {
-    const stateKey = id === 'filter-prep-max' ? 'prepMax' : 'cookMax';
-    state.filters[stateKey] = e.target.value === '' ? null : parseFloat(e.target.value);
-    saveLocal();
-    renderRecipes();
+// Filtre Temps : presets ≤15 / ≤30 / ≤45 / ≤60 (rendus dans buildFilterBar)
+const TIME_PRESETS = [15, 30, 45, 60];
+function renderTimePresets(containerId, stateKey) {
+  const cont = document.getElementById(containerId);
+  if (!cont) return;
+  cont.innerHTML = '';
+  TIME_PRESETS.forEach(v => {
+    const on = state.filters[stateKey] === v;
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'filter-pick' + (on ? ' on' : '');
+    b.textContent = '≤ ' + v;
+    b.setAttribute('aria-pressed', String(on));
+    b.onclick = () => {
+      state.filters[stateKey] = (state.filters[stateKey] === v) ? null : v;
+      saveLocal();
+      buildFilterBar();
+      renderRecipes();
+    };
+    cont.appendChild(b);
   });
-});
+}
 // Filter sheet open / close
 function openFilterSheet() {
   document.getElementById('filter-sheet-overlay').classList.add('active');
@@ -5697,10 +5902,9 @@ document.addEventListener('keydown', e => {
 });
 
 function resetAllFilters() {
-  state.filters = { search: '', sort: 'name-asc', ratingValues: [], prepMax: null, cookMax: null, mealTypes: [], includeIngredients: [], excludeIngredients: [], includeFamilies: [], excludeFamilies: [], seasonOnly: false, selectedOnly: false };
+  state.filters = { search: '', sort: 'name-asc', ratingMin: null, includeUnrated: false, prepMax: null, cookMax: null, mealTypes: [], includeIngredients: [], excludeIngredients: [], includeFamilies: [], excludeFamilies: [], seasonOnly: false, selectedOnly: false };
   document.getElementById('search-input').value = '';
   setSortValue('name-asc');
-  ['filter-prep-max','filter-cook-max'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
   const ss = document.getElementById('filter-season-toggle'); if (ss) ss.checked = false;
   const sb = document.getElementById('btn-toggle-selection-only');
   if (sb) { sb.classList.remove('active'); sb.setAttribute('aria-pressed', 'false'); }
@@ -5715,7 +5919,7 @@ function updateFilterBadge() {
   const f = state.filters;
   let count = 0;
   if (f.seasonOnly) count++;
-  if (f.ratingValues && f.ratingValues.length) count += f.ratingValues.length;
+  if (f.ratingMin != null) count++;
   if (f.mealTypes && f.mealTypes.length) count += f.mealTypes.length;
   if (f.prepMax !== null && f.prepMax !== undefined) count++;
   if (f.cookMax !== null && f.cookMax !== undefined) count++;
@@ -5748,9 +5952,9 @@ function updateActiveChips() {
   };
   if (f.seasonOnly) addChip('🌿 Saison', () => { state.filters.seasonOnly = false; });
   (f.mealTypes || []).forEach(mt => addChip(mt, () => { state.filters.mealTypes = state.filters.mealTypes.filter(x => x !== mt); }));
-  (f.ratingValues || []).forEach(rv => addChip('★ ' + rv, () => { state.filters.ratingValues = state.filters.ratingValues.filter(x => x !== rv); }));
-  if (f.prepMax !== null && f.prepMax !== undefined) addChip('Prép. ≤ ' + f.prepMax + ' min', () => { state.filters.prepMax = null; const el = document.getElementById('filter-prep-max'); if (el) el.value = ''; });
-  if (f.cookMax !== null && f.cookMax !== undefined) addChip('Cuisson ≤ ' + f.cookMax + ' min', () => { state.filters.cookMax = null; const el = document.getElementById('filter-cook-max'); if (el) el.value = ''; });
+  if (f.ratingMin != null) addChip('★ ≥ ' + f.ratingMin + '/10', () => { state.filters.ratingMin = null; state.filters.includeUnrated = false; });
+  if (f.prepMax !== null && f.prepMax !== undefined) addChip('Prép. ≤ ' + f.prepMax + ' min', () => { state.filters.prepMax = null; });
+  if (f.cookMax !== null && f.cookMax !== undefined) addChip('Cuisson ≤ ' + f.cookMax + ' min', () => { state.filters.cookMax = null; });
   (f.includeIngredients || []).forEach(id => { const n = getIngredientName(id); if (n) addChip('+ ' + n, () => { state.filters.includeIngredients = state.filters.includeIngredients.filter(x => x !== id); }); });
   (f.excludeIngredients || []).forEach(id => { const n = getIngredientName(id); if (n) addChip('− ' + n, () => { state.filters.excludeIngredients = state.filters.excludeIngredients.filter(x => x !== id); }); });
   (f.includeFamilies || []).forEach(id => { const n = getFamilyName(id); if (n) addChip('+ fam. ' + n, () => { state.filters.includeFamilies = state.filters.includeFamilies.filter(x => x !== id); }); });
@@ -7796,6 +8000,12 @@ const ICONS = {
   arrowUpDown:   _ICO('<path d="m21 16-4 4-4-4"/><path d="M17 20V4"/><path d="m3 8 4-4 4 4"/><path d="M7 4v16"/>'),
   plus:          _ICO('<path d="M5 12h14"/><path d="M12 5v14"/>'),
   x:             _ICO('<path d="M18 6 6 18"/><path d="m6 6 12 12"/>'),
+  // Icônes de section du panneau de filtres
+  eye:           _ICO('<path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>'),
+  star:          _ICO('<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>'),
+  clock:         _ICO('<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>'),
+  carrot:        _ICO('<path d="M2.27 21.7s9.87-3.5 12.73-6.36a4.5 4.5 0 0 0-6.36-6.37C5.77 11.84 2.27 21.7 2.27 21.7zM8.64 14l-2.05-2.04M15.34 15l-2.46-2.46"/><path d="M22 9s-1.33-2-3.5-2C16.86 7 15 9 15 9s1.33 2 3.5 2S22 9 22 9z"/><path d="M15 2s-2 1.33-2 3.5S15 9 15 9s2-1.84 2-3.5C17 3.33 15 2 15 2z"/>'),
+  layers:        _ICO('<polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/>'),
 };
 // Remplit tout [data-icon="key"] par le SVG correspondant. Idempotent.
 function injectIcons(root = document) {
