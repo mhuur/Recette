@@ -28,7 +28,7 @@ Guide pour Claude Code sur ce projet.
 - **État unique** `state` : `recipes`, `ingredients`, `units`, `ingredientTypes`, `ingredientFamilies`, `mealTypes`, `filters`, `notes`, `bugs`, sélection… IDs via `uid()`.
 - **Persistance** : `save()` = localStorage + push Firestore débouncé (5 s) ; `saveLocal()` = local seul (filtres/UI).
 - **Sync** : `fbDocRef` → `users/{uid}/app/data` (perso) ou `sharedData/{espace}` (partagé) ; `onSnapshot` temps réel ; `applyCloudData()` applique le cloud.
-- **Onglets** : Recettes, Courses, Saison, Données, Réglages, **Debug**. Bascule via `switchTab(id)` ; chaque onglet a son `render*()`.
+- **Onglets** : Recettes, Courses, Données, Réglages, **Debug**. Bascule via `switchTab(id)` ; chaque onglet a son `render*()`. (Onglet **Saison** + filtre Saison retirés ; les ingrédients gardent `seasonMonths` éditable dans la modale ingrédient, données préservées.)
 - **Onglet Debug** = « Notes & Remarques » (bugs/idées à transmettre à Claude) : `state.bugs.items`, rendu par `renderDebug()`, copie presse-papier.
 - **Accès** : Google perso, mode partagé (`getSharedMode()`), mode invité lecture seule (`#invite=` dans l'URL).
 
@@ -36,7 +36,7 @@ Guide pour Claude Code sur ce projet.
 - Échappement HTML : **`escapeHtml()`** — il n'existe **pas** de `esc()` (piège fréquent en portant du code de « Devis Photo »).
 - Composants réutilisables : `createAutocomplete()`, `createChipsInput()`. Modals in-app `showConfirm()`, `openMergeModal()` au lieu de `confirm()`/`prompt()` natifs.
 - Inputs texte : `autocomplete/autocorrect/autocapitalize=off`, `spellcheck=false` (anti AutoFill iOS).
-- Sidebar : desktop = onglets primaires (Recettes/Courses/Saison) visibles, secondaires (Données/Réglages/Debug) dans le menu « Mon compte » ; mobile = tous dans la barre du bas.
+- Sidebar : desktop = onglets primaires (Recettes/Courses) visibles, secondaires (Données/Réglages/Debug) dans le menu « Mon compte » ; mobile = tous dans la barre du bas.
 - **Icônes** : Lucide SVG inline via `ICONS{}` + `injectIcons()` (rempli au boot, après `detectGuestMode()`). Ajouter une icône avec `data-icon="clé"` sur un élément vide. Pas d'emoji dans la sidebar.
 - Hauteurs en `dvh` (gère le clavier iOS).
 
@@ -57,7 +57,6 @@ Guide pour Claude Code sur ce projet.
 - `authStateResolved` : flag anti-flash de l'overlay de login au boot — ne pas retirer.
 - `fbDocRef` doit être assigné **avant** `renderFirebaseUI()`.
 - `.autocomplete-dropdown` est appendé à `document.body` : le listener `click` global de fermeture doit l'ignorer.
-- `applyCloudData()` : appeler `renderSeasonTab()` inconditionnellement (sinon vide sur mobile après sync).
 - **Code mort Notes** : `#notes-editor`, `initNotesTab()`, `notesUndo/Redo` subsistent mais l'onglet Notes a été **remplacé par Debug** ; ne pas s'y fier.
 
 ## Hors-périmètre (ne PAS modifier sans demander)
