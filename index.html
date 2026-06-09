@@ -1105,9 +1105,42 @@ label {
 }
 .filter-sheet-label .sec-ico { display: inline-flex; color: var(--text-dim); }
 .filter-sheet-label .sec-ico svg { width: 14px; height: 14px; }
-/* Avancé — champ unifié requis(+)/interdit(−) */
-.reqex-field { display: flex; flex-direction: column; gap: 7px; }
-.reqex-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+/* Facette unifiée : chips sélectionnés + recherche + liste repliable */
+.facet { display: flex; flex-direction: column; gap: 7px; }
+.facet-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.facet-chip {
+  display: inline-flex; align-items: center; gap: 4px;
+  background: rgba(74,158,255,.12); border: 1px solid rgba(74,158,255,.40);
+  color: #cfe3ff; border-radius: 8px; padding: 2px 6px 2px 9px; font-size: 12px;
+}
+.facet-chip-x { background: none; border: 0; color: inherit; cursor: pointer; font-size: 14px; line-height: 1; padding: 0 2px; opacity: .75; }
+.facet-chip-x:hover { opacity: 1; }
+.facet-search {
+  width: 100%; box-sizing: border-box;
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: 8px; padding: 7px 10px;
+  color: var(--text); font: inherit; font-size: 13px;
+}
+.facet-search:focus { outline: none; border-color: rgba(74,158,255,.5); }
+.facet-list { display: flex; flex-direction: column; gap: 1px; max-height: 232px; overflow-y: auto; }
+.facet-opt {
+  text-align: left; background: none; border: 0;
+  color: var(--text-muted); font: inherit; font-size: 13px;
+  padding: 5px 9px; border-radius: 6px; cursor: pointer;
+}
+.facet-opt:hover { background: var(--surface); color: var(--text); }
+.facet-empty { font-size: 12px; color: var(--text-dim); padding: 4px 9px; }
+.facet-more { align-self: flex-start; background: none; border: 0; color: var(--primary); font: inherit; font-size: 12px; cursor: pointer; padding: 2px 4px; }
+.facet-more:hover { text-decoration: underline; }
+/* Compteur de filtres actifs sur la section repliable « Avancé » */
+.adv-count {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 16px; height: 16px; padding: 0 4px;
+  font-size: 10px; font-weight: 700; line-height: 1;
+  color: #fff; background: var(--primary); border-radius: 8px;
+  text-transform: none; letter-spacing: 0;
+}
+/* Chips requis(+)/interdit(−) — réutilisés par la facette unifiée (mode reqex) */
 .reqex-chip {
   display: inline-flex; align-items: center; gap: 4px;
   border: 1px solid; border-radius: 8px;
@@ -1127,13 +1160,6 @@ label {
 .reqex-name { padding: 0 2px; }
 .reqex-rm { background: none; border: 0; color: inherit; cursor: pointer; font-size: 14px; line-height: 1; padding: 0 2px; opacity: .7; }
 .reqex-rm:hover { opacity: 1; }
-.reqex-input {
-  width: 100%; box-sizing: border-box;
-  background: var(--bg); border: 1px solid var(--border);
-  border-radius: 8px; padding: 7px 10px;
-  color: var(--text); font: inherit; font-size: 13px;
-}
-.reqex-input:focus { outline: none; }
 .reqex-hint { font-size: 11px; color: var(--text-dim); }
 /* Filtre Temps — presets rapides en deux lignes */
 .time-presets-group { display: flex; flex-direction: column; gap: 9px; }
@@ -1269,20 +1295,27 @@ label {
 }
 /* Desktop : le filtre devient un popover ancré sous le bouton (positionné en JS), pas un bottom-sheet */
 @media (min-width: 769px) {
-  .filter-sheet-overlay { background: transparent; }
+  /* Desktop : rail de filtres docké à gauche (toujours visible), positionné en JS.
+     L'overlay ne capte pas les clics → la liste reste interactive à côté. */
+  .filter-sheet-overlay { background: transparent; pointer-events: none; }
   .filter-sheet {
+    pointer-events: auto;
     position: fixed;
-    width: 380px;
-    max-width: 380px;
+    width: 280px;
+    max-width: 280px;
     border-radius: 12px;
     border: 1px solid var(--border-light);
-    box-shadow: 0 16px 48px rgba(0,0,0,.55), 0 0 0 1px rgba(74,158,255,.10);
-    animation: popoverIn .14s ease;
+    box-shadow: 0 8px 32px rgba(0,0,0,.45), 0 0 0 1px rgba(74,158,255,.08);
+    animation: none;
   }
-  @keyframes popoverIn {
-    from { opacity: 0; transform: translateY(-6px); }
-    to   { opacity: 1; transform: none; }
-  }
+  /* Réserve l'espace du rail : la zone recettes se décale à droite */
+  body.filter-rail-on #tab-recipes { padding-left: 300px; }
+  /* Rail permanent → bouton Filtre, croix et CTA d'application inutiles */
+  body.filter-rail-on #btn-toggle-filter,
+  body.filter-rail-on .filter-sheet-close,
+  body.filter-rail-on .filter-sheet-footer { display: none; }
+  /* La barre de chips actifs (toolbar) fait doublon avec les chips du rail */
+  body.filter-rail-on #active-filter-bar { display: none !important; }
 }
 .filter-sheet-header {
   display: flex;
@@ -2572,7 +2605,7 @@ service cloud.firestore {
       <!-- Meal types -->
       <div class="filter-sheet-section">
         <div class="filter-sheet-label"><span class="sec-ico" data-icon="utensils"></span>Type de plat</div>
-        <div id="filter-meal-types" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
+        <div id="filter-meal-types"></div>
       </div>
       <!-- Rating -->
       <div class="filter-sheet-section">
@@ -2590,7 +2623,7 @@ service cloud.firestore {
       <!-- Advanced -->
       <details class="filter-sheet-section">
         <summary style="cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;padding:4px 0;">
-          <span class="filter-sheet-label" style="margin:0;">Avancé (ingrédients / familles)</span>
+          <span class="filter-sheet-label" style="margin:0;">Avancé (ingrédients / familles) <span class="adv-count" id="filter-adv-count" style="display:none;"></span></span>
           <span style="color:var(--text-muted);font-size:14px;">›</span>
         </summary>
         <div style="padding-top:14px;display:flex;flex-direction:column;gap:14px;">
@@ -3980,6 +4013,7 @@ function switchTab(tabId) {
   if (tabId === 'data') renderDataTab();
   if (tabId === 'season') renderSeasonTab();
   if (tabId === 'debug') renderDebug();
+  if (typeof updateFilterRail === 'function') updateFilterRail(); // rail visible seulement sur Recettes
 }
 
 document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -4717,36 +4751,36 @@ function renderSeasonTab() {
 /* ========================================================================
    RENDU LISTE DE RECETTES
    ======================================================================== */
-function getFilteredRecipes() {
-  const f = state.filters;
-  const q = normalizeText(f.search);
-  let list = state.recipes.filter(r => {
+// Teste une recette contre les filtres. `skip` permet d'ignorer une dimension
+// (utilisé pour le faceted search : options encore atteignables selon les AUTRES filtres).
+function recipeMatches(r, f, skip) {
+  skip = skip || {};
+  if (!skip.search && f.search) {
+    const q = normalizeText(f.search);
     if (q) {
       const inName = normalizeText(r.name).includes(q);
       const inIng = (r.ingredients || []).some(i => normalizeText(getIngredientName(i.ingredientId)).includes(q));
       const inMeal = (r.mealTypes || []).some(m => normalizeText(m).includes(q));
       if (!inName && !inIng && !inMeal) return false;
     }
-    // Filtre note : seuil minimal /10. Les non notées passent seulement si includeUnrated.
-    if (f.ratingMin != null) {
-      const rating = r.rating;
-      const isUnrated = rating == null || rating === '';
-      if (isUnrated) {
-        if (!f.includeUnrated) return false;
-      } else if (Number(rating) < f.ratingMin) {
-        return false;
-      }
-    }
-    if (f.prepMax != null && f.prepMax !== '' && !isNaN(f.prepMax)) {
-      if ((r.prepTime || 0) > f.prepMax) return false;
-    }
-    if (f.cookMax != null && f.cookMax !== '' && !isNaN(f.cookMax)) {
-      if ((r.cookTime || 0) > f.cookMax) return false;
-    }
-    if (f.mealTypes.length > 0) {
-      const rm = r.mealTypes || [];
-      if (!f.mealTypes.some(mt => rm.includes(mt))) return false;
-    }
+  }
+  if (!skip.rating && f.ratingMin != null) {
+    const rating = r.rating;
+    const isUnrated = rating == null || rating === '';
+    if (isUnrated) { if (!f.includeUnrated) return false; }
+    else if (Number(rating) < f.ratingMin) return false;
+  }
+  if (!skip.prep && f.prepMax != null && f.prepMax !== '' && !isNaN(f.prepMax)) {
+    if ((r.prepTime || 0) > f.prepMax) return false;
+  }
+  if (!skip.cook && f.cookMax != null && f.cookMax !== '' && !isNaN(f.cookMax)) {
+    if ((r.cookTime || 0) > f.cookMax) return false;
+  }
+  if (!skip.meal && f.mealTypes.length > 0) {
+    const rm = r.mealTypes || [];
+    if (!f.mealTypes.some(mt => rm.includes(mt))) return false;
+  }
+  if (!skip.ingredients) {
     if (f.includeIngredients.length > 0) {
       const ids = (r.ingredients || []).map(i => i.ingredientId);
       if (!f.includeIngredients.every(iid => ids.includes(iid))) return false;
@@ -4755,7 +4789,8 @@ function getFilteredRecipes() {
       const ids = (r.ingredients || []).map(i => i.ingredientId);
       if (f.excludeIngredients.some(iid => ids.includes(iid))) return false;
     }
-    // Filtre familles : doit contenir au moins un ingrédient de chaque famille requise
+  }
+  if (!skip.families) {
     if (f.includeFamilies && f.includeFamilies.length > 0) {
       for (const fid of f.includeFamilies) {
         const hasIt = (r.ingredients || []).some(i => {
@@ -4765,7 +4800,6 @@ function getFilteredRecipes() {
         if (!hasIt) return false;
       }
     }
-    // Filtre familles exclues : aucun ingrédient ne doit appartenir à une famille exclue
     if (f.excludeFamilies && f.excludeFamilies.length > 0) {
       const hasExcluded = (r.ingredients || []).some(i => {
         const ing = state.ingredients.find(x => x.id === i.ingredientId);
@@ -4773,19 +4807,47 @@ function getFilteredRecipes() {
       });
       if (hasExcluded) return false;
     }
-    // Filtre saisonnalité : tous les ingrédients doivent être de saison (ou intemporels)
-    if (f.seasonOnly) {
-      const month = getCurrentMonth();
-      const offSeason = (r.ingredients || []).some(i => {
-        const ing = state.ingredients.find(x => x.id === i.ingredientId);
-        return ing && !isIngredientInSeason(ing, month);
-      });
-      if (offSeason) return false;
-    }
-    // Filtre sélection (Toutes OU Sélection uniquement)
-    if (f.selectedOnly && !state.selectedRecipeIds.includes(r.id)) return false;
-    return true;
+  }
+  if (!skip.season && f.seasonOnly) {
+    const month = getCurrentMonth();
+    const offSeason = (r.ingredients || []).some(i => {
+      const ing = state.ingredients.find(x => x.id === i.ingredientId);
+      return ing && !isIngredientInSeason(ing, month);
+    });
+    if (offSeason) return false;
+  }
+  if (!skip.selected && f.selectedOnly && !state.selectedRecipeIds.includes(r.id)) return false;
+  return true;
+}
+
+// Facettes : valeurs encore atteignables compte tenu des AUTRES filtres actifs.
+// Sans autre filtre actif → simplement les valeurs réellement présentes dans les recettes.
+function availableMealTypes() {
+  const f = state.filters, set = new Set();
+  state.recipes.forEach(r => { if (recipeMatches(r, f, { meal: true })) (r.mealTypes || []).forEach(m => set.add(m)); });
+  (f.mealTypes || []).forEach(m => set.add(m)); // garder les sélectionnés visibles
+  return set;
+}
+function availableIngredientIds() {
+  const f = state.filters, set = new Set();
+  state.recipes.forEach(r => { if (recipeMatches(r, f, { ingredients: true })) (r.ingredients || []).forEach(i => set.add(i.ingredientId)); });
+  return set;
+}
+function availableFamilyIds() {
+  const f = state.filters, set = new Set();
+  state.recipes.forEach(r => {
+    if (!recipeMatches(r, f, { families: true })) return;
+    (r.ingredients || []).forEach(i => {
+      const ing = state.ingredients.find(x => x.id === i.ingredientId);
+      if (ing) (ing.familyIds || []).forEach(fid => set.add(fid));
+    });
   });
+  return set;
+}
+
+function getFilteredRecipes() {
+  const f = state.filters;
+  let list = state.recipes.filter(r => recipeMatches(r, f));
 
   const collator = new Intl.Collator('fr', { sensitivity: 'base' });
   switch (f.sort) {
@@ -4807,6 +4869,7 @@ function renderRecipes() {
   document.getElementById('recipe-count').textContent = total;
   if (typeof updateFilterBadge === 'function') updateFilterBadge();
   if (typeof updateActiveChips === 'function') updateActiveChips();
+  if (typeof refreshAllFacets === 'function') refreshAllFacets(); // facettes à jour (sélections, faceting, sync cloud)
   const selBadge = document.getElementById('selected-badge');
   selBadge.textContent = state.selectedRecipeIds.length;
   selBadge.setAttribute('data-value', state.selectedRecipeIds.length);
@@ -5524,167 +5587,124 @@ if (btnNewInline) btnNewInline.onclick = () => openRecipeModal();
 
 // Positionne un dropdown `position:fixed` sous (ou au-dessus si pas la place) un input,
 // clampé au viewport. Même logique que le dropdown des chips (anti hors-champ).
-function clampFixedDropdown(dd, input) {
-  const rect = input.getBoundingClientRect();
-  const vw = window.innerWidth, vh = window.innerHeight, margin = 8;
-  const width = Math.max(rect.width, 180);
-  let left = rect.left;
-  if (left + width > vw - margin) left = vw - margin - width;
-  if (left < margin) left = margin;
-  dd.style.width = width + 'px';
-  dd.style.left = left + 'px';
-  const below = vh - rect.bottom - margin, above = rect.top - margin;
-  if (below >= 160 || below >= above) {
-    dd.style.maxHeight = Math.max(120, Math.min(260, below)) + 'px';
-    dd.style.top = (rect.bottom + 2) + 'px';
-  } else {
-    dd.style.maxHeight = Math.max(120, Math.min(260, above)) + 'px';
-    dd.style.top = Math.max(margin, rect.top - 2 - dd.offsetHeight) + 'px';
-  }
+// Composant de facette UNIFIÉ : chips sélectionnés + recherche + liste repliable (top N).
+// Utilisé pour Type de plat (mode 'include') et Ingrédients/Familles (mode 'reqex', +/−).
+// Tous les composants vivants s'enregistrent ici pour être rafraîchis quand un filtre change.
+const facetRefreshers = [];
+function refreshAllFacets() {
+  for (const fn of facetRefreshers.slice()) { try { fn(); } catch (e) { /* DOM détaché */ } }
 }
 
-// Champ « requis(+) / interdit(−) » unifié : chips à bascule + input d'ajout avec dropdown.
-// opts: { getItems:()=>[{name,id}], includeKey, excludeKey, idToName, placeholder }
-function createReqExInput(wrapper, opts) {
+function createFacetSelect(wrapper, cfg) {
   if (!wrapper) return;
   wrapper.innerHTML = '';
-  const container = document.createElement('div');
-  container.className = 'reqex-field';
-  const chipsArea = document.createElement('div');
-  chipsArea.className = 'reqex-chips';
-  const input = document.createElement('input');
-  input.type = 'text';
-  input.className = 'reqex-input';
-  input.placeholder = opts.placeholder || 'Ajouter…';
-  input.autocomplete = 'off';
-  input.setAttribute('autocorrect', 'off');
-  input.setAttribute('autocapitalize', 'none');
-  input.setAttribute('spellcheck', 'false');
-  input.setAttribute('data-form-type', 'other');
-  container.appendChild(chipsArea);
-  container.appendChild(input);
-  wrapper.appendChild(container);
+  const root = document.createElement('div');
+  root.className = 'facet';
+  const chipsEl = document.createElement('div');
+  chipsEl.className = 'facet-chips';
+  const search = document.createElement('input');
+  search.type = 'text';
+  search.className = 'facet-search';
+  search.placeholder = cfg.searchPlaceholder || 'Rechercher…';
+  search.autocomplete = 'off';
+  search.setAttribute('autocorrect', 'off');
+  search.setAttribute('autocapitalize', 'none');
+  search.setAttribute('spellcheck', 'false');
+  search.setAttribute('data-form-type', 'other');
+  const listEl = document.createElement('div');
+  listEl.className = 'facet-list';
+  const moreBtn = document.createElement('button');
+  moreBtn.type = 'button';
+  moreBtn.className = 'facet-more';
+  root.append(chipsEl, search, listEl, moreBtn);
+  wrapper.appendChild(root);
 
-  let dropdown = null;
-  const inc = () => (state.filters[opts.includeKey] = state.filters[opts.includeKey] || []);
-  const exc = () => (state.filters[opts.excludeKey] = state.filters[opts.excludeKey] || []);
-  const commit = () => { saveLocal(); renderRecipes(); };
+  const COLLAPSED = 8;
+  let expanded = false;
+  const changed = () => { saveLocal(); renderRecipes(); }; // renderRecipes → refreshAllFacets
 
   function renderChips() {
-    chipsArea.innerHTML = '';
-    const I = inc(), E = exc();
-    const mk = (id, mode) => {
-      const chip = document.createElement('span');
-      chip.className = 'reqex-chip ' + (mode === '+' ? 'req' : 'exc');
-      const sign = document.createElement('button');
-      sign.type = 'button';
-      sign.className = 'reqex-sign';
-      sign.textContent = mode === '+' ? '+' : '−';
-      sign.title = mode === '+' ? 'Requis — cliquer pour interdire' : 'Interdit — cliquer pour requérir';
-      sign.onclick = () => {
-        if (mode === '+') {
-          state.filters[opts.includeKey] = I.filter(x => x !== id);
-          state.filters[opts.excludeKey] = [...E, id];
-        } else {
-          state.filters[opts.excludeKey] = E.filter(x => x !== id);
-          state.filters[opts.includeKey] = [...I, id];
-        }
-        commit(); renderChips();
-      };
-      const name = document.createElement('span');
-      name.className = 'reqex-name';
-      name.textContent = opts.idToName(id) || '?';
-      const rm = document.createElement('button');
-      rm.type = 'button';
-      rm.className = 'reqex-rm';
-      rm.textContent = '×';
-      rm.onclick = () => {
-        state.filters[opts.includeKey] = I.filter(x => x !== id);
-        state.filters[opts.excludeKey] = E.filter(x => x !== id);
-        commit(); renderChips();
-      };
-      chip.append(sign, name, rm);
-      return chip;
-    };
-    I.forEach(id => chipsArea.appendChild(mk(id, '+')));
-    E.forEach(id => chipsArea.appendChild(mk(id, '-')));
-    chipsArea.style.display = (I.length || E.length) ? '' : 'none';
+    chipsEl.innerHTML = '';
+    const sel = cfg.getSelected();
+    chipsEl.style.display = sel.length ? '' : 'none';
+    sel.forEach(it => {
+      if (cfg.mode === 'reqex') {
+        const chip = document.createElement('span');
+        chip.className = 'reqex-chip ' + (it.sign === '+' ? 'req' : 'exc');
+        const sign = document.createElement('button');
+        sign.type = 'button';
+        sign.className = 'reqex-sign';
+        sign.textContent = it.sign === '+' ? '+' : '−';
+        sign.title = it.sign === '+' ? 'Requis — cliquer pour interdire' : 'Interdit — cliquer pour requérir';
+        sign.onclick = () => { cfg.flip(it.id); changed(); };
+        const name = document.createElement('span');
+        name.className = 'reqex-name';
+        name.textContent = it.name;
+        const rm = document.createElement('button');
+        rm.type = 'button';
+        rm.className = 'reqex-rm';
+        rm.textContent = '×';
+        rm.onclick = () => { cfg.remove(it.id); changed(); };
+        chip.append(sign, name, rm);
+        chipsEl.appendChild(chip);
+      } else {
+        const chip = document.createElement('span');
+        chip.className = 'facet-chip';
+        const name = document.createElement('span');
+        name.textContent = it.name;
+        const rm = document.createElement('button');
+        rm.type = 'button';
+        rm.className = 'facet-chip-x';
+        rm.textContent = '×';
+        rm.onclick = () => { cfg.remove(it.id); changed(); };
+        chip.append(name, rm);
+        chipsEl.appendChild(chip);
+      }
+    });
   }
 
-  const available = () => {
-    const used = new Set([...inc(), ...exc()]);
-    return opts.getItems().filter(it => !used.has(it.id));
-  };
-  const reflow = () => { if (dropdown) clampFixedDropdown(dropdown, input); };
-
-  function hideDropdown() {
-    if (dropdown) {
-      window.removeEventListener('scroll', reflow, true);
-      window.removeEventListener('resize', reflow);
-      dropdown.remove();
-      dropdown = null;
-    }
-  }
-
-  function buildItems() {
-    const q = normalizeText(input.value);
-    const items = available().filter(it => !q || normalizeText(it.name).includes(q));
-    dropdown.innerHTML = '';
-    if (!items.length) {
+  function renderList() {
+    const q = normalizeText(search.value);
+    const selectedIds = new Set(cfg.getSelected().map(s => s.id));
+    let opts = cfg.getOptions().filter(o => !selectedIds.has(o.id));
+    if (q) opts = opts.filter(o => normalizeText(o.name).includes(q));
+    opts.sort((a, b) => a.name.localeCompare(b.name, 'fr'));
+    const total = opts.length;
+    const showAll = expanded || !!q;
+    const shown = showAll ? opts.slice(0, 200) : opts.slice(0, COLLAPSED);
+    listEl.innerHTML = '';
+    if (!shown.length) {
       const e = document.createElement('div');
-      e.className = 'autocomplete-empty';
-      e.textContent = 'Aucun élément';
-      dropdown.appendChild(e);
+      e.className = 'facet-empty';
+      e.textContent = q ? 'Aucun résultat' : 'Aucune option disponible';
+      listEl.appendChild(e);
     } else {
-      items.slice(0, 100).forEach(it => {
-        const d = document.createElement('div');
-        d.className = 'autocomplete-item';
-        d.textContent = it.name;
-        d.onmousedown = ev => ev.preventDefault();
-        d.onclick = () => {
-          inc().push(it.id);
-          input.value = '';
-          commit(); renderChips(); buildItems(); input.focus();
-        };
-        dropdown.appendChild(d);
+      shown.forEach(o => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'facet-opt';
+        b.textContent = o.name;
+        b.onclick = () => { cfg.add(o.id); search.value = ''; changed(); };
+        listEl.appendChild(b);
       });
     }
-    clampFixedDropdown(dropdown, input);
-  }
-
-  function showDropdown() {
-    if (dropdown) { buildItems(); return; }
-    dropdown = document.createElement('div');
-    dropdown.className = 'autocomplete-dropdown active';
-    dropdown.style.position = 'fixed';
-    dropdown.style.zIndex = '1000';
-    dropdown.style.overflowY = 'auto';
-    document.body.appendChild(dropdown);
-    buildItems();
-    window.addEventListener('scroll', reflow, true);
-    window.addEventListener('resize', reflow);
-  }
-
-  input.addEventListener('focus', showDropdown);
-  input.addEventListener('input', () => { dropdown ? buildItems() : showDropdown(); });
-  input.addEventListener('blur', () => setTimeout(() => {
-    if (dropdown && !dropdown.matches(':hover')) hideDropdown();
-  }, 200));
-  input.addEventListener('keydown', e => {
-    if (e.key === 'Escape') {
-      if (dropdown) { e.stopPropagation(); hideDropdown(); }
-      input.blur();
-    } else if (e.key === 'Enter') {
-      const first = dropdown && dropdown.querySelector('.autocomplete-item');
-      if (first) { e.preventDefault(); first.click(); }
+    if (!q && total > COLLAPSED) {
+      moreBtn.style.display = '';
+      moreBtn.textContent = expanded ? 'Voir moins' : ('Voir tout (' + total + ')');
+      moreBtn.onclick = () => { expanded = !expanded; renderList(); };
+    } else {
+      moreBtn.style.display = 'none';
     }
-  });
+  }
 
-  renderChips();
+  const refresh = () => { renderChips(); renderList(); };
+  search.addEventListener('input', renderList);
+  facetRefreshers.push(refresh);
+  refresh();
 }
 
 function buildFilterBar() {
-  const collator = new Intl.Collator('fr', { sensitivity: 'base' });
+  facetRefreshers.length = 0; // les facettes vont se ré-enregistrer ci-dessous
 
   // Quick filter: Sélection uniquement (bouton de la toolbar)
   const selBtn = document.getElementById('btn-toggle-selection-only');
@@ -5758,44 +5778,54 @@ function buildFilterBar() {
   renderTimePresets('filter-prep-presets', 'prepMax');
   renderTimePresets('filter-cook-presets', 'cookMax');
 
-  // Meal types : triés alphabétiquement
-  const mtCont = document.getElementById('filter-meal-types');
-  mtCont.innerHTML = '';
-  const sortedMealTypes = [...state.mealTypes].sort(collator.compare);
-  sortedMealTypes.forEach(mt => {
-    const on = state.filters.mealTypes.includes(mt);
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.className = 'filter-pick' + (on ? ' on' : '');
-    btn.textContent = mt;
-    btn.setAttribute('aria-pressed', String(on));
-    btn.onclick = () => {
-      if (state.filters.mealTypes.includes(mt)) {
-        state.filters.mealTypes = state.filters.mealTypes.filter(x => x !== mt);
-      } else {
-        state.filters.mealTypes.push(mt);
-      }
-      saveLocal();
-      buildFilterBar();
-      renderRecipes();
-    };
-    mtCont.appendChild(btn);
+  // Type de plat : facette unifiée (inclure simple), uniquement les types disponibles
+  createFacetSelect(document.getElementById('filter-meal-types'), {
+    mode: 'include',
+    searchPlaceholder: 'Rechercher un type…',
+    getOptions: () => [...availableMealTypes()].map(m => ({ id: m, name: m })),
+    getSelected: () => (state.filters.mealTypes || []).map(m => ({ id: m, name: m, sign: '+' })),
+    add: id => { if (!state.filters.mealTypes.includes(id)) state.filters.mealTypes.push(id); },
+    remove: id => { state.filters.mealTypes = state.filters.mealTypes.filter(x => x !== id); }
   });
 
   // Avancé : champs unifiés requis(+)/interdit(−) pour ingrédients et familles
-  createReqExInput(document.getElementById('filter-ingredients-wrapper'), {
-    getItems: () => state.ingredients.map(i => ({ name: i.name, id: i.id })),
-    includeKey: 'includeIngredients',
-    excludeKey: 'excludeIngredients',
-    idToName: getIngredientName,
-    placeholder: 'Ajouter un ingrédient…'
+  createFacetSelect(document.getElementById('filter-ingredients-wrapper'), {
+    mode: 'reqex',
+    searchPlaceholder: 'Rechercher un ingrédient…',
+    getOptions: () => { const av = availableIngredientIds(); return state.ingredients.filter(i => av.has(i.id)).map(i => ({ id: i.id, name: i.name })); },
+    getSelected: () => [
+      ...(state.filters.includeIngredients || []).map(id => ({ id, name: getIngredientName(id), sign: '+' })),
+      ...(state.filters.excludeIngredients || []).map(id => ({ id, name: getIngredientName(id), sign: '-' }))
+    ],
+    add: id => { state.filters.includeIngredients = [...(state.filters.includeIngredients || []), id]; },
+    remove: id => {
+      state.filters.includeIngredients = (state.filters.includeIngredients || []).filter(x => x !== id);
+      state.filters.excludeIngredients = (state.filters.excludeIngredients || []).filter(x => x !== id);
+    },
+    flip: id => {
+      const inc = state.filters.includeIngredients || [], exc = state.filters.excludeIngredients || [];
+      if (inc.includes(id)) { state.filters.includeIngredients = inc.filter(x => x !== id); state.filters.excludeIngredients = [...exc, id]; }
+      else { state.filters.excludeIngredients = exc.filter(x => x !== id); state.filters.includeIngredients = [...inc, id]; }
+    }
   });
-  createReqExInput(document.getElementById('filter-families-wrapper'), {
-    getItems: () => state.ingredientFamilies.map(f => ({ name: f.name, id: f.id })),
-    includeKey: 'includeFamilies',
-    excludeKey: 'excludeFamilies',
-    idToName: getFamilyName,
-    placeholder: 'Ajouter une famille…'
+  createFacetSelect(document.getElementById('filter-families-wrapper'), {
+    mode: 'reqex',
+    searchPlaceholder: 'Rechercher une famille…',
+    getOptions: () => { const av = availableFamilyIds(); return state.ingredientFamilies.filter(f => av.has(f.id)).map(f => ({ id: f.id, name: f.name })); },
+    getSelected: () => [
+      ...(state.filters.includeFamilies || []).map(id => ({ id, name: getFamilyName(id), sign: '+' })),
+      ...(state.filters.excludeFamilies || []).map(id => ({ id, name: getFamilyName(id), sign: '-' }))
+    ],
+    add: id => { state.filters.includeFamilies = [...(state.filters.includeFamilies || []), id]; },
+    remove: id => {
+      state.filters.includeFamilies = (state.filters.includeFamilies || []).filter(x => x !== id);
+      state.filters.excludeFamilies = (state.filters.excludeFamilies || []).filter(x => x !== id);
+    },
+    flip: id => {
+      const inc = state.filters.includeFamilies || [], exc = state.filters.excludeFamilies || [];
+      if (inc.includes(id)) { state.filters.includeFamilies = inc.filter(x => x !== id); state.filters.excludeFamilies = [...exc, id]; }
+      else { state.filters.excludeFamilies = exc.filter(x => x !== id); state.filters.includeFamilies = [...inc, id]; }
+    }
   });
 }
 
@@ -5862,29 +5892,43 @@ function openFilterSheet() {
     fc.textContent = n === 0 ? 'Aucune recette' : 'Voir ' + n + ' recette' + (n > 1 ? 's' : '');
   }
 }
-// Desktop (>768px) : ancre le popover sous le bouton Filtre, clampé au viewport.
+// Desktop (≥769px) : positionne le rail docké à gauche de la zone recettes, pleine hauteur.
 // Mobile : on retire les styles inline pour laisser le bottom-sheet CSS s'appliquer.
 function positionFilterSheet() {
   const sheet = document.querySelector('.filter-sheet');
   if (!sheet) return;
-  if (window.innerWidth > 768) {
-    const btn = document.getElementById('btn-toggle-filter');
-    const r = btn.getBoundingClientRect();
-    const margin = 10, w = 380;
-    let left = r.left;
-    if (left + w > window.innerWidth - margin) left = Math.max(margin, window.innerWidth - margin - w);
-    sheet.style.left = left + 'px';
-    sheet.style.top = (r.bottom + 6) + 'px';
-    sheet.style.maxHeight = Math.max(220, window.innerHeight - r.bottom - 6 - margin) + 'px';
+  if (window.innerWidth >= 769) {
+    const mainEl = document.querySelector('main');
+    const r = mainEl.getBoundingClientRect();
+    const pad = 16;
+    sheet.style.left = (r.left + pad) + 'px';
+    sheet.style.top = pad + 'px';
+    sheet.style.height = (window.innerHeight - pad * 2) + 'px';
+    sheet.style.maxHeight = (window.innerHeight - pad * 2) + 'px';
   } else {
     sheet.style.left = '';
     sheet.style.top = '';
+    sheet.style.height = '';
     sheet.style.maxHeight = '';
   }
 }
-window.addEventListener('resize', () => {
-  if (document.getElementById('filter-sheet-overlay').classList.contains('active')) positionFilterSheet();
-});
+// Affiche le rail uniquement sur desktop ET sur l'onglet Recettes ; sinon le replie.
+function updateFilterRail() {
+  const desktop = window.innerWidth >= 769;
+  const tabRecipes = document.getElementById('tab-recipes');
+  const overlay = document.getElementById('filter-sheet-overlay');
+  if (!tabRecipes || !overlay) return;
+  const show = desktop && tabRecipes.classList.contains('active');
+  document.body.classList.toggle('filter-rail-on', show);
+  if (show) {
+    overlay.classList.add('active');
+    positionFilterSheet();
+  } else {
+    overlay.classList.remove('active');
+    if (!desktop) positionFilterSheet(); // nettoie les styles inline pour le bottom-sheet
+  }
+}
+window.addEventListener('resize', updateFilterRail);
 function closeFilterSheet() {
   document.getElementById('filter-sheet-overlay').classList.remove('active');
 }
@@ -5894,9 +5938,11 @@ document.getElementById('filter-apply-btn').onclick = closeFilterSheet;
 document.getElementById('filter-sheet-overlay').addEventListener('click', e => {
   if (e.target === document.getElementById('filter-sheet-overlay')) closeFilterSheet();
 });
-// Échap ferme le panneau (sauf si un dropdown interne vient de l'intercepter)
+// Échap ferme le panneau (sauf rail permanent desktop, et sauf si un dropdown interne l'intercepte)
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape' && document.getElementById('filter-sheet-overlay').classList.contains('active')) {
+  if (e.key === 'Escape'
+      && document.getElementById('filter-sheet-overlay').classList.contains('active')
+      && !document.body.classList.contains('filter-rail-on')) {
     closeFilterSheet();
   }
 });
@@ -5934,6 +5980,11 @@ function updateFilterBadge() {
   }
   const btn = document.getElementById('btn-toggle-filter');
   if (btn) btn.classList.toggle('neon-on', count > 0);
+  // Compteur de filtres actifs sur la section repliable « Avancé »
+  const advCount = (f.includeIngredients || []).length + (f.excludeIngredients || []).length
+                 + (f.includeFamilies || []).length + (f.excludeFamilies || []).length;
+  const advEl = document.getElementById('filter-adv-count');
+  if (advEl) { advEl.textContent = advCount; advEl.style.display = advCount ? '' : 'none'; }
 }
 
 // Render active-filter chips bar (tap to remove)
@@ -8024,6 +8075,7 @@ load();
 setSortValue(state.filters.sort || 'name-asc');
 buildFilterBar();
 renderRecipes();
+updateFilterRail(); // rail de filtres docké au démarrage (desktop)
 updateDebugBadges();
 renderFirebaseUI(); // affiche le bouton mobile dès le démarrage
 initFirebase();
