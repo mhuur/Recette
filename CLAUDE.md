@@ -37,11 +37,19 @@ Guide pour Claude Code sur ce projet.
 - Composants réutilisables : `createAutocomplete()`, `createChipsInput()`. Modals in-app `showConfirm()`, `openMergeModal()` au lieu de `confirm()`/`prompt()` natifs.
 - Inputs texte : `autocomplete/autocorrect/autocapitalize=off`, `spellcheck=false` (anti AutoFill iOS).
 - Sidebar : desktop = onglets primaires (Recettes/Courses/Saison) visibles, secondaires (Données/Réglages/Debug) dans le menu « Mon compte » ; mobile = tous dans la barre du bas.
+- **Icônes** : Lucide SVG inline via `ICONS{}` + `injectIcons()` (rempli au boot, après `detectGuestMode()`). Ajouter une icône avec `data-icon="clé"` sur un élément vide. Pas d'emoji dans la sidebar.
 - Hauteurs en `dvh` (gère le clavier iOS).
 
 ## Workflows
 - **Feature / fix** : éditer le `.html` → tester via serveur local → vérifier à la main les onglets touchés + un cycle save/sync.
+- **Vérification — adapter l'effort au risque (3 niveaux)** :
+  - *Visuel / CSS / icônes* → l'utilisateur regarde `__preview.html` (cf. ci-dessous). **Pas** de screenshot headless de ma part.
+  - *Logique JS* → une seule sonde `dump-dom`/`document.title` ; s'arrêter **dès qu'elle répond** (ne pas escalader vers des screenshots).
+  - *Sync / données* → cycle save/reload manuel.
+- **Preview local sans login** : `__preview.html` (gitignoré) — iframe sur `index.html?_=<ts>` (cache-buster, fini le « stale »), masque `#login-overlay` → app en mode local. Lancer `py -m http.server 8000`, ouvrir `http://localhost:8000/__preview.html`, **rafraîchir** après chaque modif.
 - **Debug headless (pas de console accessible facilement)** : copier le fichier, injecter une sonde qui écrit le résultat dans `document.title`, lancer `chrome --headless=new --dump-dom`, lire le `<title>`. (Méthode utilisée pour traquer le bug `esc`/`escapeHtml`.)
+  - **Piège** : injecter la sonde avant le **dernier** `</body>` (`rpartition`), pas un `replace` global — `</body>` apparaît dans des chaînes JS de l'app, et le remplacer partout casse le script principal (symptôme : tout `ICONS`/fonctions deviennent `undefined`, l'app n'affiche plus que le HTML statique).
+  - **Screenshot** : `chrome --headless=new --no-sandbox --screenshot=C:/Temp/x.png` (échoue silencieusement vers un chemin OneDrive avec espaces → écrire dans `C:/Temp`). Sidebar masquée par `#login-overlay` hors connexion : injecter `#login-overlay{display:none}` + `.active` sur `#sidebar-user` pour la voir.
 - Pas de CI ni de tests auto.
 
 ## Pièges connus

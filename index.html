@@ -58,7 +58,7 @@ body {
    =================================================================== */
 /* Titre néon en haut de la sidebar */
 .sidebar > nav::before {
-  content: "🍳 Mes Recettes";
+  content: "MES RECETTES";
   display: block;
   font-family: 'Tilt Neon', sans-serif;
   font-size: 19px; font-weight: 400; letter-spacing: .05em; text-transform: uppercase;
@@ -73,14 +73,13 @@ h1, h2 {
   color: #cfe3ff;
   text-shadow: 0 0 4px rgba(74,158,255,.8), 0 0 14px rgba(74,158,255,.45), 0 0 30px rgba(74,158,255,.18);
 }
-/* Onglet actif : fond surface + barre néon à gauche + halo */
+/* Onglet actif : fond surface + barre néon à gauche + icône en primary (façon Devis Photo) */
 .tab-btn.active {
   background: var(--surface) !important;
   color: #fff !important;
-  box-shadow: inset 3px 0 0 var(--primary), 0 0 14px rgba(74,158,255,.16);
+  border-left-color: var(--primary) !important;
 }
-.tab-btn.active .tab-icon { filter: drop-shadow(0 0 6px rgba(74,158,255,.6)); }
-.tab-btn:hover { box-shadow: 0 0 10px rgba(74,158,255,.10); }
+.tab-btn.active .tab-icon { color: var(--primary); }
 /* Boutons primaires : glow néon */
 .btn-primary, #btn-sign-in, #btn-login-google {
   box-shadow: 0 0 14px rgba(74,158,255,.30);
@@ -107,8 +106,7 @@ input:focus, textarea:focus, select:focus, [contenteditable]:focus {
   0%, 100% { text-shadow: 0 0 4px rgba(74,158,255,.8), 0 0 10px rgba(74,158,255,.55), 0 0 24px rgba(74,158,255,.30), 0 0 48px rgba(74,158,255,.15); }
   50%      { text-shadow: 0 0 6px rgba(74,158,255,1),  0 0 16px rgba(74,158,255,.90), 0 0 36px rgba(74,158,255,.55), 0 0 64px rgba(74,158,255,.28); }
 }
-/* Le titre de la sidebar respire */
-.sidebar > nav::before { animation: neon-title-pulse 4s ease-in-out infinite; }
+/* Titre sidebar : glow statique (façon Devis Photo, plus sobre que le pulse) */
 /* Gros titre néon en tête de chaque onglet (seul l'onglet actif est visible) */
 .tab::before {
   display: block;
@@ -131,12 +129,6 @@ input:focus, textarea:focus, select:focus, [contenteditable]:focus {
 }
 /* Sous-titres descriptifs (h2) en glow doux qui respire */
 h2 { animation: neon-title-pulse 5s ease-in-out infinite; }
-/* Onglet actif : barre latérale néon qui pulse légèrement */
-@keyframes neon-bar-pulse {
-  0%, 100% { box-shadow: inset 3px 0 0 var(--primary), 0 0 10px rgba(74,158,255,.12); }
-  50%      { box-shadow: inset 3px 0 0 var(--primary), 0 0 18px rgba(74,158,255,.28); }
-}
-.tab-btn.active { animation: neon-bar-pulse 3.2s ease-in-out infinite; }
 
 /* Layout avec sidebar */
 .app-layout {
@@ -180,20 +172,26 @@ html, body { overflow-x: hidden; }
   background: transparent;
   color: var(--text-muted);
   border: none;
-  padding: 10px 14px;
-  border-radius: 8px;
+  border-left: 3px solid transparent;
+  padding: 10px 16px;
+  border-radius: 0;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
-  transition: all 0.15s;
+  transition: background .12s, color .12s, border-color .12s;
   font-family: inherit;
   text-align: left;
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-start;
   align-items: center;
+  gap: 11px;
 }
 .sidebar nav button:hover { color: var(--text); background: var(--surface); }
-.sidebar nav button.active { background: var(--primary); color: white; }
+/* Icône Lucide dans les onglets (desktop) */
+.sidebar nav .tab-icon { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.sidebar nav .tab-icon svg { width: 18px; height: 18px; }
+/* Le label prend l'espace pour pousser le badge à droite */
+.sidebar nav .tab-label { flex: 1; }
 /* Onglets secondaires (Données / Réglages / Debug) : cachés de la nav desktop
    — ils sont accessibles via le menu utilisateur en bas. Réaffichés en barre mobile. */
 .sidebar nav .tab-btn-secondary { display: none; }
@@ -256,6 +254,9 @@ html, body { overflow-x: hidden; }
   transition: background .12s, color .12s;
 }
 .user-menu-item span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* Icône Lucide d'un item de menu : taille fixe, ne flexe pas comme le label */
+.user-menu-item .um-ico { flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; }
+.user-menu-item .um-ico svg { width: 18px; height: 18px; }
 .user-menu-item:hover { background: var(--surface); color: var(--text); }
 .user-menu-item.danger:hover { color: var(--danger); }
 .user-menu-item .um-badge {
@@ -291,7 +292,8 @@ html, body { overflow-x: hidden; }
   border-color: var(--primary); box-shadow: 0 0 8px rgba(74,158,255,.35);
 }
 .sidebar-user-trigger-label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; }
-.sidebar-user-chevron { flex-shrink: 0; color: var(--text-dim); font-size: 11px; transition: transform .15s; }
+.sidebar-user-chevron { flex-shrink: 0; color: var(--text-dim); display: inline-flex; align-items: center; transition: transform .15s; }
+.sidebar-user-chevron svg { width: 16px; height: 16px; }
 .user-avatar-wrapper.open .sidebar-user-chevron { transform: rotate(180deg); }
 .sidebar-sync { font-size: 10px; color: var(--success); text-align: center; padding: 3px 8px 6px; }
 .count-badge {
@@ -344,6 +346,37 @@ button {
 .btn-xs { padding: 3px 8px; font-size: 12px; }
 .btn.active { background: var(--primary); border-color: var(--primary); color: white; }
 .btn.active:hover { background: var(--primary-dark); border-color: var(--primary-dark); }
+/* Toggles de la barre d'outils Recettes — icône Lucide + état actif néon (façon Devis Photo seg-neon) */
+.tb-toggle { gap: 6px; border-radius: 6px; }
+.tb-toggle .tb-ico { display: inline-flex; align-items: center; }
+.tb-toggle .tb-ico svg { width: 15px; height: 15px; }
+.tb-toggle.active,
+.tb-toggle.neon-on,
+.tb-toggle[aria-pressed="true"] {
+  background: var(--primary); border-color: var(--primary); color: #fff;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.18), 0 0 12px rgba(74,158,255,.5), 0 0 24px rgba(74,158,255,.22);
+  text-shadow: 0 0 8px rgba(255,255,255,.4);
+}
+.tb-toggle.active:hover,
+.tb-toggle.neon-on:hover,
+.tb-toggle[aria-pressed="true"]:hover { background: var(--primary-dark); border-color: var(--primary-dark); }
+/* Bouton action néon-contour (CTA « Ajouter ») — porté de Devis Photo (.btn-neon) */
+.btn-neon {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: transparent; color: var(--primary);
+  border: 1px solid var(--primary); border-radius: 6px;
+  padding: 5px 14px; cursor: pointer;
+  font: inherit; font-size: 13px; font-weight: 600;
+  transition: all .15s;
+  box-shadow: inset 0 0 0 1px rgba(74,158,255,.22), 0 0 12px rgba(74,158,255,.35), 0 0 24px rgba(74,158,255,.14);
+  text-shadow: 0 0 8px currentColor;
+}
+.btn-neon:hover {
+  background: rgba(74,158,255,.10); color: #7eb8ff;
+  box-shadow: inset 0 0 12px rgba(74,158,255,.22), 0 0 18px rgba(74,158,255,.55), 0 0 32px rgba(74,158,255,.22);
+}
+.btn-neon .tb-ico { display: inline-flex; align-items: center; }
+.btn-neon .tb-ico svg { width: 15px; height: 15px; }
 
 /* Inputs */
 input[type="text"], input[type="number"], input[type="url"], select, textarea {
@@ -474,11 +507,11 @@ label {
 }
 
 /* Recipe list */
-.recipe-list { display: flex; flex-direction: column; gap: 4px; }
+.recipe-list { display: flex; flex-direction: column; gap: 3px; }
 .recipe-card {
   background: var(--bg-2);
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: 6px;
   overflow: hidden;
   transition: border-color 0.15s;
 }
@@ -488,7 +521,7 @@ label {
 .recipe-header {
   display: flex;
   align-items: center;
-  padding: 7px 10px;
+  padding: 4px 10px;
   gap: 10px;
   cursor: pointer;
   user-select: none;
@@ -512,7 +545,7 @@ label {
   align-items: center;
 }
 .recipe-title {
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 600;
   color: var(--text);
   flex: 1 1 auto;
@@ -532,17 +565,20 @@ label {
 .meta-item {
   display: inline-flex;
   align-items: center;
-  gap: 3px;
+  gap: 4px;
 }
+/* Icônes Lucide de la méta : taille uniforme, ton discret */
+.recipe-meta svg { width: 14px; height: 14px; color: var(--text-dim); flex-shrink: 0; }
 .rating-stars { color: var(--star); font-size: 11px; }
 .meal-tags { display: flex; flex-wrap: wrap; gap: 3px; }
+/* Tag de plat en lecture seule (en-tête de carte) — même famille tonale, plus discret */
 .meal-tag {
-  background: var(--surface);
-  color: var(--text-muted);
-  padding: 1px 7px;
-  border-radius: 10px;
+  background: rgba(74,158,255,.08);
+  color: #a8c7f0;
+  padding: 1px 8px;
+  border-radius: 7px;
   font-size: 10px;
-  border: 1px solid var(--border);
+  border: 1px solid rgba(74,158,255,.22);
 }
 .recipe-actions {
   display: flex;
@@ -825,32 +861,34 @@ label {
   cursor: text;
 }
 .chips-input-wrapper:focus-within { border-color: var(--primary); }
+/* Chip interactif (removable) — langage tonal néon, partagé avec .active-filter-chip */
 .chip {
-  background: var(--primary);
-  color: white;
-  padding: 3px 10px;
-  border-radius: 12px;
+  background: rgba(74,158,255,.10);
+  color: #cfe3ff;
+  border: 1px solid rgba(74,158,255,.30);
+  padding: 3px 9px;
+  border-radius: 8px;
   font-size: 12px;
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
   cursor: pointer;
-  transition: background 0.15s, opacity 0.15s;
+  transition: background .12s, border-color .12s, color .12s;
   user-select: none;
 }
 .chip::after {
   content: '×';
   font-size: 14px;
   line-height: 1;
-  opacity: 0.7;
+  color: var(--text-dim);
+  transition: color .12s;
 }
 .chip:hover {
-  background: var(--primary-dark);
-  opacity: 0.7;
+  background: rgba(74,158,255,.16);
+  border-color: rgba(74,158,255,.55);
+  color: #fff;
 }
-.chip:hover::after {
-  opacity: 1;
-}
+.chip:hover::after { color: #fff; }
 .chips-inner-input {
   flex: 1;
   min-width: 100px;
@@ -1133,28 +1171,52 @@ label {
 /* Active filter chips bar */
 #active-filter-bar {
   display: flex;
+  flex-wrap: wrap;
   gap: 6px;
-  overflow-x: auto;
-  padding: 0 0 6px;
-  scrollbar-width: none;
-  -webkit-overflow-scrolling: touch;
-  flex-wrap: nowrap;
+  padding: 2px 0 4px;
 }
-#active-filter-bar::-webkit-scrollbar { display: none; }
+/* Filtre actif = chip tonal (info secondaire, pas un CTA bleu plein) */
 .active-filter-chip {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  background: var(--primary);
-  color: white;
-  padding: 4px 10px;
-  border-radius: 14px;
+  gap: 6px;
+  background: rgba(74,158,255,.10);
+  color: #cfe3ff;
+  border: 1px solid rgba(74,158,255,.30);
+  padding: 3px 8px 3px 11px;
+  border-radius: 8px;
   font-size: 12px;
+  font-weight: 500;
   white-space: nowrap;
   cursor: pointer;
-  flex-shrink: 0;
+  transition: background .12s, border-color .12s, color .12s;
 }
-.active-filter-chip::after { content: '×'; opacity: 0.8; font-size: 13px; }
+.active-filter-chip:hover {
+  background: rgba(74,158,255,.16);
+  border-color: rgba(74,158,255,.55);
+  color: #fff;
+}
+.active-filter-chip::after {
+  content: '×';
+  font-size: 14px;
+  line-height: 1;
+  color: var(--text-dim);
+  transition: color .12s;
+}
+.active-filter-chip:hover::after { color: #fff; }
+/* « Tout effacer » — lien discret, vire au rouge au survol */
+.active-filter-clear {
+  background: none;
+  border: 0;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  padding: 3px 8px;
+  border-radius: 8px;
+  transition: color .12s, background .12s;
+}
+.active-filter-clear:hover { color: var(--danger); background: var(--surface); }
 .quick-filter-chk input { width: auto; margin: 0; cursor: pointer; }
 
 /* Filter bottom sheet overlay */
@@ -1612,6 +1674,7 @@ select.bug-tab-select option{background:var(--bg-2);color:var(--text);font-weigh
     align-items: center;
     justify-content: center;
     gap: 3px;
+    border-left: none;
     padding: 10px 2px 12px;
     font-size: 9px;
     font-weight: 500;
@@ -1642,8 +1705,9 @@ select.bug-tab-select option{background:var(--bg-2);color:var(--text);font-weigh
   .sidebar nav .tab-btn { position: relative; }
 
   /* Icônes visibles sur mobile */
-  .tab-icon { display: block; font-size: 20px; line-height: 1; }
-  .tab-label { display: block; }
+  .tab-icon { display: flex; align-items: center; justify-content: center; line-height: 1; }
+  .sidebar nav .tab-icon svg { width: 22px; height: 22px; }
+  .tab-label { display: block; flex: none; }
 
   /* Badge dans la nav mobile */
   .sidebar nav .count-badge {
@@ -1691,19 +1755,19 @@ select.bug-tab-select option{background:var(--bg-2);color:var(--text);font-weigh
   .tab { padding: 16px; }
 
   /* ---- Recettes ---- */
-  .recipe-list { gap: 8px; }
+  .recipe-list { gap: 6px; }
   .recipe-card {
-    border-radius: 12px;
+    border-radius: 10px;
     border-color: var(--border);
     background: var(--bg-2);
   }
   .recipe-card.expanded { border-color: var(--primary); }
   .recipe-header {
-    padding: 12px 14px;
+    padding: 7px 12px;
     gap: 12px;
     flex-wrap: nowrap;
   }
-  .recipe-title { font-size: 15px; }
+  .recipe-title { font-size: 13px; }
   .recipe-meta { font-size: 12px; gap: 4px 8px; }
   .recipe-checkbox input { width: 20px; height: 20px; }
 
@@ -1903,12 +1967,12 @@ body.guest-mode .sidebar::after {
 <div class="app-layout">
 <aside class="sidebar">
   <nav role="tablist" aria-label="Navigation principale">
-    <button class="tab-btn active" data-tab="recipes" role="tab" aria-selected="true"><span class="tab-icon" aria-hidden="true">🍳</span><span class="tab-label">Recettes</span> <span class="count-badge" id="recipe-count">0</span></button>
-    <button class="tab-btn" data-tab="shopping" role="tab" aria-selected="false"><span class="tab-icon" aria-hidden="true">🛒</span><span class="tab-label">Courses</span> <span class="count-badge hide-if-zero" id="selected-badge">0</span></button>
-    <button class="tab-btn" data-tab="season" role="tab" aria-selected="false"><span class="tab-icon" aria-hidden="true">🌿</span><span class="tab-label">Saison</span></button>
-    <button class="tab-btn tab-btn-secondary" data-tab="data" role="tab" aria-selected="false"><span class="tab-icon" aria-hidden="true">📋</span><span class="tab-label">Données</span></button>
-    <button class="tab-btn tab-btn-secondary" data-tab="settings" role="tab" aria-selected="false"><span class="tab-icon" aria-hidden="true">⚙️</span><span class="tab-label">Réglages</span></button>
-    <button class="tab-btn tab-btn-secondary" data-tab="debug" role="tab" aria-selected="false"><span class="tab-icon" aria-hidden="true">🐞</span><span class="tab-label">Debug</span> <span class="count-badge hide-if-zero" id="debug-count">0</span></button>
+    <button class="tab-btn active" data-tab="recipes" role="tab" aria-selected="true"><span class="tab-icon" data-icon="chefHat" aria-hidden="true"></span><span class="tab-label">Recettes</span> <span class="count-badge" id="recipe-count">0</span></button>
+    <button class="tab-btn" data-tab="shopping" role="tab" aria-selected="false"><span class="tab-icon" data-icon="shoppingCart" aria-hidden="true"></span><span class="tab-label">Courses</span> <span class="count-badge hide-if-zero" id="selected-badge">0</span></button>
+    <button class="tab-btn" data-tab="season" role="tab" aria-selected="false"><span class="tab-icon" data-icon="leaf" aria-hidden="true"></span><span class="tab-label">Saison</span></button>
+    <button class="tab-btn tab-btn-secondary" data-tab="data" role="tab" aria-selected="false"><span class="tab-icon" data-icon="database" aria-hidden="true"></span><span class="tab-label">Données</span></button>
+    <button class="tab-btn tab-btn-secondary" data-tab="settings" role="tab" aria-selected="false"><span class="tab-icon" data-icon="settings" aria-hidden="true"></span><span class="tab-label">Réglages</span></button>
+    <button class="tab-btn tab-btn-secondary" data-tab="debug" role="tab" aria-selected="false"><span class="tab-icon" data-icon="bug" aria-hidden="true"></span><span class="tab-label">Debug</span> <span class="count-badge hide-if-zero" id="debug-count">0</span></button>
     <button class="btn btn-primary" id="mobile-login-btn">🔑 Connexion</button>
   </nav>
   <div class="sidebar-user" id="sidebar-user">
@@ -1918,19 +1982,19 @@ body.guest-mode .sidebar::after {
           <div class="user-menu-name" id="user-menu-name">—</div>
           <div class="user-menu-email" id="user-menu-email">—</div>
         </div>
-        <button class="user-menu-item" role="menuitem" data-go="data">📋 <span>Données</span></button>
-        <button class="user-menu-item" role="menuitem" data-go="settings">⚙️ <span>Réglages</span></button>
-        <button class="user-menu-item" role="menuitem" data-go="debug">🐞 <span>Debug</span> <span class="um-badge hide-if-zero" id="menu-debug-count">0</span></button>
+        <button class="user-menu-item" role="menuitem" data-go="data"><span class="um-ico" data-icon="database"></span><span>Données</span></button>
+        <button class="user-menu-item" role="menuitem" data-go="settings"><span class="um-ico" data-icon="settings"></span><span>Réglages</span></button>
+        <button class="user-menu-item" role="menuitem" data-go="debug"><span class="um-ico" data-icon="bug"></span><span>Debug</span> <span class="um-badge hide-if-zero" id="menu-debug-count">0</span></button>
         <div class="user-menu-sep"></div>
-        <button class="user-menu-item" role="menuitem" id="menu-push-cloud">⬆ <span>Envoyer vers le cloud</span></button>
-        <button class="user-menu-item" role="menuitem" id="menu-pull-cloud">⬇ <span>Recharger depuis le cloud</span></button>
+        <button class="user-menu-item" role="menuitem" id="menu-push-cloud"><span class="um-ico" data-icon="uploadCloud"></span><span>Envoyer vers le cloud</span></button>
+        <button class="user-menu-item" role="menuitem" id="menu-pull-cloud"><span class="um-ico" data-icon="downloadCloud"></span><span>Recharger depuis le cloud</span></button>
         <div class="user-menu-sep"></div>
-        <button class="user-menu-item danger" role="menuitem" id="menu-sign-out">🚪 <span>Se déconnecter</span></button>
+        <button class="user-menu-item danger" role="menuitem" id="menu-sign-out"><span class="um-ico" data-icon="logOut"></span><span>Se déconnecter</span></button>
       </div>
       <button class="sidebar-user-trigger" id="sidebar-user-trigger" type="button" aria-label="Mon compte">
         <span class="sidebar-user-avatar" id="sidebar-user-avatar"></span>
         <span class="sidebar-user-trigger-label">Mon compte</span>
-        <span class="sidebar-user-chevron" aria-hidden="true">▾</span>
+        <span class="sidebar-user-chevron" data-icon="chevronDown" aria-hidden="true"></span>
       </button>
     </div>
     <div class="sidebar-sync" id="sidebar-sync-status">☁</div>
@@ -1947,10 +2011,10 @@ body.guest-mode .sidebar::after {
       </div>
       <div class="toolbar-row" style="justify-content:space-between;">
         <div style="display:flex; gap:6px; align-items:center;">
-          <button class="btn btn-sm" id="btn-toggle-filter" title="Filtres">⏷ Filtre<span class="filter-count-badge" id="filter-count-badge" style="display:none;">0</span></button>
-          <button class="btn btn-sm" id="btn-toggle-selection-only" title="Afficher uniquement la sélection" aria-pressed="false">✓</button>
+          <button class="btn btn-sm tb-toggle" id="btn-toggle-filter" title="Filtres"><span class="tb-ico" data-icon="filter"></span>Filtre<span class="filter-count-badge" id="filter-count-badge" style="display:none;">0</span></button>
+          <button class="btn btn-sm tb-toggle" id="btn-toggle-selection-only" title="Afficher uniquement la sélection" aria-pressed="false"><span class="tb-ico" data-icon="check"></span></button>
           <div style="position:relative;">
-            <button class="btn btn-ghost btn-sm" id="sort-btn" title="Trier">⇅ <span id="sort-label">A→Z</span></button>
+            <button class="btn btn-ghost btn-sm tb-toggle" id="sort-btn" title="Trier"><span class="tb-ico" data-icon="arrowUpDown"></span><span id="sort-label">A→Z</span></button>
             <div class="sort-popup" id="sort-popup">
               <div class="sort-option active-sort" data-sort="name-asc">Nom A → Z</div>
               <div class="sort-option" data-sort="name-desc">Nom Z → A</div>
@@ -1961,7 +2025,7 @@ body.guest-mode .sidebar::after {
             </div>
           </div>
         </div>
-        <button class="btn btn-primary btn-sm" id="btn-new-recipe-inline">＋ Ajouter</button>
+        <button class="btn-neon" id="btn-new-recipe-inline"><span class="tb-ico" data-icon="plus"></span>Ajouter</button>
       </div>
       <div id="active-filter-bar" style="display:none;"></div>
     </div>
@@ -4728,9 +4792,9 @@ function renderRecipes() {
       if (r.rating != null && r.rating !== '') {
         html += '<span class="meta-item"><span class="rating-stars">' + ratingStars(r.rating) + '</span> <b>' + r.rating + '/10</b></span>';
       }
-      if (r.servings) html += '<span class="meta-item">👥 ' + r.servings + '</span>';
-      if (r.prepTime) html += '<span class="meta-item">🔪 ' + formatTime(r.prepTime) + '</span>';
-      if (r.cookTime) html += '<span class="meta-item">🔥 ' + formatTime(r.cookTime) + '</span>';
+      if (r.servings) html += '<span class="meta-item">' + ICONS.users + ' ' + r.servings + '</span>';
+      if (r.prepTime) html += '<span class="meta-item">' + ICONS.utensils + ' ' + formatTime(r.prepTime) + '</span>';
+      if (r.cookTime) html += '<span class="meta-item">' + ICONS.flame + ' ' + formatTime(r.cookTime) + '</span>';
       if (r.mealTypes && r.mealTypes.length > 0) {
         const tagsHtml = r.mealTypes.map(m => '<span class="meal-tag">' + escapeHtml(m) + '</span>').join('');
         html += '<span class="meta-item meal-tags">' + tagsHtml + '</span>';
@@ -5568,7 +5632,7 @@ document.getElementById('filter-sheet-overlay').addEventListener('click', e => {
   if (e.target === document.getElementById('filter-sheet-overlay')) closeFilterSheet();
 });
 
-document.getElementById('btn-reset-filters').onclick = () => {
+function resetAllFilters() {
   state.filters = { search: '', sort: 'name-asc', ratingValues: [], prepMax: null, cookMax: null, mealTypes: [], includeIngredients: [], excludeIngredients: [], includeFamilies: [], excludeFamilies: [], seasonOnly: false, selectedOnly: false };
   document.getElementById('search-input').value = '';
   setSortValue('name-asc');
@@ -5579,7 +5643,8 @@ document.getElementById('btn-reset-filters').onclick = () => {
   saveLocal();
   buildFilterBar();
   renderRecipes();
-};
+}
+document.getElementById('btn-reset-filters').onclick = resetAllFilters;
 
 // Count active filters and update badge
 function updateFilterBadge() {
@@ -5600,7 +5665,7 @@ function updateFilterBadge() {
     badge.style.display = count > 0 ? '' : 'none';
   }
   const btn = document.getElementById('btn-toggle-filter');
-  if (btn) btn.style.borderColor = count > 0 ? 'var(--primary)' : '';
+  if (btn) btn.classList.toggle('neon-on', count > 0);
 }
 
 // Render active-filter chips bar (tap to remove)
@@ -5613,6 +5678,7 @@ function updateActiveChips() {
     const chip = document.createElement('div');
     chip.className = 'active-filter-chip';
     chip.textContent = label;
+    chip.title = 'Retirer « ' + label + ' »';
     chip.addEventListener('click', () => { removeFn(); saveLocal(); buildFilterBar(); renderRecipes(); });
     bar.appendChild(chip);
   };
@@ -5625,6 +5691,15 @@ function updateActiveChips() {
   (f.excludeIngredients || []).forEach(id => { const n = getIngredientName(id); if (n) addChip('− ' + n, () => { state.filters.excludeIngredients = state.filters.excludeIngredients.filter(x => x !== id); }); });
   (f.includeFamilies || []).forEach(id => { const n = getFamilyName(id); if (n) addChip('+ fam. ' + n, () => { state.filters.includeFamilies = state.filters.includeFamilies.filter(x => x !== id); }); });
   (f.excludeFamilies || []).forEach(id => { const n = getFamilyName(id); if (n) addChip('− fam. ' + n, () => { state.filters.excludeFamilies = state.filters.excludeFamilies.filter(x => x !== id); }); });
+  // « Tout effacer » en fin de barre dès qu'au moins 2 filtres sont actifs
+  if (bar.children.length >= 2) {
+    const clear = document.createElement('button');
+    clear.type = 'button';
+    clear.className = 'active-filter-clear';
+    clear.textContent = 'Tout effacer';
+    clear.addEventListener('click', resetAllFilters);
+    bar.appendChild(clear);
+  }
   bar.style.display = bar.children.length ? '' : 'none';
 }
 
@@ -7631,9 +7706,45 @@ service cloud.firestore {
 }
 
 /* ========================================================================
+   ICÔNES LUCIDE (inline SVG, pas de CDN — single-file)
+   Source : lucide.dev. stroke=currentColor → l'icône hérite la couleur du
+   bouton (passe en primary quand l'onglet est actif).
+   ======================================================================== */
+const _ICO = (paths, sz = 18) => `<svg xmlns="http://www.w3.org/2000/svg" width="${sz}" height="${sz}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">${paths}</svg>`;
+const ICONS = {
+  chefHat:       _ICO('<path d="M6 13.87A4 4 0 0 1 7.41 6a5.11 5.11 0 0 1 1.05-1.54 5 5 0 0 1 7.08 0A5.11 5.11 0 0 1 16.59 6 4 4 0 0 1 18 13.87V21H6Z"/><line x1="6" x2="18" y1="17" y2="17"/>'),
+  shoppingCart:  _ICO('<circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/>'),
+  leaf:          _ICO('<path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/>'),
+  database:      _ICO('<ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5V19A9 3 0 0 0 21 19V5"/><path d="M3 12A9 3 0 0 0 21 12"/>'),
+  settings:      _ICO('<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>'),
+  bug:           _ICO('<path d="m8 2 1.88 1.88"/><path d="M14.12 3.88 16 2"/><path d="M9 7.13v-1a3.003 3.003 0 1 1 6 0v1"/><path d="M12 20c-3.3 0-6-2.7-6-6v-3a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v3c0 3.3-2.7 6-6 6"/><path d="M12 20v-9"/><path d="M6.53 9C4.6 8.8 3 7.1 3 5"/><path d="M6 13H2"/><path d="M3 21c0-2.1 1.7-3.9 3.8-4"/><path d="M20.97 5c0 2.1-1.6 3.8-3.5 4"/><path d="M22 13h-4"/><path d="M17.2 17c2.1.1 3.8 1.9 3.8 4"/>'),
+  uploadCloud:   _ICO('<path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><path d="M12 12v9"/><path d="m16 16-4-4-4 4"/>'),
+  downloadCloud: _ICO('<path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"/><path d="M12 12v9"/><path d="m8 17 4 4 4-4"/>'),
+  logOut:        _ICO('<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/>'),
+  chevronDown:   _ICO('<path d="m6 9 6 6 6-6"/>'),
+  // Méta des cartes recette
+  users:         _ICO('<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>'),
+  utensils:      _ICO('<path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/>'),
+  flame:         _ICO('<path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>'),
+  // Barre d'outils
+  filter:        _ICO('<polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>'),
+  check:         _ICO('<polyline points="20 6 9 17 4 12"/>'),
+  arrowUpDown:   _ICO('<path d="m21 16-4 4-4-4"/><path d="M17 20V4"/><path d="m3 8 4-4 4 4"/><path d="M7 4v16"/>'),
+  plus:          _ICO('<path d="M5 12h14"/><path d="M12 5v14"/>'),
+};
+// Remplit tout [data-icon="key"] par le SVG correspondant. Idempotent.
+function injectIcons(root = document) {
+  root.querySelectorAll('[data-icon]').forEach(el => {
+    const svg = ICONS[el.dataset.icon];
+    if (svg) el.innerHTML = svg;
+  });
+}
+
+/* ========================================================================
    INITIALISATION
    ======================================================================== */
 detectGuestMode();
+injectIcons();
 load();
 setSortValue(state.filters.sort || 'name-asc');
 buildFilterBar();
