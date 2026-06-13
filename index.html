@@ -2281,37 +2281,6 @@ body.coeditor-mode .sidebar::after {
       </details>
     </div>
 
-    <!-- Partage complet (couple/famille) -->
-    <div class="data-section" id="share-section" style="display:none;">
-      <h3>👥 Partage complet</h3>
-      <p style="font-size:13px; color:var(--text-muted);">Pour qu'une autre personne puisse aussi <b>modifier</b> les recettes (couple, famille…). Les deux comptes voient et éditent les mêmes données.</p>
-      <div style="background:var(--surface); padding:10px 12px; border-radius:8px; margin:10px 0;">
-        <div class="form-group" style="margin-bottom:12px;">
-          <label>Nom de l'espace partagé</label>
-          <input type="text" id="shared-space-name" placeholder="ex: famille-mhuur" style="font-family:monospace;" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" data-form-type="other">
-          <div style="font-size:12px; color:var(--text-muted); margin-top:4px;">💡 Les deux comptes doivent utiliser <b>exactement le même nom</b>.</div>
-        </div>
-        <label style="display:flex; align-items:center; gap:10px; margin:0; cursor:pointer;">
-          <input type="checkbox" id="toggle-shared-mode" style="width:auto;">
-          <span style="color:var(--text); font-weight:500;">Activer le mode partagé</span>
-        </label>
-      </div>
-      <div id="shared-mode-details" style="display:none;">
-        <div class="form-group">
-          <label>UIDs des comptes autorisés</label>
-          <ul id="shared-uids-list" style="list-style:none; padding:0; margin-bottom:8px;"></ul>
-          <div style="display:flex; gap:6px;">
-            <input type="text" id="new-uid-input" placeholder="UID du compte à ajouter…" style="font-family:monospace; font-size:12px;" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" data-form-type="other">
-            <button class="btn btn-sm" id="btn-add-uid">+ Ajouter</button>
-          </div>
-        </div>
-        <div class="data-buttons" style="margin-top:10px;">
-          <button class="btn btn-primary" id="btn-copy-shared-rules">📋 Copier les règles Firestore</button>
-          <button class="btn" id="btn-migrate-to-shared">⬆ Envoyer mes données vers l'espace partagé</button>
-        </div>
-      </div>
-    </div>
-
     <!-- Config avancée -->
     <div class="data-section">
       <details>
@@ -3090,7 +3059,6 @@ function renderFirebaseUI() {
     const em = document.getElementById('user-menu-email');
     if (nm) nm.textContent = fbUser.displayName || fbUser.email;
     if (em) em.textContent = fbUser.email || '';
-    renderSharedSection();
     // Afficher le panneau de gestion des accès invités (admin uniquement)
     const guestMgmt = document.getElementById('guest-mgmt-section');
     if (guestMgmt) guestMgmt.style.display = '';
@@ -3100,8 +3068,6 @@ function renderFirebaseUI() {
     if (pendingApprovalAction) processApprovalLink();
   } else {
     sidebarUser.classList.remove('active');
-    const ss = document.getElementById('share-section');
-    if (ss) ss.style.display = 'none';
     const guestMgmt = document.getElementById('guest-mgmt-section');
     if (guestMgmt) guestMgmt.style.display = 'none';
   }
@@ -3244,18 +3210,14 @@ document.getElementById('btn-export-backup')?.addEventListener('click', () => {
 /* ========================================================================
    MODE PARTAGÉ (plusieurs comptes Google, mêmes recettes)
    ======================================================================== */
+// Mode « espace partagé » déprécié (co-édition désormais via le flux Accès invités).
+// On garde ces helpers : getFirebaseDocRef les lit et, sans UI pour l'activer, ils
+// routent toujours vers le carnet personnel users/{uid}/app/data.
 const SHARED_MODE_KEY = 'mhuur_shared_mode_v1';
 const SHARED_SPACE_KEY = 'mhuur_shared_space_v1';
-const SHARED_UIDS_KEY = 'mhuur_shared_uids_v1';
 
 function getSharedMode() { return localStorage.getItem(SHARED_MODE_KEY) === '1'; }
-function setSharedModeValue(v) { localStorage.setItem(SHARED_MODE_KEY, v ? '1' : '0'); }
 function getSharedSpace() { return localStorage.getItem(SHARED_SPACE_KEY) || ''; }
-function setSharedSpace(v) { localStorage.setItem(SHARED_SPACE_KEY, v); }
-function getSharedUids() {
-  try { return JSON.parse(localStorage.getItem(SHARED_UIDS_KEY) || '[]'); } catch { return []; }
-}
-function setSharedUids(arr) { localStorage.setItem(SHARED_UIDS_KEY, JSON.stringify(arr)); }
 
 function getFirebaseDocRef(user) {
   if (getSharedMode() && getSharedSpace()) {
@@ -3264,132 +3226,6 @@ function getFirebaseDocRef(user) {
   return fbDb.collection('users').doc(user.uid).collection('app').doc('data');
 }
 
-function renderSharedSection() {
-  if (!fbUser) {
-    document.getElementById('share-section').style.display = 'none';
-    return;
-  }
-  document.getElementById('share-section').style.display = '';
-
-  const on = getSharedMode();
-  document.getElementById('toggle-shared-mode').checked = on;
-  document.getElementById('shared-mode-details').style.display = on ? '' : 'none';
-  document.getElementById('shared-space-name').value = getSharedSpace();
-
-  // UIDs list : s'assurer que le sien y est
-  const uids = getSharedUids();
-  if (fbUser && !uids.includes(fbUser.uid)) {
-    uids.unshift(fbUser.uid);
-    setSharedUids(uids);
-  }
-  const list = document.getElementById('shared-uids-list');
-  list.innerHTML = '';
-  uids.forEach(uid => {
-    const li = document.createElement('li');
-    li.style.cssText = 'display:flex; align-items:center; gap:6px; padding:6px 10px; background:var(--bg); border-radius:6px; margin-bottom:4px; font-size:12px;';
-    const isMine = fbUser && uid === fbUser.uid;
-    li.innerHTML = '<code style="flex:1; color:var(--accent); word-break:break-all;">' + escapeHtml(uid) + '</code>' +
-      (isMine ? '<span style="font-size:11px; color:var(--text-muted);">(toi)</span>' : '');
-    const rm = document.createElement('button');
-    rm.className = 'btn btn-xs btn-danger';
-    rm.textContent = '×';
-    rm.onclick = () => {
-      if (isMine) { toast('Tu ne peux pas retirer ton propre UID.', 'error'); return; }
-      setSharedUids(uids.filter(x => x !== uid));
-      renderSharedSection();
-    };
-    li.appendChild(rm);
-    list.appendChild(li);
-  });
-}
-
-document.getElementById('toggle-shared-mode').onchange = async (e) => {
-  const on = e.target.checked;
-  if (on) {
-    const space = document.getElementById('shared-space-name').value.trim() || getSharedSpace();
-    if (!space) {
-      toast('Entre d\'abord un nom d\'espace partagé.', 'error');
-      e.target.checked = false;
-      return;
-    }
-    if (!confirm('Activer le mode partagé ?\n\nL\'app va se reconnecter à l\'espace « ' + space + ' ». Assure-toi que :\n1. Les règles Firestore autorisent ton UID pour cet espace\n2. L\'espace porte le même nom pour tous les comptes\n\nContinuer ?')) {
-      e.target.checked = false;
-      return;
-    }
-    setSharedSpace(space);
-  }
-  setSharedModeValue(on);
-  renderSharedSection();
-  // Reconnecter au bon chemin
-  if (fbUser && fbDb) {
-    if (fbUnsubscribe) { fbUnsubscribe(); fbUnsubscribe = null; }
-    fbDocRef = getFirebaseDocRef(fbUser);
-    await onFirebaseSignIn();
-    toast(on ? 'Mode partagé activé' : 'Mode personnel activé', 'success');
-  }
-};
-
-document.getElementById('shared-space-name').addEventListener('blur', (e) => {
-  setSharedSpace(e.target.value.trim());
-});
-
-document.getElementById('btn-add-uid').onclick = () => {
-  const input = document.getElementById('new-uid-input');
-  const uid = input.value.trim();
-  if (!uid) return;
-  if (uid.length < 10) { toast('UID invalide (trop court)', 'error'); return; }
-  const uids = getSharedUids();
-  if (uids.includes(uid)) { toast('Cet UID est déjà dans la liste.', 'error'); return; }
-  uids.push(uid);
-  setSharedUids(uids);
-  input.value = '';
-  renderSharedSection();
-  toast('UID ajouté. N\'oublie pas de mettre à jour les règles Firestore !', 'success');
-};
-
-document.getElementById('btn-copy-shared-rules').onclick = async () => {
-  const uids = getSharedUids();
-  const space = getSharedSpace();
-  if (uids.length === 0) { toast('Aucun UID dans la liste.', 'error'); return; }
-  const uidList = uids.map(u => "        '" + u + "'").join(',\n');
-  const rules = `rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    // Espace personnel : chacun voit ses données
-    match /users/{userId}/{document=**} {
-      allow read, write: if request.auth != null
-                         && request.auth.uid == userId;
-    }
-    // Espace partagé : UIDs autorisés
-    match /sharedData/{spaceId} {
-      allow read, write: if request.auth != null
-                         && request.auth.uid in [
-${uidList}
-                         ];
-    }
-  }
-}`;
-  try {
-    await navigator.clipboard.writeText(rules);
-    toast('Règles copiées ! Colle-les dans Firestore → Rules puis Publier.', 'success');
-  } catch {
-    // Fallback : montrer dans une alerte
-    prompt('Copie ces règles manuellement (Ctrl+C) :', rules);
-  }
-};
-
-document.getElementById('btn-migrate-to-shared').onclick = async () => {
-  if (!fbUser || !fbDb) { toast('Connecte-toi d\'abord.', 'error'); return; }
-  if (!getSharedMode()) { toast('Active d\'abord le mode partagé.', 'error'); return; }
-  if (!getSharedSpace()) { toast('Renseigne un nom d\'espace partagé.', 'error'); return; }
-  if (!confirm('Envoyer toutes tes données locales actuelles vers l\'espace partagé « ' + getSharedSpace() + ' » ?\n\nSi l\'espace contient déjà des données, elles seront écrasées.')) return;
-  try {
-    await pushToCloud();
-    toast('Données envoyées vers l\'espace partagé !', 'success');
-  } catch (e) {
-    toast('Échec : ' + e.message, 'error');
-  }
-};
 
 document.getElementById('btn-copy-uid').onclick = async () => {
   if (!fbUser) return;
