@@ -5397,8 +5397,13 @@ function openRenameModal(title, currentValue, onSave) {
   });
 }
 document.querySelectorAll('[data-close-modal]').forEach(b => b.onclick = closeAllModals);
+// Clic sur le fond : ferme seulement les modales "action" (confirmation, fusion).
+// Les modales de SAISIE ne se ferment PAS au clic extérieur (anti-perte de données non sauvegardées).
+const NO_BACKDROP_CLOSE = new Set(['recipe-modal', 'ing-create-modal', 'firebase-modal', 'rename-modal']);
 document.querySelectorAll('.modal-overlay').forEach(m => {
-  m.addEventListener('click', e => { if (e.target === m) closeAllModals(); });
+  m.addEventListener('click', e => {
+    if (e.target === m && !NO_BACKDROP_CLOSE.has(m.id)) closeAllModals();
+  });
 });
 document.getElementById('btn-new-recipe').onclick = () => openRecipeModal();
 const btnNewInline = document.getElementById('btn-new-recipe-inline');
