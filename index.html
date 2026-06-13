@@ -12,7 +12,7 @@
 <meta name="application-name" content="Recettes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Recettes">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/svg+xml" href="icons/icon.svg">
@@ -54,7 +54,12 @@
   --radius: 10px;
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
-html, body { height: 100%; }
+html, body {
+  height: 100%;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  overscroll-behavior: none; /* pas de pull-to-refresh / rebond façon page web */
+}
 body {
   font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   background: linear-gradient(180deg, var(--bg) 0%, #06101d 100%);
@@ -64,6 +69,11 @@ body {
   font-size: 14px;
   line-height: 1.5;
   font-variant-numeric: tabular-nums;
+  -webkit-tap-highlight-color: transparent; /* pas de flash gris au tap */
+}
+/* Supprime le double-tap-zoom + le délai de 300 ms sur les éléments interactifs (garde le pinch-zoom) */
+button, a, label, summary, input, select, textarea, [role="button"], .tab-btn, .recipe-card {
+  touch-action: manipulation;
 }
 
 /* ===================================================================
@@ -1692,7 +1702,7 @@ select.bug-tab-select option{background:var(--bg-2);color:var(--text);font-weigh
     top: auto;
     width: 100%;
     height: auto;
-    padding: 0;
+    padding: 0 0 env(safe-area-inset-bottom); /* dégage l'indicateur d'accueil iOS */
     border-right: none;
     border-top: 1px solid var(--border);
     border-bottom: none;
@@ -1783,7 +1793,7 @@ select.bug-tab-select option{background:var(--bg-2);color:var(--text);font-weigh
 
   /* ---- En-tête mobile en haut ---- */
   main {
-    padding: 0 0 72px; /* espace pour la nav du bas */
+    padding: 0 0 calc(72px + env(safe-area-inset-bottom)); /* espace pour la nav du bas + safe-area */
     flex: 1;
   }
 
@@ -1797,7 +1807,7 @@ select.bug-tab-select option{background:var(--bg-2);color:var(--text);font-weigh
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     border-bottom: 1px solid var(--border);
-    padding: 14px 16px;
+    padding: calc(14px + env(safe-area-inset-top)) 16px 14px; /* dégage l'encoche iOS */
     font-size: 17px;
     font-weight: 700;
     color: var(--text);
