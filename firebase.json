@@ -7,6 +7,8 @@
     "ignore": [
       "firebase.json",
       ".firebaserc",
+      "firestore.rules",
+      "firestore.indexes.json",
       "**/.*",
       "**/.git/**",
       "**/.firebase/**",
