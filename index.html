@@ -1712,10 +1712,8 @@ select.bug-tab-select option{background:var(--bg-2);color:var(--text);font-weigh
     gap: 0;
     flex-wrap: nowrap;
     z-index: 200;
-    /* Flou façon iOS */
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    background: rgba(15, 34, 64, 0.92);
+    /* Fond solide volontaire : un filtre ici "piégerait" l'avatar fixe (containing block) */
+    background: rgba(13, 30, 58, 0.97);
   }
 
   .sidebar h1 { display: none; }
@@ -1799,7 +1797,7 @@ select.bug-tab-select option{background:var(--bg-2);color:var(--text);font-weigh
 
   /* Barre de titre en haut sur mobile */
   .app-layout::before {
-    content: '🍳 Mes Recettes';
+    content: attr(data-appbar);   /* titre dynamique = onglet courant (maj par switchTab) */
     display: block;
     position: sticky;
     top: 0;
@@ -1807,13 +1805,47 @@ select.bug-tab-select option{background:var(--bg-2);color:var(--text);font-weigh
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     border-bottom: 1px solid var(--border);
-    padding: calc(14px + env(safe-area-inset-top)) 16px 14px; /* dégage l'encoche iOS */
-    font-size: 17px;
-    font-weight: 700;
+    padding: calc(14px + env(safe-area-inset-top)) 64px 14px 16px; /* 64px à droite = place pour l'avatar */
+    font-family: 'Tilt Neon', sans-serif;
+    font-size: 19px;
+    font-weight: 400;
     color: var(--text);
     z-index: 100;
-    letter-spacing: -0.01em;
+    letter-spacing: .01em;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
+
+  /* ===== Compte : avatar en haut à droite + menu déroulant (mobile) ===== */
+  .sidebar-user.active {
+    position: fixed;
+    top: calc(env(safe-area-inset-top) + 6px);
+    right: 10px;
+    width: auto; margin: 0; padding-top: 0; border-top: none;
+    z-index: 250; /* au-dessus des barres (100/200), sous les modales (300) */
+  }
+  .user-avatar-wrapper { width: auto; }
+  .sidebar-user-trigger { width: auto; padding: 2px; border-left: none; gap: 0; }
+  .sidebar-user-trigger-label, .sidebar-user-chevron { display: none; }
+  .sidebar-user-avatar { width: 34px; height: 34px; font-size: 15px; }
+  .sidebar-sync { display: none; }
+  .user-menu {
+    position: fixed;                                   /* ancré au bord droit de l'écran (anti-débordement) */
+    top: calc(env(safe-area-inset-top) + 48px);
+    right: 10px; left: auto;
+    width: min(264px, calc(100vw - 20px));
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+
+  /* Suppression des titres redondants en mobile */
+  .sidebar > nav::before { display: none; }   /* « MES RECETTES » néon (titre sidebar desktop) */
+  .tab::before { display: none; }             /* gros titre néon répété par onglet */
+
+  /* Barre du bas : Recettes + Courses uniquement quand connecté (le reste → menu avatar) */
+  body.signed-in .sidebar nav .tab-btn-secondary { display: none; }
 
   /* ---- Contenu ---- */
   .tab { padding: 16px; }
@@ -2027,7 +2059,7 @@ body.guest-mode .sidebar::after {
 </head>
 <body>
 
-<div class="app-layout">
+<div class="app-layout" data-appbar="🍳 Recettes">
 <aside class="sidebar">
   <nav role="tablist" aria-label="Navigation principale">
     <button class="tab-btn active" data-tab="recipes" role="tab" aria-selected="true"><span class="tab-icon" data-icon="chefHat" aria-hidden="true"></span><span class="tab-label">Recettes</span> <span class="count-badge" id="recipe-count">0</span></button>
@@ -3013,6 +3045,7 @@ function renderFirebaseUI() {
   if (!hasConfig) return;
 
   const signedIn = !!fbUser;
+  document.body.classList.toggle('signed-in', signedIn); // pilote la barre du bas mobile (2 onglets si connecté)
   document.getElementById('firebase-signed-in').style.display = signedIn ? '' : 'none';
   document.getElementById('firebase-signed-out').style.display = signedIn ? 'none' : '';
 
@@ -3959,6 +3992,12 @@ function switchTab(tabId) {
   if (tabId === 'data') renderDataTab();
   if (tabId === 'debug') renderDebug();
   if (typeof updateFilterRail === 'function') updateFilterRail(); // rail visible seulement sur Recettes
+  // App bar mobile : titre = onglet courant
+  const _al = document.querySelector('.app-layout');
+  if (_al) {
+    const _t = { recipes: '🍳 Recettes', shopping: '🍳 Courses', data: '🍳 Données', settings: '🍳 Réglages', debug: '🍳 Debug' };
+    _al.dataset.appbar = _t[tabId] || '🍳 Mes Recettes';
+  }
 }
 
 document.querySelectorAll('.tab-btn').forEach(btn => {

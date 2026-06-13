@@ -6,7 +6,7 @@
    Mise à jour : pas de skipWaiting auto ; la page affiche un bandeau et envoie {type:'SKIP_WAITING'}.
    ⚠️ Bumper CACHE_VERSION à chaque déploiement de contenu pour éviter un cache figé. */
 
-const CACHE_VERSION = 'v2';
+const CACHE_VERSION = 'v3';
 const PRECACHE = 'precache-' + CACHE_VERSION;
 const RUNTIME = 'runtime-' + CACHE_VERSION;
 
