@@ -8,13 +8,14 @@ Guide pour Claude Code sur ce projet.
 - État : **en prod**, utilisée au quotidien sur mobile et desktop.
 
 ## Stack & versions
-- **Single-file** : tout (HTML + CSS + JS) dans un seul `.html`. Pas de build, bundler, ni npm.
+- **App = `index.html`** (HTML + CSS + JS dans un seul fichier, pas de build/bundler/npm) **+ fichiers PWA** : `manifest.webmanifest`, `sw.js`, `icons/`. Le code de l'app reste tout dans `index.html`.
 - Vanilla JS ; CSS dark « néon » (variables `--bg`, `--primary`…) ; polices Google Inter + Tilt Neon.
 - CDN dans `<head>` : Firebase compat **10.12.5** (app/auth/firestore), SheetJS **xlsx 0.18.5** (import Excel).
 - Données : `localStorage` + sync temps réel Firestore.
 
 ## Fichiers du dossier
 - `index.html` — **l'app Recettes** (titre « 🍳 Mes Recettes », ~7 600 lignes), suivi par git.
+- `manifest.webmanifest`, `sw.js`, `icons/` — **PWA** (installable + offline). `sw.js` : stale-while-revalidate shell/CDN, **bypass total Firestore/Auth** ; bumper `CACHE_VERSION` à chaque déploiement. Icônes = `chef-hat` Lucide néon ; source vectorielle = `icons/icon.svg`, PNG régénérables par capture Chrome headless (`--screenshot --window-size=NxN` vers `C:/Temp`).
 - `index - <timestamp>.html` (titre « Devis Photo ») — **autre outil**, gardé en local comme **référence de design** (sidebar, menu « Signaler un bug ») ; **gitignored** (hors repo). Ne pas le confondre avec l'app.
 
 ## Commandes

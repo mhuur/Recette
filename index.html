@@ -2,9 +2,22 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="format-detection" content="telephone=no, date=no, email=no, address=no">
 <title>🍳 Mes Recettes</title>
+<!-- PWA / app installable -->
+<meta name="description" content="Recettes, liste de courses et ingrédients de saison.">
+<meta name="theme-color" content="#0a1628">
+<meta name="color-scheme" content="dark">
+<meta name="application-name" content="Recettes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="Recettes">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/svg+xml" href="icons/icon.svg">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Tilt+Neon&display=swap" rel="stylesheet">
@@ -1293,7 +1306,7 @@ label {
   position: fixed;
   inset: 0;
   background: rgba(0,0,0,0.5);
-  z-index: 350;
+  z-index: 280; /* sous les modales (.modal-overlay = 300) pour ne pas masquer l'édition */
   display: none;
   align-items: flex-end;
   justify-content: center;
@@ -2731,6 +2744,10 @@ function initFirebase() {
       fbApp = firebase.initializeApp(config);
       fbAuth = firebase.auth();
       fbDb = firebase.firestore();
+      // Persistance offline Firestore (lecture des recettes/courses sans réseau)
+      fbDb.enablePersistence({ synchronizeTabs: true }).catch(() => {
+        // failed-precondition (plusieurs onglets) ou unimplemented (navigateur) : on reste en ligne
+      });
       // Persistence locale pour garder la session entre visites
       fbAuth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
 
@@ -7943,6 +7960,43 @@ updateFilterRail(); // rail de filtres docké au démarrage (desktop)
 updateDebugBadges();
 renderFirebaseUI(); // affiche le bouton mobile dès le démarrage
 initFirebase();
+</script>
+<!-- PWA : enregistrement du service worker + bandeau de mise à jour -->
+<script>
+(function () {
+  if (!('serviceWorker' in navigator) || location.protocol === 'file:') return;
+
+  function showUpdateBanner(worker) {
+    if (document.getElementById('sw-update-banner')) return;
+    var bar = document.createElement('div');
+    bar.id = 'sw-update-banner';
+    bar.setAttribute('role', 'status');
+    bar.style.cssText = 'position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:99999;display:flex;gap:12px;align-items:center;background:#122a4d;color:#eaf2ff;border:1px solid #2a4a7d;border-radius:12px;padding:10px 14px;box-shadow:0 8px 30px rgba(0,0,0,.45);font:600 14px Inter,system-ui,sans-serif;max-width:calc(100vw - 32px)';
+    var txt = document.createElement('span'); txt.textContent = 'Nouvelle version disponible';
+    var btn = document.createElement('button'); btn.textContent = 'Recharger';
+    btn.style.cssText = 'border:0;cursor:pointer;background:#4a9eff;color:#06122a;font:700 14px Inter,system-ui,sans-serif;border-radius:9px;padding:7px 12px';
+    btn.onclick = function () { btn.disabled = true; txt.textContent = 'Mise à jour…'; worker.postMessage({ type: 'SKIP_WAITING' }); };
+    bar.appendChild(txt); bar.appendChild(btn); document.body.appendChild(bar);
+  }
+
+  window.addEventListener('load', function () {
+    navigator.serviceWorker.register('./sw.js').then(function (reg) {
+      function watch(worker) {
+        if (!worker) return;
+        worker.addEventListener('statechange', function () {
+          if (worker.state === 'installed' && navigator.serviceWorker.controller) showUpdateBanner(worker);
+        });
+      }
+      if (reg.waiting && navigator.serviceWorker.controller) showUpdateBanner(reg.waiting);
+      reg.addEventListener('updatefound', function () { watch(reg.installing); });
+    }).catch(function () {});
+
+    var reloaded = false;
+    navigator.serviceWorker.addEventListener('controllerchange', function () {
+      if (reloaded) return; reloaded = true; location.reload();
+    });
+  });
+})();
 </script>
 </body>
 </html>

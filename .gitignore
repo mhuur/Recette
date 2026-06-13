@@ -4,3 +4,6 @@ index - *.html
 # Téléchargements / sauvegardes éventuels
 *.bak
 __*
+
+# Firebase Hosting — cache de déploiement local
+.firebase/
