@@ -2055,6 +2055,19 @@ body.guest-mode .sidebar::after {
   border-radius: 4px;
   flex-shrink: 0;
 }
+/* Mode co-éditeur (invité approuvé « peut modifier ») : édition autorisée,
+   on masque seulement Réglages + Debug (administration réservée au propriétaire). */
+body.coeditor-mode .tab-btn[data-tab="settings"],
+body.coeditor-mode .tab-btn[data-tab="debug"] { display: none !important; }
+body.coeditor-mode .sidebar::after {
+  content: '✏ Co-édition';
+  font-size: 11px;
+  color: var(--accent);
+  padding: 3px 8px;
+  background: var(--surface);
+  border-radius: 4px;
+  flex-shrink: 0;
+}
 </style>
 </head>
 <body>
@@ -2221,6 +2234,7 @@ body.guest-mode .sidebar::after {
           <div class="data-buttons" style="margin-top:10px;">
             <button class="btn btn-sm" id="btn-push-cloud">⬆ Forcer l'envoi</button>
             <button class="btn btn-sm" id="btn-pull-cloud">⬇ Forcer le téléchargement</button>
+            <button class="btn btn-sm" id="btn-export-backup">💾 Sauvegarde (.json)</button>
           </div>
           <details style="margin-top:12px;">
             <summary style="cursor:pointer; font-size:12px; color:var(--text-muted); padding:4px 0;">Identifiant (UID)</summary>
@@ -2239,7 +2253,7 @@ body.guest-mode .sidebar::after {
     <!-- Accès invités -->
     <div class="data-section" id="guest-mgmt-section" style="display:none;">
       <h3>🔗 Accès invités <span id="access-requests-badge"></span></h3>
-      <p style="font-size:13px; color:var(--text-muted);">Partagez vos recettes en lecture seule. La personne reçoit un lien, se connecte avec Google, et vous pouvez approuver ou refuser son accès.</p>
+      <p style="font-size:13px; color:var(--text-muted);">Partagez vos recettes : la personne reçoit un lien, se connecte avec Google, puis vous l'approuvez en <b>lecture</b> ou en <b>modification</b> (co-édition à deux comptes).</p>
 
       <div style="margin-bottom:16px;">
         <button class="btn btn-primary" id="btn-gen-share-link">🔗 Générer le lien de partage</button>
@@ -3214,6 +3228,18 @@ document.getElementById('btn-pull-cloud').onclick = () => {
   if (!confirm('Cela va remplacer tes données locales par celles du cloud. Continuer ?')) return;
   pullFromCloud();
 };
+
+document.getElementById('btn-export-backup')?.addEventListener('click', () => {
+  try {
+    const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'recettes-sauvegarde-' + new Date().toISOString().slice(0, 10) + '.json';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    toast('Sauvegarde téléchargée', 'success');
+  } catch (e) { toast('Erreur sauvegarde : ' + e.message, 'error'); }
+});
 
 /* ========================================================================
    MODE PARTAGÉ (plusieurs comptes Google, mêmes recettes)
@@ -7712,7 +7738,7 @@ async function handleGuestAccess(user) {
         await createAccessRequest(user, reqRef);
       } else if (d.status === 'approved') {
         showGuestState('approved');
-        await loadGuestData();
+        await loadGuestData(d.guestRole === 'editor');
       } else if (d.status === 'denied') {
         showGuestState('denied');
       } else {
@@ -7745,27 +7771,42 @@ function listenForAccessStatusChange(reqRef) {
   const unsub = reqRef.onSnapshot(snap => {
     if (!snap.exists) return;
     const s = snap.data().status;
-    if (s === 'approved') { unsub(); showGuestState('approved'); loadGuestData(); }
+    if (s === 'approved') { unsub(); showGuestState('approved'); loadGuestData(snap.data().guestRole === 'editor'); }
     else if (s === 'denied') { unsub(); showGuestState('denied'); }
   });
 }
 
-async function loadGuestData() {
+async function loadGuestData(asEditor) {
   try {
     const docRef = (guestAdminDataPath === 'shared' && guestAdminSpace)
       ? fbDb.collection('sharedData').doc(guestAdminSpace)
       : fbDb.collection('users').doc(guestAdminUid).collection('app').doc('data');
 
+    // TOUJOURS charger d'abord les données du propriétaire : un éditeur qui arrive
+    // ne doit jamais écraser le carnet avec son état local.
     const snap = await docRef.get();
     if (snap.exists) applyCloudData(snap.data());
 
     document.getElementById('guest-overlay').classList.remove('active');
-    document.body.classList.add('guest-mode');
 
-    // Synchronisation temps réel (lecture seule)
-    docRef.onSnapshot(snap => {
-      if (snap.exists && !snap.metadata.hasPendingWrites) applyCloudData(snap.data());
-    });
+    if (asEditor) {
+      // Co-édition : on écrit dans le carnet du propriétaire, sync deux-sens (même logique que onFirebaseSignIn)
+      fbDocRef = docRef;
+      document.body.classList.add('coeditor-mode');
+      setSyncStatus('☁ Co-édition', 'success');
+      fbUnsubscribe = docRef.onSnapshot(snap => {
+        if (fbSkipNextSnapshot) { fbSkipNextSnapshot = false; return; }
+        if (snap.metadata.hasPendingWrites) return;
+        if (fbSaveTimer) return; // modifs locales non encore envoyées
+        if (snap.exists) { applyCloudData(snap.data()); setSyncStatus('☁ Synchronisé', 'success'); }
+      }, err => { console.error('Snapshot error:', err); setSyncStatus('⚠ Erreur de synchro', 'error'); });
+    } else {
+      // Lecture seule (inchangé)
+      document.body.classList.add('guest-mode');
+      docRef.onSnapshot(snap => {
+        if (snap.exists && !snap.metadata.hasPendingWrites) applyCloudData(snap.data());
+      });
+    }
   } catch (e) {
     showGuestState('error', 'Impossible de charger les recettes : ' + e.message);
   }
@@ -7781,10 +7822,9 @@ async function processApprovalLink() {
     return;
   }
   try {
-    await fbDb.collection('accessRequests').doc(uid).update({
-      status:    action === 'approve' ? 'approved' : 'denied',
-      decidedAt: firebase.firestore.FieldValue.serverTimestamp()
-    });
+    const upd = { status: action === 'approve' ? 'approved' : 'denied', decidedAt: firebase.firestore.FieldValue.serverTimestamp() };
+    if (action === 'approve') upd.guestRole = 'viewer'; // approbation par lien = lecture seule (modif via les boutons)
+    await fbDb.collection('accessRequests').doc(uid).update(upd);
     toast(action === 'approve' ? 'Accès accordé !' : 'Accès refusé.', action === 'approve' ? 'success' : 'info');
     pendingApprovalAction = null;
   } catch (e) {
@@ -7845,23 +7885,36 @@ function renderAccessRequestsList(requests) {
         ? '<img src="' + escapeHtml(req.guestPhotoURL) + '" style="width:32px;height:32px;border-radius:50%;object-fit:cover;flex-shrink:0;" onerror="this.style.display=\'none\'">'
         : '<div style="width:32px;height:32px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;color:white;font-weight:600;flex-shrink:0;">' + escapeHtml((req.guestName||'?').charAt(0).toUpperCase()) + '</div>';
       const labels = { pending:'⏳ En attente', approved:'✅ Approuvé', denied:'🚫 Refusé' };
-      const actions = req.status === 'pending'
-        ? '<button class="btn btn-xs" style="background:#d1e7dd;color:#0f5132;" onclick="approveGuest(\''+req.uid+'\')">✓ Approuver</button><button class="btn btn-xs btn-danger" onclick="denyGuest(\''+req.uid+'\')">✗ Refuser</button>'
-        : req.status === 'approved'
-        ? '<button class="btn btn-xs btn-danger" onclick="denyGuest(\''+req.uid+'\')">Révoquer</button>'
-        : '<button class="btn btn-xs" style="background:#d1e7dd;color:#0f5132;" onclick="approveGuest(\''+req.uid+'\')">Ré-approuver</button>';
+      const isEditor = req.guestRole === 'editor';
+      const badge = req.status === 'approved'
+        ? '<span class="req-badge approved">' + (isEditor ? '✏ Modifie' : '👁 Lecture') + '</span>'
+        : '<span class="req-badge ' + req.status + '">' + (labels[req.status]||req.status) + '</span>';
+      let actions;
+      if (req.status === 'pending') {
+        actions = '<button class="btn btn-xs" style="background:#d1e7dd;color:#0f5132;" onclick="approveGuest(\''+req.uid+'\',\'viewer\')">👁 Lecture</button>'
+                + '<button class="btn btn-xs" style="background:#cfe0ff;color:#0b3d91;" onclick="approveGuest(\''+req.uid+'\',\'editor\')">✏ Modifier</button>'
+                + '<button class="btn btn-xs btn-danger" onclick="denyGuest(\''+req.uid+'\')">✗</button>';
+      } else if (req.status === 'approved') {
+        actions = (isEditor
+                    ? '<button class="btn btn-xs" onclick="approveGuest(\''+req.uid+'\',\'viewer\')">👁 Lecture seule</button>'
+                    : '<button class="btn btn-xs" onclick="approveGuest(\''+req.uid+'\',\'editor\')">✏ Autoriser modif</button>')
+                + '<button class="btn btn-xs btn-danger" onclick="denyGuest(\''+req.uid+'\')">Révoquer</button>';
+      } else {
+        actions = '<button class="btn btn-xs" style="background:#d1e7dd;color:#0f5132;" onclick="approveGuest(\''+req.uid+'\',\'viewer\')">Ré-approuver</button>';
+      }
       el.innerHTML = photo +
         '<div class="req-info"><div class="req-name">' + escapeHtml(req.guestName||req.guestEmail||req.uid) + '</div><div class="req-email">' + escapeHtml(req.guestEmail||'') + '</div></div>' +
-        '<span class="req-badge ' + req.status + '">' + (labels[req.status]||req.status) + '</span>' +
+        badge +
         '<div style="display:flex;gap:4px;flex-shrink:0;">' + actions + '</div>';
       container.appendChild(el);
     });
 }
 
-async function approveGuest(uid) {
+async function approveGuest(uid, role) {
+  role = role === 'editor' ? 'editor' : 'viewer'; // toujours explicite (empêche l'invité de s'auto-promouvoir)
   try {
-    await fbDb.collection('accessRequests').doc(uid).update({ status:'approved', decidedAt: firebase.firestore.FieldValue.serverTimestamp() });
-    toast('Accès accordé.', 'success');
+    await fbDb.collection('accessRequests').doc(uid).update({ status:'approved', guestRole: role, decidedAt: firebase.firestore.FieldValue.serverTimestamp() });
+    toast(role === 'editor' ? 'Accès en modification accordé.' : 'Accès en lecture accordé.', 'success');
   } catch(e) { toast('Erreur : '+e.message, 'error'); }
 }
 
@@ -7909,9 +7962,10 @@ service cloud.firestore {
 
     // Données personnelles de chaque utilisateur
     match /users/{userId}/app/data {
-      allow read, write: if request.auth.uid == userId;
-      // Accès en lecture pour les invités approuvés
-      allow read: if isApprovedGuest(request.auth.uid, userId);
+      // Lecture : propriétaire OU invité approuvé (lecture ou modif)
+      allow read:  if request.auth.uid == userId || isApprovedGuest(request.auth.uid, userId);
+      // Écriture : propriétaire OU invité approuvé « peut modifier »
+      allow write: if request.auth.uid == userId || isApprovedEditor(request.auth.uid, userId);
     }
 
     // Espace partagé (mode multi-comptes)
@@ -7932,6 +7986,10 @@ service cloud.firestore {
           && exists(/databases/$(database)/documents/accessRequests/$(uid))
           && get(/databases/$(database)/documents/accessRequests/$(uid)).data.status   == 'approved'
           && get(/databases/$(database)/documents/accessRequests/$(uid)).data.adminUid == adminUid;
+    }
+    function isApprovedEditor(uid, adminUid) {
+      return isApprovedGuest(uid, adminUid)
+          && get(/databases/$(database)/documents/accessRequests/$(uid)).data.guestRole == 'editor';
     }
   }
 }`;
