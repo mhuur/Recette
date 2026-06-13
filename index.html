@@ -3541,31 +3541,67 @@ function createAutocomplete(wrapper, options) {
   input.setAttribute('data-form-type', 'other');
   wrapper.appendChild(input);
 
-  const dropdown = document.createElement('div');
-  dropdown.className = 'autocomplete-dropdown';
-  wrapper.appendChild(dropdown);
-
+  // Menu d'autocomplétion : appendé à <body> en position:fixed pour passer PAR-DESSUS
+  // les modales (overflow + backdrop-filter découperaient un dropdown interne).
+  let dropdown = null;
   let highlighted = -1;
+
+  function ensureDropdown() {
+    if (dropdown) return;
+    dropdown = document.createElement('div');
+    dropdown.className = 'autocomplete-dropdown';
+    dropdown.style.position = 'fixed';
+    dropdown.style.zIndex = '1000';
+    dropdown.style.overflowY = 'auto';
+    document.body.appendChild(dropdown);
+  }
+
+  function hideDropdown() {
+    if (dropdown) { dropdown.remove(); dropdown = null; }
+    highlighted = -1;
+  }
+
+  function positionDropdown() {
+    if (!dropdown) return;
+    const rect = input.getBoundingClientRect();
+    const vw = window.innerWidth, vh = window.innerHeight, margin = 8;
+    const width = Math.max(rect.width, 180);
+    let left = rect.left;
+    if (left + width > vw - margin) left = vw - margin - width;
+    if (left < margin) left = margin;
+    dropdown.style.width = width + 'px';
+    dropdown.style.left = left + 'px';
+    // Sous le champ par défaut ; bascule au-dessus si pas la place (anti hors-champ)
+    const spaceBelow = vh - rect.bottom - margin, spaceAbove = rect.top - margin;
+    if (spaceBelow >= 160 || spaceBelow >= spaceAbove) {
+      dropdown.style.maxHeight = Math.max(120, Math.min(260, spaceBelow)) + 'px';
+      dropdown.style.top = (rect.bottom + 2) + 'px';
+    } else {
+      dropdown.style.maxHeight = Math.max(120, Math.min(260, spaceAbove)) + 'px';
+      dropdown.style.top = Math.max(margin, rect.top - 2 - dropdown.offsetHeight) + 'px';
+    }
+  }
 
   function renderDropdown() {
     const q = normalizeText(input.value);
     const all = getItems();
     const filtered = q ? all.filter(it => normalizeText(it.name).includes(q)) : all;
-    dropdown.innerHTML = '';
     highlighted = -1;
 
-    if (filtered.length === 0 && q) {
+    // Rien à proposer et rien à « créer » → on ferme
+    if (filtered.length === 0 && !q) { hideDropdown(); return; }
+
+    ensureDropdown();
+    dropdown.innerHTML = '';
+
+    if (filtered.length === 0) {
       if (onCreate) {
         const create = document.createElement('div');
         create.className = 'autocomplete-create';
         create.textContent = '+ Créer « ' + input.value + ' »';
         create.onclick = () => {
           const newItem = onCreate(input.value.trim());
-          if (newItem) {
-            input.value = newItem.name;
-            onSelect(newItem);
-            dropdown.classList.remove('active');
-          }
+          if (newItem) { input.value = newItem.name; onSelect(newItem); hideDropdown(); }
         };
         dropdown.appendChild(create);
       } else {
@@ -3574,19 +3610,12 @@ function createAutocomplete(wrapper, options) {
         empty.textContent = 'Aucun résultat';
         dropdown.appendChild(empty);
       }
-    } else if (filtered.length === 0) {
-      dropdown.classList.remove('active');
-      return;
     } else {
-      filtered.slice(0, 50).forEach((it, idx) => {
+      filtered.slice(0, 50).forEach((it) => {
         const div = document.createElement('div');
         div.className = 'autocomplete-item';
         div.textContent = it.name + (it.typeHint ? ' — ' + it.typeHint : '');
-        div.onclick = () => {
-          input.value = it.name;
-          onSelect(it);
-          dropdown.classList.remove('active');
-        };
+        div.onclick = () => { input.value = it.name; onSelect(it); hideDropdown(); };
         dropdown.appendChild(div);
       });
       if (q && onCreate && !filtered.some(it => normalizeText(it.name) === q)) {
@@ -3595,24 +3624,20 @@ function createAutocomplete(wrapper, options) {
         create.textContent = '+ Créer « ' + input.value + ' »';
         create.onclick = () => {
           const newItem = onCreate(input.value.trim());
-          if (newItem) {
-            input.value = newItem.name;
-            onSelect(newItem);
-            dropdown.classList.remove('active');
-          }
+          if (newItem) { input.value = newItem.name; onSelect(newItem); hideDropdown(); }
         };
         dropdown.appendChild(create);
       }
     }
     dropdown.classList.add('active');
+    positionDropdown();
   }
 
   input.addEventListener('focus', renderDropdown);
   input.addEventListener('input', renderDropdown);
-  input.addEventListener('blur', () => {
-    setTimeout(() => dropdown.classList.remove('active'), 180);
-  });
+  input.addEventListener('blur', () => { setTimeout(hideDropdown, 180); });
   input.addEventListener('keydown', e => {
+    if (!dropdown) return;
     const items = dropdown.querySelectorAll('.autocomplete-item, .autocomplete-create');
     if (e.key === 'ArrowDown') {
       e.preventDefault();
@@ -3630,9 +3655,13 @@ function createAutocomplete(wrapper, options) {
         items[0].click();
       }
     } else if (e.key === 'Escape') {
-      dropdown.classList.remove('active');
+      hideDropdown();
     }
   });
+
+  // Repositionner si la page/modale défile ou si la fenêtre change (le menu est sur <body>)
+  window.addEventListener('scroll', (e) => { if (dropdown && e.target !== dropdown) positionDropdown(); }, true);
+  window.addEventListener('resize', () => { if (dropdown) positionDropdown(); });
 
   return {
     getValue: () => input.value.trim(),
