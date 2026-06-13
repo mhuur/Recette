@@ -1,0 +1,37 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Données personnelles de chaque utilisateur
+    match /users/{userId}/app/data {
+      // Lecture : propriétaire OU invité approuvé (lecture ou modif)
+      allow read:  if request.auth.uid == userId || isApprovedGuest(request.auth.uid, userId);
+      // Écriture : propriétaire OU invité approuvé « peut modifier »
+      allow write: if request.auth.uid == userId || isApprovedEditor(request.auth.uid, userId);
+    }
+
+    // Espace partagé (ancien mode multi-comptes — conservé pour compat)
+    match /sharedData/{space} {
+      allow read, write: if request.auth != null;
+    }
+
+    // Demandes d'accès invité
+    match /accessRequests/{reqId} {
+      allow create: if request.auth.uid == reqId;
+      allow read:   if request.auth.uid == reqId
+                    || request.auth.uid == resource.data.adminUid;
+      allow update: if request.auth.uid == resource.data.adminUid;
+    }
+
+    function isApprovedGuest(uid, adminUid) {
+      return uid != null
+          && exists(/databases/$(database)/documents/accessRequests/$(uid))
+          && get(/databases/$(database)/documents/accessRequests/$(uid)).data.status   == 'approved'
+          && get(/databases/$(database)/documents/accessRequests/$(uid)).data.adminUid == adminUid;
+    }
+    function isApprovedEditor(uid, adminUid) {
+      return isApprovedGuest(uid, adminUid)
+          && get(/databases/$(database)/documents/accessRequests/$(uid)).data.guestRole == 'editor';
+    }
+  }
+}
