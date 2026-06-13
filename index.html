@@ -3410,10 +3410,10 @@ function createAutocomplete(wrapper, options) {
     // Sous le champ par défaut ; bascule au-dessus si pas la place (anti hors-champ)
     const spaceBelow = vh - rect.bottom - margin, spaceAbove = rect.top - margin;
     if (spaceBelow >= 160 || spaceBelow >= spaceAbove) {
-      dropdown.style.maxHeight = Math.max(120, Math.min(260, spaceBelow)) + 'px';
+      dropdown.style.maxHeight = Math.max(120, Math.min(Math.round(vh * 0.6),spaceBelow)) + 'px';
       dropdown.style.top = (rect.bottom + 2) + 'px';
     } else {
-      dropdown.style.maxHeight = Math.max(120, Math.min(260, spaceAbove)) + 'px';
+      dropdown.style.maxHeight = Math.max(120, Math.min(Math.round(vh * 0.6),spaceAbove)) + 'px';
       dropdown.style.top = Math.max(margin, rect.top - 2 - dropdown.offsetHeight) + 'px';
     }
   }
@@ -3557,7 +3557,7 @@ function createChipsInput(wrapper, options) {
 
   function hideDropdown() {
     if (dropdown) {
-      document.removeEventListener('mousemove', onMouseMove);
+      document.removeEventListener('pointerdown', onOutsidePointer, true);
       dropdown.remove();
       dropdown = null;
     }
@@ -3577,7 +3577,7 @@ function createChipsInput(wrapper, options) {
       if (left + w > vw - margin) left = Math.max(margin, arect.left - w - 8);
       dropdown.style.width = w + 'px';
       dropdown.style.left = left + 'px';
-      dropdown.style.maxHeight = Math.max(120, Math.min(260, vh - arect.top - margin)) + 'px';
+      dropdown.style.maxHeight = Math.max(120, Math.min(Math.round(vh * 0.6),vh - arect.top - margin)) + 'px';
       dropdown.style.top = Math.max(margin, Math.min(arect.top, vh - margin - dropdown.offsetHeight)) + 'px';
       return;
     }
@@ -3592,30 +3592,20 @@ function createChipsInput(wrapper, options) {
     const spaceBelow = vh - rect.bottom - margin;
     const spaceAbove = rect.top - margin;
     if (spaceBelow >= 160 || spaceBelow >= spaceAbove) {
-      dropdown.style.maxHeight = Math.max(120, Math.min(260, spaceBelow)) + 'px';
+      dropdown.style.maxHeight = Math.max(120, Math.min(Math.round(vh * 0.6),spaceBelow)) + 'px';
       dropdown.style.top = (rect.bottom + 2) + 'px';
     } else {
-      const maxH = Math.max(120, Math.min(260, spaceAbove));
+      const maxH = Math.max(120, Math.min(Math.round(vh * 0.6),spaceAbove));
       dropdown.style.maxHeight = maxH + 'px';
       dropdown.style.top = Math.max(margin, rect.top - 2 - dropdown.offsetHeight) + 'px';
     }
   }
 
-  // Listener global pour fermer le dropdown quand la souris s'éloigne trop
-  function onMouseMove(e) {
+  // Ferme le menu au clic/tap EN DEHORS (fiable desktop ET tactile, contrairement au :hover).
+  // → on peut cocher plusieurs options d'affilée sans que le menu se ferme.
+  function onOutsidePointer(e) {
     if (!dropdown) return;
-    const dr = dropdown.getBoundingClientRect();
-    const ir = input.getBoundingClientRect();
-    // Zone englobante = input + dropdown, avec marge de tolérance 80px
-    const margin = 80;
-    const left = Math.min(dr.left, ir.left) - margin;
-    const right = Math.max(dr.right, ir.right) + margin;
-    const top = Math.min(dr.top, ir.top) - margin;
-    const bottom = Math.max(dr.bottom, ir.bottom) + margin;
-    if (e.clientX < left || e.clientX > right || e.clientY < top || e.clientY > bottom) {
-      hideDropdown();
-      document.removeEventListener('mousemove', onMouseMove);
-    }
+    if (!wrapper.contains(e.target) && !dropdown.contains(e.target)) hideDropdown();
   }
 
   function showDropdown() {
@@ -3632,8 +3622,8 @@ function createChipsInput(wrapper, options) {
     dropdown.className = 'autocomplete-dropdown active';
     dropdown.style.position = 'fixed';
     dropdown.style.zIndex = '1000';
-    // Hauteur max fixe pour que le dropdown ne change pas de taille entre les renders
-    dropdown.style.maxHeight = '260px';
+    // Hauteur max (recalculée précisément par positionDropdown juste après)
+    dropdown.style.maxHeight = '60vh';
     dropdown.style.overflowY = 'auto';
     document.body.appendChild(dropdown);
     // Empêcher que le scroll à l'intérieur du dropdown fasse scroller la page
@@ -3646,9 +3636,8 @@ function createChipsInput(wrapper, options) {
     }, { passive: false });
     buildDropdownItems(filtered, q);
     positionDropdown(); // après le build : la hauteur réelle est connue (flip correct)
-    // (reposition au scroll/resize gérée au niveau du composant, plus bas)
-    // Écouter mouvement souris pour fermer à distance (desktop)
-    document.addEventListener('mousemove', onMouseMove);
+    // Fermer au clic/tap en dehors (fiable desktop + tactile)
+    document.addEventListener('pointerdown', onOutsidePointer, true);
   }
 
   function updateDropdownContent() {
@@ -3724,13 +3713,8 @@ function createChipsInput(wrapper, options) {
     if (dropdown) updateDropdownContent();
     else showDropdown();
   });
-  input.addEventListener('blur', () => setTimeout(() => {
-    // Ne fermer que si la souris n'est pas sur le dropdown
-    if (dropdown && !dropdown.matches(':hover')) {
-      hideDropdown();
-      document.removeEventListener('mousemove', onMouseMove);
-    }
-  }, 200));
+  // Pas de fermeture au blur : le menu reste ouvert pour la multi-sélection.
+  // Il se ferme au clic/tap en dehors (onOutsidePointer) ou via Échap.
   input.addEventListener('keydown', e => {
     if (e.key === 'Backspace' && !input.value && selectedValues.length > 0) {
       selectedValues.pop();
@@ -3745,7 +3729,6 @@ function createChipsInput(wrapper, options) {
     } else if (e.key === 'Escape') {
       if (dropdown) e.stopPropagation(); // ferme d'abord le dropdown, pas le panneau parent
       hideDropdown();
-      document.removeEventListener('mousemove', onMouseMove);
       input.blur();
     }
   });
