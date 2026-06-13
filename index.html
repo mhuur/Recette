@@ -2080,9 +2080,6 @@ body.guest-mode .sidebar::after {
         <button class="user-menu-item" role="menuitem" data-go="settings"><span class="um-ico" data-icon="settings"></span><span>Réglages</span></button>
         <button class="user-menu-item" role="menuitem" data-go="debug"><span class="um-ico" data-icon="bug"></span><span>Debug</span> <span class="um-badge hide-if-zero" id="menu-debug-count">0</span></button>
         <div class="user-menu-sep"></div>
-        <button class="user-menu-item" role="menuitem" id="menu-push-cloud"><span class="um-ico" data-icon="uploadCloud"></span><span>Envoyer vers le cloud</span></button>
-        <button class="user-menu-item" role="menuitem" id="menu-pull-cloud"><span class="um-ico" data-icon="downloadCloud"></span><span>Recharger depuis le cloud</span></button>
-        <div class="user-menu-sep"></div>
         <button class="user-menu-item danger" role="menuitem" id="menu-sign-out"><span class="um-ico" data-icon="logOut"></span><span>Se déconnecter</span></button>
       </div>
       <button class="sidebar-user-trigger" id="sidebar-user-trigger" type="button" aria-label="Mon compte">
@@ -3194,13 +3191,7 @@ document.getElementById('btn-sign-out').onclick = () => {
 {
   const msi = document.getElementById('menu-sign-out');
   if (msi) msi.onclick = () => { if (fbAuth) fbAuth.signOut(); };
-  const mpc = document.getElementById('menu-push-cloud');
-  if (mpc) mpc.onclick = () => pushToCloud().then(() => toast('Envoyé vers le cloud', 'success'));
-  const mpl = document.getElementById('menu-pull-cloud');
-  if (mpl) mpl.onclick = () => {
-    if (!confirm('Cela va remplacer tes données locales par celles du cloud. Continuer ?')) return;
-    pullFromCloud();
-  };
+  // (Push/pull cloud manuels retirés du menu avatar — toujours dispo dans Réglages › Mon compte.)
   // Toggle le menu au clic sur le trigger (avatar + « Mon compte »)
   const trigger = document.getElementById('sidebar-user-trigger');
   if (trigger) {
