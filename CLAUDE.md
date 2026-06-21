@@ -21,6 +21,8 @@ Guide pour Claude Code sur ce projet.
 ## Commandes
 - **Aucun build / install / lint / test.** On édite `index.html` directement.
 - **Dépôt git lié** : ce dossier est un clone de `github.com/mhuur/Recette` (branche `main`). Workflow : éditer `index.html` → `git add/commit/push` direct (le dossier vit dans OneDrive, comme le projet todolist).
+- **Déploiement prod ≠ git push** : `git push` ne met RIEN en ligne. Le site est servi par **Firebase Hosting** : `firebase deploy --only hosting` (et `,firestore:rules` si les règles changent). CLI déjà authentifiée (`saintilan.romain@gmail.com`, projet `mes-recettes-ff138`). Toujours **bumper `CACHE_VERSION` dans `sw.js`** sinon la PWA installée garde l'ancien code.
+- **OneDrive crée des copies de conflit** « `nom (2).ext` » — ignorées via `.gitignore` (`* (2).*`). Ne pas les committer.
 - Test local : `py -m http.server 8000` dans le dossier → `http://localhost:8000/index.html`.
 - Le **login Google exige `http://localhost`** (échoue en `file://`).
 
