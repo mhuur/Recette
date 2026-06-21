@@ -2710,6 +2710,7 @@ function saveLocal() {
    FIREBASE - Synchronisation Cloud
    ======================================================================== */
 const FB_CONFIG_KEY = 'mhuur_firebase_config_v1';
+const GUEST_CTX_KEY = 'mhuur_guest_ctx_v1'; // contexte invité persistant (survit aux rechargements / PWA installée)
 const DEFAULT_FIREBASE_CONFIG = {
   apiKey: "AIzaSyCO4gd7rVibJ2khql7fB4eT9JENb-j2ppI",
   authDomain: "mes-recettes-ff138.firebaseapp.com",
@@ -7496,7 +7497,7 @@ let pendingApprovalAction = null;
 // --- Détection du mode invité (lien de partage dans le hash) ---
 function detectGuestMode() {
   const hash = location.hash;
-  if (!hash) return false;
+  if (!hash) return restoreGuestContext();
 
   // Lien d'approbation/refus : #approve=UID&admin=ADMIN_UID ou #deny=UID&admin=ADMIN_UID
   const approveMatch = hash.match(/[#&]approve=([^&]+)/);
@@ -7514,7 +7515,7 @@ function detectGuestMode() {
 
   // Lien de partage : #guestAccess=BASE64
   const shareMatch = hash.match(/^#guestAccess=([A-Za-z0-9+/=_-]+)/);
-  if (!shareMatch) return false;
+  if (!shareMatch) return restoreGuestContext();
 
   try {
     const raw = atob(shareMatch[1].replace(/-/g, '+').replace(/_/g, '/'));
@@ -7526,12 +7527,41 @@ function detectGuestMode() {
     guestAdminDataPath = data.dataPath || 'personal';
     guestAdminSpace    = data.space || null;
     guestMode          = true;
+    persistGuestContext(); // mémorise l'accès : l'app installée / un favori restera en mode invité sans le lien
     history.replaceState(null, '', location.pathname);
     return true;
   } catch (e) {
     console.error('Lien de partage invalide :', e);
     return false;
   }
+}
+
+// Persistance du contexte invité : une fois le lien utilisé, on n'en dépend plus.
+// Sans ça, rouvrir l'app sans le hash #guestAccess= renvoie l'invité sur SON propre carnet (vide).
+function persistGuestContext() {
+  try {
+    localStorage.setItem(GUEST_CTX_KEY, JSON.stringify({
+      adminUid: guestAdminUid, dataPath: guestAdminDataPath, space: guestAdminSpace
+    }));
+  } catch {}
+}
+
+function restoreGuestContext() {
+  try {
+    const ctx = JSON.parse(localStorage.getItem(GUEST_CTX_KEY) || 'null');
+    if (!ctx || !ctx.adminUid) return false;
+    guestAdminUid      = ctx.adminUid;
+    guestAdminDataPath = ctx.dataPath || 'personal';
+    guestAdminSpace    = ctx.space || null;
+    guestMode          = true;
+    return true;
+  } catch { return false; }
+}
+
+function clearGuestContext() {
+  guestMode = false;
+  guestAdminUid = null; guestAdminDataPath = 'personal'; guestAdminSpace = null;
+  try { localStorage.removeItem(GUEST_CTX_KEY); } catch {}
 }
 
 function parseHashParams(hash) {
@@ -7576,6 +7606,13 @@ function showGuestState(state, msg) {
 async function handleGuestAccess(user) {
   if (!user) {
     showGuestState('login');
+    return;
+  }
+  // Le propriétaire lui-même est connecté sur ce navigateur (contexte invité restauré par erreur) :
+  // on quitte le mode invité et on recharge en mode normal.
+  if (user.uid === guestAdminUid) {
+    clearGuestContext();
+    location.reload();
     return;
   }
   showGuestState('loading');
