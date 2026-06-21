@@ -7676,10 +7676,23 @@ async function loadGuestData(asEditor) {
       ? fbDb.collection('sharedData').doc(guestAdminSpace)
       : fbDb.collection('users').doc(guestAdminUid).collection('app').doc('data');
 
-    // TOUJOURS charger d'abord les données du propriétaire : un éditeur qui arrive
-    // ne doit jamais écraser le carnet avec son état local.
-    const snap = await docRef.get();
-    if (snap.exists) applyCloudData(snap.data());
+    // Lecture AUTORITAIRE depuis le serveur : évite de servir un cache local vide/obsolète
+    // (et de masquer un refus de droits). Refus -> on remonte. Hors-ligne -> repli sur le cache.
+    let snap;
+    try {
+      snap = await docRef.get({ source: 'server' });
+    } catch (e) {
+      if (e.code === 'permission-denied') throw e;
+      snap = await docRef.get({ source: 'cache' }).catch(() => null);
+    }
+
+    if (snap && snap.exists) {
+      applyCloudData(snap.data());
+    } else {
+      // Lecture AUTORISÉE mais document absent/vide : ce n'est PAS un refus de droits.
+      showGuestState('error', "Le carnet partagé est vide ou introuvable côté serveur — le propriétaire doit être connecté et synchronisé.");
+      return;
+    }
 
     document.getElementById('guest-overlay').classList.remove('active');
 
@@ -7695,14 +7708,20 @@ async function loadGuestData(asEditor) {
         if (snap.exists) { applyCloudData(snap.data()); setSyncStatus('☁ Synchronisé', 'success'); }
       }, err => { console.error('Snapshot error:', err); setSyncStatus('⚠ Erreur de synchro', 'error'); });
     } else {
-      // Lecture seule (inchangé)
+      // Lecture seule
       document.body.classList.add('guest-mode');
       docRef.onSnapshot(snap => {
         if (snap.exists && !snap.metadata.hasPendingWrites) applyCloudData(snap.data());
+      }, err => {
+        // Ne plus avaler l'erreur du flux temps réel : un refus de droits doit être visible.
+        showGuestState('error', 'Lecture refusée par le serveur (règles Firestore) : ' + (err.message || err.code));
       });
     }
   } catch (e) {
-    showGuestState('error', 'Impossible de charger les recettes : ' + e.message);
+    const msg = (e.code === 'permission-denied')
+      ? 'Lecture refusée par le serveur (règles Firestore) : ' + e.message
+      : 'Impossible de charger les recettes : ' + e.message;
+    showGuestState('error', msg);
   }
 }
 
