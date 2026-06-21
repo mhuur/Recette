@@ -7575,6 +7575,10 @@ function parseHashParams(hash) {
 
 // --- Affichage des états de l'écran invité ---
 function showGuestState(state, msg) {
+  // L'overlay invité doit être visible tant qu'on n'a pas chargé les recettes
+  // (loadGuestData retire .active en cas de succès). Sans ça, un échec de lecture
+  // = app vide muette, impossible à diagnostiquer.
+  document.getElementById('guest-overlay')?.classList.add('active');
   const icon     = document.getElementById('guest-state-icon');
   const title    = document.getElementById('guest-title');
   const subtitle = document.getElementById('guest-subtitle');
@@ -7939,6 +7943,7 @@ function injectIcons(root = document) {
    INITIALISATION
    ======================================================================== */
 detectGuestMode();
+if (guestMode) document.getElementById('guest-overlay')?.classList.add('active'); // écran invité visible dès le boot
 injectIcons();
 load();
 setSortValue(state.filters.sort || 'name-asc');
