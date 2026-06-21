@@ -2774,12 +2774,32 @@ function initFirebase() {
       // Persistence locale pour garder la session entre visites
       fbAuth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
 
-      fbAuth.onAuthStateChanged(user => {
+      fbAuth.onAuthStateChanged(async user => {
         fbUser = user;
         authStateResolved = true;
         if (guestMode) {
           handleGuestAccess(user);
           return;
+        }
+        // Détection invité PAR LE COMPTE : un utilisateur déjà approuvé voit le carnet
+        // du propriétaire SANS rouvrir le lien (marche dans tout navigateur, l'app installée, iOS).
+        if (user) {
+          try {
+            const reqSnap = await fbDb.collection('accessRequests').doc(user.uid).get();
+            if (reqSnap.exists) {
+              const d = reqSnap.data();
+              if (d.status === 'approved' && d.adminUid && d.adminUid !== user.uid) {
+                guestMode = true;
+                guestAdminUid = d.adminUid;
+                guestAdminDataPath = 'personal';
+                guestAdminSpace = null;
+                persistGuestContext();
+                document.getElementById('guest-overlay')?.classList.add('active');
+                handleGuestAccess(user);
+                return;
+              }
+            }
+          } catch (e) { /* lecture impossible : on continue en mode normal */ }
         }
         // Définir fbDocRef AVANT renderFirebaseUI pour que le chemin soit déjà disponible
         if (user) {
