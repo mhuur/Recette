@@ -7,3 +7,7 @@ __*
 
 # Firebase Hosting — cache de déploiement local
 .firebase/
+
+# Copies de conflit OneDrive (« nom (2).ext »)
+* (2).*
+* (3).*

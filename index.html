@@ -2883,6 +2883,12 @@ async function onFirebaseSignIn() {
 }
 
 function applyCloudData(data) {
+  // Anti-effacement : ne JAMAIS remplacer un carnet local non vide par un cloud vide
+  // (lecture périmée, co-éditeur à l'état vide, mauvais chemin…). Empêche une perte de données.
+  if ((!data.recipes || data.recipes.length === 0) && Array.isArray(state.recipes) && state.recipes.length > 0) {
+    console.warn('applyCloudData ignoré : cloud vide alors que le carnet local est non vide');
+    return;
+  }
   // Préserver les filtres locaux (UI) car ils ne sont pas synchronisés
   const currentFilters = state.filters;
   state.recipes = data.recipes || [];
@@ -2933,6 +2939,8 @@ window.addEventListener('beforeunload', () => {
   if (fbSaveTimer && fbDocRef) {
     clearTimeout(fbSaveTimer);
     fbSaveTimer = null;
+    // Anti-effacement : un invité/co-éditeur au carnet vide ne pousse rien en partant.
+    if (guestMode && (!state.recipes || state.recipes.length === 0)) return;
     // Tentative de push synchrone - le navigateur l'envoie même si l'onglet ferme
     try {
       state.lastModified = Date.now();
@@ -2958,6 +2966,12 @@ window.addEventListener('beforeunload', () => {
 
 async function pushToCloud() {
   if (!fbDocRef) return;
+  // Anti-effacement : un invité/co-éditeur au carnet vide ne doit jamais écraser
+  // le carnet du propriétaire (ex. chargement initial raté).
+  if (guestMode && (!state.recipes || state.recipes.length === 0)) {
+    console.warn('pushToCloud ignoré : co-éditeur invité au carnet vide');
+    return;
+  }
   fbSkipNextSnapshot = true;
   // Reset aussi ici au cas où pushToCloud est appelé directement (pas via scheduler)
   fbSaveTimer = null;
@@ -3217,7 +3231,9 @@ document.getElementById('btn-export-backup')?.addEventListener('click', () => {
 const SHARED_MODE_KEY = 'mhuur_shared_mode_v1';
 const SHARED_SPACE_KEY = 'mhuur_shared_space_v1';
 
-function getSharedMode() { return localStorage.getItem(SHARED_MODE_KEY) === '1'; }
+// Mode partagé (sharedData) RETIRÉ : toujours perso. Un ancien flag résiduel en
+// localStorage ne doit plus router les écritures vers sharedData (sinon données coupées en deux).
+function getSharedMode() { return false; }
 function getSharedSpace() { return localStorage.getItem(SHARED_SPACE_KEY) || ''; }
 
 function getFirebaseDocRef(user) {
@@ -7962,6 +7978,8 @@ function injectIcons(root = document) {
    INITIALISATION
    ======================================================================== */
 detectGuestMode();
+// Purge des restes de l'ancien « mode partagé » (sharedData), retiré : tout passe en perso.
+try { localStorage.removeItem(SHARED_MODE_KEY); localStorage.removeItem(SHARED_SPACE_KEY); } catch {}
 if (guestMode) document.getElementById('guest-overlay')?.classList.add('active'); // écran invité visible dès le boot
 injectIcons();
 load();
