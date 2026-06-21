@@ -3,10 +3,12 @@
    - Shell même origine + CDN connus : stale-while-revalidate (ouverture instantanée + offline).
    - Navigation : network-first → fallback sur index.html en cache (app utilisable hors-ligne).
    - Firestore / Auth / Google : BYPASS total (réseau direct) — le SDK gère son propre offline.
-   Mise à jour : pas de skipWaiting auto ; la page affiche un bandeau et envoie {type:'SKIP_WAITING'}.
+   Mise à jour : skipWaiting AUTO (le nouveau SW s'active seul) + clients.claim + reload
+   de la page sur controllerchange -> aucun appareil ne reste figé sur l'ancien code.
+   Le bandeau « Recharger » reste comme filet (envoie {type:'SKIP_WAITING'}).
    ⚠️ Bumper CACHE_VERSION à chaque déploiement de contenu pour éviter un cache figé. */
 
-const CACHE_VERSION = 'v13';
+const CACHE_VERSION = 'v14';
 const PRECACHE = 'precache-' + CACHE_VERSION;
 const RUNTIME = 'runtime-' + CACHE_VERSION;
 
@@ -39,7 +41,7 @@ const BYPASS_HOSTS = [
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(PRECACHE).then((cache) => cache.addAll(PRECACHE_URLS))
-    // Pas de skipWaiting() : on attend l'accord de l'utilisateur (bandeau de mise à jour).
+      .then(() => self.skipWaiting()) // activation auto : aucun client ne reste bloqué sur l'ancien code
   );
 });
 
