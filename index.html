@@ -1266,6 +1266,27 @@ label {
 .star-btn:hover { transform: scale(1.12); }
 .star-btn.on { color: var(--star); filter: drop-shadow(0 0 6px rgba(250,204,21,.5)); }
 .star-btn.on svg { fill: currentColor; }
+/* Modale d'affectation « recettes d'un type de plat » */
+.meal-recipes-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 8px; flex-wrap: wrap; margin-bottom: 8px;
+  font-size: 12px; color: var(--text-muted);
+}
+.meal-recipes-list {
+  max-height: min(46dvh, 360px); overflow-y: auto;
+  display: flex; flex-direction: column; gap: 2px;
+  border: 1px solid var(--border); border-radius: 8px; padding: 6px;
+}
+.meal-recipes-row {
+  display: flex; align-items: center; gap: 9px;
+  padding: 6px 8px; border-radius: 6px; cursor: pointer; margin: 0;
+}
+.meal-recipes-row:hover { background: var(--surface); }
+.meal-recipes-row input { width: 16px; height: 16px; accent-color: var(--primary); cursor: pointer; flex-shrink: 0; }
+.meal-recipes-name { flex: 1; min-width: 0; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.meal-recipes-other { font-size: 11px; color: var(--text-dim); flex-shrink: 0; max-width: 40%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.meal-recipes-empty { padding: 14px; text-align: center; color: var(--text-muted); font-size: 13px; }
+
 .rating-min-label { margin-left: 10px; font-size: 13px; color: var(--text-muted); }
 .rating-unrated {
   display: flex; align-items: center; gap: 7px;
@@ -2608,6 +2629,34 @@ service cloud.firestore {
         <button class="btn" id="merge-confirm-back"><span class="tb-ico" data-icon="arrowLeft"></span>Retour</button>
         <button class="btn btn-primary" id="merge-confirm-ok"><span class="tb-ico" data-icon="check"></span>Fusionner</button>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal : affectation en masse des recettes à un type de plat -->
+<div class="modal-overlay" id="meal-recipes-modal">
+  <div class="modal" style="max-width:520px;">
+    <div class="modal-header">
+      <span class="modal-title" id="meal-recipes-title">Recettes du type</span>
+      <button class="modal-close" data-close-modal>×</button>
+    </div>
+    <div class="modal-body" style="padding:16px;">
+      <div class="search-wrap" style="margin-bottom:10px;">
+        <span class="search-ico" data-icon="search" aria-hidden="true"></span>
+        <input type="text" id="meal-recipes-search" placeholder="Rechercher une recette…" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" data-form-type="other">
+      </div>
+      <div class="meal-recipes-bar">
+        <span id="meal-recipes-count"></span>
+        <span style="display:flex; gap:6px;">
+          <button class="btn btn-xs" id="meal-recipes-check-all">Cocher les résultats</button>
+          <button class="btn btn-xs" id="meal-recipes-uncheck-all">Décocher</button>
+        </span>
+      </div>
+      <div id="meal-recipes-list" class="meal-recipes-list"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" data-close-modal>Annuler</button>
+      <button class="btn btn-primary" id="meal-recipes-save"><span class="tb-ico" data-icon="check"></span>Enregistrer</button>
     </div>
   </div>
 </div>
@@ -5497,7 +5546,7 @@ function openRenameModal(title, currentValue, onSave) {
 document.querySelectorAll('[data-close-modal]').forEach(b => b.onclick = closeAllModals);
 // Clic sur le fond : ferme seulement les modales "action" (confirmation, fusion).
 // Les modales de SAISIE ne se ferment PAS au clic extérieur (anti-perte de données non sauvegardées).
-const NO_BACKDROP_CLOSE = new Set(['recipe-modal', 'ing-create-modal', 'firebase-modal', 'rename-modal']);
+const NO_BACKDROP_CLOSE = new Set(['recipe-modal', 'ing-create-modal', 'firebase-modal', 'rename-modal', 'meal-recipes-modal']);
 document.querySelectorAll('.modal-overlay').forEach(m => {
   m.addEventListener('click', e => {
     if (e.target === m && !NO_BACKDROP_CLOSE.has(m.id)) closeAllModals();
@@ -6484,6 +6533,116 @@ function openMergeMealTypeDialog(sourceMealType) {
   );
 }
 
+/* ========================================================================
+   AFFECTATION EN MASSE — recettes d'un type de plat
+   Le brouillon (_mealRecipesDraft) n'est appliqué qu'à « Enregistrer » :
+   « Annuler » ou la croix le jettent sans toucher à state.
+   ======================================================================== */
+let _mealRecipesType = null;   // type de plat en cours d'édition
+let _mealRecipesDraft = null;  // Set des ids de recettes cochées
+let _mealRecipesShown = 0;     // nb de lignes affichées (après recherche)
+
+function openMealRecipesDialog(mealType) {
+  _mealRecipesType = mealType;
+  _mealRecipesDraft = new Set(
+    state.recipes.filter(r => (r.mealTypes || []).includes(mealType)).map(r => r.id)
+  );
+  document.getElementById('meal-recipes-title').textContent = 'Recettes « ' + mealType + ' »';
+  const search = document.getElementById('meal-recipes-search');
+  search.value = '';
+  document.getElementById('meal-recipes-modal').classList.add('active');
+  renderMealRecipesList();
+  setTimeout(() => search.focus(), 100);
+}
+
+function mealRecipesFiltered() {
+  const q = normalizeText(document.getElementById('meal-recipes-search').value || '');
+  return [...state.recipes]
+    .filter(r => !q || normalizeText(r.name || '').includes(q))
+    .sort((a, b) => (a.name || '').localeCompare(b.name || '', 'fr', { sensitivity: 'base' }));
+}
+
+function refreshMealRecipesCount() {
+  const n = _mealRecipesDraft.size;
+  const total = state.recipes.length;
+  document.getElementById('meal-recipes-count').textContent =
+    n + ' / ' + total + ' cochée' + (n > 1 ? 's' : '')
+    + (_mealRecipesShown !== total ? ' · ' + _mealRecipesShown + ' affichée' + (_mealRecipesShown > 1 ? 's' : '') : '');
+}
+
+function renderMealRecipesList() {
+  const list = document.getElementById('meal-recipes-list');
+  const rows = mealRecipesFiltered();
+  _mealRecipesShown = rows.length;
+  refreshMealRecipesCount();
+  if (!rows.length) {
+    list.innerHTML = '<div class="meal-recipes-empty">Aucune recette ne correspond.</div>';
+    return;
+  }
+  list.innerHTML = '';
+  rows.forEach(r => {
+    const row = document.createElement('label');
+    row.className = 'meal-recipes-row';
+    const cb = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.checked = _mealRecipesDraft.has(r.id);
+    cb.onchange = () => {
+      if (cb.checked) _mealRecipesDraft.add(r.id); else _mealRecipesDraft.delete(r.id);
+      refreshMealRecipesCount(); // pas de re-render : on garde la position de scroll
+    };
+    const name = document.createElement('span');
+    name.className = 'meal-recipes-name';
+    name.textContent = r.name || '(sans nom)';
+    row.appendChild(cb);
+    row.appendChild(name);
+    const others = (r.mealTypes || []).filter(x => x !== _mealRecipesType);
+    if (others.length) {
+      const o = document.createElement('span');
+      o.className = 'meal-recipes-other';
+      o.textContent = sortMealTypes(others).join(', ');
+      row.appendChild(o);
+    }
+    list.appendChild(row);
+  });
+}
+
+// Cocher/décocher agit sur les lignes affichées (résultats de la recherche), pas sur tout le carnet.
+function mealRecipesSetAll(checked) {
+  mealRecipesFiltered().forEach(r => {
+    if (checked) _mealRecipesDraft.add(r.id); else _mealRecipesDraft.delete(r.id);
+  });
+  renderMealRecipesList();
+}
+
+function saveMealRecipes() {
+  const type = _mealRecipesType;
+  let added = 0, removed = 0;
+  state.recipes.forEach(r => {
+    const wanted = _mealRecipesDraft.has(r.id);
+    const current = (r.mealTypes || []).includes(type);
+    if (wanted === current) return;
+    if (wanted) {
+      // « Aucun » et un vrai type sont exclusifs.
+      r.mealTypes = [...(r.mealTypes || []).filter(x => normalizeText(x) !== 'aucun'), type];
+      added++;
+    } else {
+      r.mealTypes = (r.mealTypes || []).filter(x => x !== type);
+      if (r.mealTypes.length === 0) r.mealTypes = ['Aucun']; // invariant de migrateRecipes()
+      removed++;
+    }
+  });
+  closeAllModals();
+  if (!added && !removed) { toast('Aucun changement', 'muted'); return; }
+  save();
+  rerenderAll();
+  toast(added + ' ajoutée(s), ' + removed + ' retirée(s) — « ' + type + ' »', 'success');
+}
+
+document.getElementById('meal-recipes-search').addEventListener('input', renderMealRecipesList);
+document.getElementById('meal-recipes-check-all').onclick = () => mealRecipesSetAll(true);
+document.getElementById('meal-recipes-uncheck-all').onclick = () => mealRecipesSetAll(false);
+document.getElementById('meal-recipes-save').onclick = saveMealRecipes;
+
 function openMergeUnitDialog(sourceUnit) {
   const others = state.units.filter(u => u.id !== sourceUnit.id).sort((a,b) => a.name.localeCompare(b.name, 'fr'));
   if (others.length === 0) { toast('Aucune autre unité disponible pour fusionner.', 'error'); return; }
@@ -6823,6 +6982,18 @@ function renderDataTab() {
         rerenderAll();
       });
     };
+    // Affectation en masse : cocher/décocher les recettes de ce type.
+    const listBtn = document.createElement('button');
+    listBtn.className = 'btn btn-xs';
+    listBtn.innerHTML = ICONS.listChecks;
+    if (normalizeText(m) === 'aucun') {
+      // « Aucun » est dérivé (= aucune autre catégorie), il ne s'attribue pas à la main.
+      listBtn.disabled = true;
+      listBtn.title = '« Aucun » se déduit des recettes sans type, il ne s\'attribue pas';
+    } else {
+      listBtn.title = 'Choisir les recettes de ce type';
+      listBtn.onclick = () => openMealRecipesDialog(m);
+    }
     const mergeMealBtn = document.createElement('button');
     mergeMealBtn.className = 'btn btn-xs';
     mergeMealBtn.innerHTML = ICONS.link2;
@@ -6830,6 +7001,7 @@ function renderDataTab() {
     mergeMealBtn.onclick = () => openMergeMealTypeDialog(m);
     const actions = document.createElement('span');
     actions.className = 'data-list-item-actions';
+    actions.appendChild(listBtn);
     actions.appendChild(editBtn);
     actions.appendChild(mergeMealBtn);
     actions.appendChild(delBtn);
@@ -8132,6 +8304,7 @@ const ICONS = {
   arrowLeft:     _ICO('<path d="m12 19-7-7 7-7"/><path d="M19 12H5"/>'),
   arrowDown:     _ICO('<path d="M12 5v14"/><path d="m19 12-7 7-7-7"/>'),
   chevronRight:  _ICO('<path d="m9 18 6-6-6-6"/>'),
+  listChecks:    _ICO('<path d="m3 17 2 2 4-4"/><path d="m3 7 2 2 4-4"/><path d="M13 6h8"/><path d="M13 12h8"/><path d="M13 18h8"/>'),
   info:          _ICO('<circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/>'),
   rotateCcw:     _ICO('<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/>'),
   cornerDownRight: _ICO('<path d="m15 10 5 5-5 5"/><path d="M4 4v7a4 4 0 0 0 4 4h12"/>'),
