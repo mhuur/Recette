@@ -373,6 +373,8 @@ button {
 .btn-sm { padding: 5px 10px; font-size: 13px; }
 .btn-xs { padding: 3px 8px; font-size: 12px; }
 .btn-xs svg { width: 14px; height: 14px; flex-shrink: 0; }
+.btn:disabled { opacity: .4; cursor: not-allowed; }
+.btn:disabled:hover { background: var(--surface); border-color: var(--border); }
 .btn.active { background: var(--primary); border-color: var(--primary); color: white; }
 .btn.active:hover { background: var(--primary-dark); border-color: var(--primary-dark); }
 /* Toggles de la barre d'outils Recettes — icône Lucide + état actif néon (façon Devis Photo seg-neon) */
@@ -6783,6 +6785,32 @@ function renderDataTab() {
     el.className = 'data-list-item';
     const usage = state.recipes.filter(r => (r.mealTypes||[]).includes(m)).length;
     el.innerHTML = '<span>' + escapeHtml(m) + ' <span style="color:var(--text-dim); font-size:12px;">(' + usage + ' recettes)</span></span>';
+    // Renommer — les recettes référencent les types par NOM (pas par id) : propager partout.
+    const editBtn = document.createElement('button');
+    editBtn.className = 'btn btn-xs';
+    editBtn.innerHTML = ICONS.pencil;
+    if (normalizeText(m) === 'aucun') {
+      // « Aucun » est le type par défaut, réinjecté par load() : le renommer le ferait réapparaître en double.
+      editBtn.disabled = true;
+      editBtn.title = '« Aucun » est le type par défaut, il ne peut pas être renommé';
+    } else {
+      editBtn.title = 'Renommer';
+      editBtn.onclick = () => openRenameModal('Renommer le type de plat', m, (nv) => {
+        const name = nv.trim();
+        if (name === m) return;
+        if (state.mealTypes.some(x => x !== m && normalizeText(x) === normalizeText(name))) {
+          toast('« ' + name + ' » existe déjà — utilise la fusion', 'error');
+          return;
+        }
+        state.mealTypes = state.mealTypes.map(x => (x === m ? name : x));
+        state.recipes.forEach(r => { r.mealTypes = (r.mealTypes || []).map(x => (x === m ? name : x)); });
+        if (Array.isArray(state.filters?.mealTypes)) {
+          state.filters.mealTypes = state.filters.mealTypes.map(x => (x === m ? name : x));
+        }
+        save();
+        rerenderAll();
+      });
+    }
     const delBtn = document.createElement('button');
     delBtn.className = 'btn btn-xs btn-danger';
     delBtn.innerHTML = ICONS.trash2;
@@ -6802,6 +6830,7 @@ function renderDataTab() {
     mergeMealBtn.onclick = () => openMergeMealTypeDialog(m);
     const actions = document.createElement('span');
     actions.className = 'data-list-item-actions';
+    actions.appendChild(editBtn);
     actions.appendChild(mergeMealBtn);
     actions.appendChild(delBtn);
     el.appendChild(actions);
