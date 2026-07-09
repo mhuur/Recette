@@ -629,6 +629,36 @@ label {
 .recipe-origin a { color: var(--primary); text-decoration: none; word-break: break-all; }
 .recipe-origin a:hover { text-decoration: underline; }
 
+/* Préparation & Notes (carte dépliée) */
+.recipe-section {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+.recipe-section-title {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 11px; text-transform: uppercase; letter-spacing: .05em;
+  color: var(--text-muted); margin-bottom: 8px;
+}
+.recipe-section-title svg { width: 13px; height: 13px; flex-shrink: 0; }
+.recipe-steps {
+  margin: 0; padding-left: 22px;
+  display: flex; flex-direction: column; gap: 6px;
+}
+.recipe-steps li { font-size: 13.5px; line-height: 1.55; color: var(--text); padding-left: 2px; }
+.recipe-steps li::marker { color: var(--primary); font-weight: 700; font-size: 12px; }
+.recipe-notes-text {
+  font-size: 13px; line-height: 1.55; color: var(--text-muted);
+  white-space: pre-wrap; word-break: break-word;   /* garde les retours à la ligne saisis */
+  border-left: 3px solid var(--primary); padding: 2px 0 2px 10px;
+}
+
+/* Zones de texte de la modale recette */
+.recipe-textarea {
+  width: 100%; resize: vertical;
+  font: inherit; font-size: 13.5px; line-height: 1.55;
+}
+
 /* Empty state */
 .empty {
   text-align: center;

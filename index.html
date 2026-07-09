@@ -348,6 +348,14 @@
         <div class="ing-rows" id="ing-rows-container"></div>
         <button class="btn btn-sm" id="btn-add-ing" style="margin-top:8px;">+ Ajouter un ingrédient</button>
       </div>
+      <div class="form-group full">
+        <label>Préparation</label>
+        <textarea id="recipe-instructions" class="recipe-textarea" rows="7" placeholder="Une étape par ligne. Elles seront numérotées à l'affichage.&#10;&#10;Faire revenir l'oignon 5 min.&#10;Ajouter les tomates, laisser mijoter." spellcheck="false"></textarea>
+      </div>
+      <div class="form-group full">
+        <label>Notes</label>
+        <textarea id="recipe-notes" class="recipe-textarea" rows="3" placeholder="Variantes, substitutions, ratés à éviter…" spellcheck="false"></textarea>
+      </div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-danger" id="btn-delete-recipe" style="display:none;">Supprimer</button>
@@ -2890,6 +2898,34 @@ function renderRecipes() {
         body.appendChild(mealRow);
       }
 
+      // Préparation : une étape par ligne non vide, numérotée à l'affichage.
+      const steps = (r.instructions || '').split('\n').map(s => s.trim()).filter(Boolean);
+      if (steps.length) {
+        const sec = document.createElement('div');
+        sec.className = 'recipe-section';
+        sec.innerHTML = '<div class="recipe-section-title">' + ICONS.utensilsCrossed + '<span>Préparation</span></div>';
+        const ol = document.createElement('ol');
+        ol.className = 'recipe-steps';
+        steps.forEach(s => {
+          const li = document.createElement('li');
+          li.textContent = s;
+          ol.appendChild(li);
+        });
+        sec.appendChild(ol);
+        body.appendChild(sec);
+      }
+
+      if ((r.notes || '').trim()) {
+        const sec = document.createElement('div');
+        sec.className = 'recipe-section';
+        sec.innerHTML = '<div class="recipe-section-title">' + ICONS.fileText + '<span>Notes</span></div>';
+        const p = document.createElement('div');
+        p.className = 'recipe-notes-text';
+        p.textContent = r.notes.trim(); // white-space:pre-wrap en CSS : les retours à la ligne sont gardés
+        sec.appendChild(p);
+        body.appendChild(sec);
+      }
+
       card.appendChild(body);
     }
 
@@ -3032,6 +3068,8 @@ function openRecipeModal(recipe = null) {
   document.getElementById('recipe-servings').value = recipe?.servings || 4;
   document.getElementById('recipe-prep').value = recipe?.prepTime ?? '';
   document.getElementById('recipe-cook').value = recipe?.cookTime ?? '';
+  document.getElementById('recipe-instructions').value = recipe?.instructions || '';
+  document.getElementById('recipe-notes').value = recipe?.notes || '';
   updateRatingPreview();
 
   // Origin
@@ -3364,7 +3402,13 @@ document.getElementById('btn-save-recipe').onclick = () => {
     ingredients.push({ ingredientId: ingId, unitId, quantity: r.qtyInput.value.trim() });
   });
 
+  const idx = currentRecipeId ? state.recipes.findIndex(r => r.id === currentRecipeId) : -1;
+  const previous = idx !== -1 ? state.recipes[idx] : null;
+
+  // `...previous` d'abord : l'objet est reconstruit à chaque enregistrement, sans ça
+  // tout champ absent de cette liste serait effacé (createdAt, importedFromExcel…).
   const recipe = {
+    ...previous,
     id: currentRecipeId || uid(),
     name: finalName,
     rating: rating === '' ? null : parseFloat(rating),
@@ -3374,12 +3418,13 @@ document.getElementById('btn-save-recipe').onclick = () => {
     mealTypes: mealTypesWrapperCtrl ? mealTypesWrapperCtrl.getValues() : [],
     origin,
     ingredients,
+    instructions: document.getElementById('recipe-instructions').value.trim(),
+    notes: document.getElementById('recipe-notes').value.trim(),
     updatedAt: Date.now()
   };
 
-  if (currentRecipeId) {
-    const idx = state.recipes.findIndex(r => r.id === currentRecipeId);
-    if (idx !== -1) state.recipes[idx] = recipe;
+  if (idx !== -1) {
+    state.recipes[idx] = recipe;
   } else {
     recipe.createdAt = Date.now();
     state.recipes.push(recipe);
@@ -5652,7 +5697,9 @@ function renderExcelMapping(wb) {
       { key: 'cookTime', label: 'Temps de cuisson (min)' },
       { key: 'mealTypes', label: 'Type(s) de plat (virgules)' },
       { key: 'origin', label: 'Origine (livre, URL...)' },
-      { key: 'ingredients', label: 'Ingrédients *' }
+      { key: 'ingredients', label: 'Ingrédients *' },
+      { key: 'instructions', label: 'Préparation (une étape par ligne)' },
+      { key: 'notes', label: 'Notes / remarques' }
     ];
     const selects = {};
     fields.forEach(f => {
@@ -5671,6 +5718,9 @@ function renderExcelMapping(wb) {
         if (f.key === 'mealTypes') return /(type|categorie|plat|meal)/.test(nh);
         if (f.key === 'origin') return /(origine|source|livre|book|url|lien)/.test(nh);
         if (f.key === 'ingredients') return /(ingr|compos)/.test(nh);
+        // Volontairement sans « prep » ni « note » : ils sont déjà pris par prepTime et rating.
+        if (f.key === 'instructions') return /(instruction|etape|deroul|marche a suivre)/.test(nh);
+        if (f.key === 'notes') return /(remarque|commentaire|observation)/.test(nh);
         return false;
       });
       if (matched >= 0) s.value = matched;
@@ -5785,6 +5835,8 @@ function doExcelImport(headers, dataRows, selects) {
       mealTypes,
       origin,
       ingredients,
+      instructions: (getCell('instructions') || '').trim(),
+      notes: (getCell('notes') || '').trim(),
       createdAt: Date.now(),
       updatedAt: Date.now(),
       importedFromExcel: true

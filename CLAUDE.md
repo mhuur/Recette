@@ -66,6 +66,8 @@ Guide pour Claude Code sur ce projet.
 - Pas de CI ni de tests auto.
 
 ## Pièges connus
+- `saveRecipe()` **reconstruit** l'objet recette et l'écrase dans `state.recipes`. Il commence par `...previous` : tout nouveau champ doit être ajouté à cet objet, sinon il est effacé à chaque modification (c'était le cas de `createdAt`/`importedFromExcel` avant 2026-07-09).
+- Recette : `instructions` (texte, 1 étape par ligne, numérotées à l'affichage) et `notes` (texte libre) sont **hors recherche** (choix utilisateur). Ne pas confondre `recipe.notes` avec `state.notes` (legacy).
 - `fbSaveTimer` : remettre à `null` **avant** `fbDocRef.set()` dans le timer, sinon les snapshots cloud entrants restent bloqués.
 - `authStateResolved` : flag anti-flash de l'overlay de login au boot — ne pas retirer.
 - `fbDocRef` doit être assigné **avant** `renderFirebaseUI()`.
