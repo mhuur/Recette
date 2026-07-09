@@ -3448,6 +3448,11 @@ function formatTime(mins) {
   return m === 0 ? h + 'h' : h + 'h' + String(m).padStart(2, '0');
 }
 
+// Copie triée alphabétiquement (fr, insensible aux accents/casse) — ne mute jamais le tableau source.
+function sortMealTypes(list) {
+  return [...(list || [])].sort((a, b) => a.localeCompare(b, 'fr', { sensitivity: 'base' }));
+}
+
 // Renvoie du HTML (5 SVG Lucide), pas du texte : les consommateurs doivent utiliser innerHTML.
 function ratingStars(r) {
   if (r == null || r === '') return '';
@@ -4800,7 +4805,8 @@ function renderRecipes() {
       if (r.prepTime) html += '<span class="meta-item">' + ICONS.utensils + ' ' + formatTime(r.prepTime) + '</span>';
       if (r.cookTime) html += '<span class="meta-item">' + ICONS.flame + ' ' + formatTime(r.cookTime) + '</span>';
       if (r.mealTypes && r.mealTypes.length > 0) {
-        const tagsHtml = r.mealTypes.map(m => '<span class="meal-tag">' + escapeHtml(m) + '</span>').join('');
+        // Tri alphabétique à l'affichage seulement — r.mealTypes garde son ordre (persisté/synchro).
+        const tagsHtml = sortMealTypes(r.mealTypes).map(m => '<span class="meal-tag">' + escapeHtml(m) + '</span>').join('');
         html += '<span class="meta-item meal-tags">' + tagsHtml + '</span>';
       }
       return html;
@@ -4877,7 +4883,7 @@ function renderRecipes() {
         mealLabel.className = 'recipe-types-label';
         mealLabel.textContent = 'Types :';
         mealRow.appendChild(mealLabel);
-        r.mealTypes.forEach(m => {
+        sortMealTypes(r.mealTypes).forEach(m => {
           const tag = document.createElement('span');
           tag.className = 'meal-tag';
           tag.textContent = m;

@@ -48,6 +48,7 @@ Guide pour Claude Code sur ce projet.
 - Hauteurs en `dvh` (gère le clavier iOS).
 
 ## Workflows
+- **Livraison automatique (demandé par l'utilisateur, 2026-07-09)** : à la fin de chaque tâche qui modifie l'app, enchaîner **sans redemander** : bumper `CACHE_VERSION` (`sw.js`) → `git commit` + `push` → `firebase deploy --only hosting`. Vérifier avant, pas après (sonde headless ; cf. ci-dessous). Retour arrière = `git revert <sha>` puis redéployer.
 - **Feature / fix** : éditer le `.html` → tester via serveur local → vérifier à la main les onglets touchés + un cycle save/sync.
 - **Vérification — adapter l'effort au risque (3 niveaux)** :
   - *Visuel / CSS / icônes* → l'utilisateur regarde `__preview.html` (cf. ci-dessous). **Pas** de screenshot headless de ma part.
