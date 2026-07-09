@@ -750,7 +750,7 @@ label {
   padding: 0;
 }
 .form-compact-item .rating-input { gap:6px; border:none; padding:0; background:transparent; }
-.form-compact-item .rating-input input[type="number"] { width:48px; }
+.rating-value { font-size:12px; color:var(--text-muted); white-space:nowrap; min-width:56px; }
 
 /* Autocomplete */
 .autocomplete {
@@ -1144,6 +1144,35 @@ label {
 .rating-input input { width: 70px; }
 .rating-stars-display { color: var(--star); display: inline-flex; align-items: center; gap: 1px; }
 .rating-stars-display svg { width: 15px; height: 15px; }
+
+/* Sélecteur d'étoiles cliquable — 10 zones (une demi-étoile = 1 point) */
+.star-picker { position: relative; display: inline-flex; line-height: 0; }
+.star-picker-stars { display: inline-flex; gap: 0; color: var(--star); }
+.star-picker-stars svg { width: var(--sp-size, 34px); height: var(--sp-size, 34px); }
+.star-picker-hit { position: absolute; inset: 0; display: flex; }
+.star-picker-hit button {
+  flex: 1; background: none; border: 0; padding: 0; margin: 0;
+  cursor: pointer; border-radius: 3px;
+}
+.star-picker-hit button:focus-visible { outline: 2px solid var(--primary); outline-offset: 1px; }
+.rating-modal-value { margin-top: 12px; font-size: 15px; font-weight: 600; color: var(--text-muted); }
+.rating-clear-btn {
+  border: 0; background: transparent; color: var(--text-dim); cursor: pointer;
+  display: inline-flex; align-items: center; line-height: 0; padding: 3px; border-radius: 4px;
+}
+.rating-clear-btn:hover { color: var(--danger); background: var(--danger-soft); }
+.rating-clear-btn svg { width: 13px; height: 13px; }
+
+/* Note cliquable sur la carte recette */
+.rating-badge {
+  background: none; border: 1px solid transparent; color: inherit; font: inherit;
+  padding: 1px 6px; border-radius: 6px; cursor: pointer;
+}
+.rating-badge:hover { border-color: var(--star); background: rgba(250,204,21,.10); }
+.rating-badge-empty { color: var(--text-dim); }
+.rating-badge-empty .rating-stars { color: var(--text-dim); }
+.rating-badge-empty:hover { color: var(--star); }
+.rating-badge-empty:hover .rating-stars { color: var(--star); }
 
 .quick-filter-chk {
   display: flex;
@@ -2426,8 +2455,11 @@ body.coeditor-mode .sidebar::after {
         <div class="form-compact-item" title="Note / 10">
           <span class="form-compact-icon" data-icon="starFull" aria-hidden="true"></span>
           <div class="rating-input">
-            <input type="number" id="recipe-rating" min="0" max="10" step="0.5" placeholder="/10" autocomplete="off" data-form-type="other">
-            <span class="rating-stars-display" id="rating-preview"></span>
+            <!-- Valeur lue par saveRecipe() ; pilotée par le sélecteur d'étoiles. -->
+            <input type="hidden" id="recipe-rating">
+            <div id="recipe-rating-picker"></div>
+            <span class="rating-value" id="rating-preview">Non notée</span>
+            <button type="button" class="rating-clear-btn" id="recipe-rating-clear" title="Retirer la note" aria-label="Retirer la note"><span data-icon="x"></span></button>
           </div>
         </div>
         <div class="form-compact-item" title="Nombre de personnes">
@@ -2629,6 +2661,24 @@ service cloud.firestore {
         <button class="btn" id="merge-confirm-back"><span class="tb-ico" data-icon="arrowLeft"></span>Retour</button>
         <button class="btn btn-primary" id="merge-confirm-ok"><span class="tb-ico" data-icon="check"></span>Fusionner</button>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal : noter une recette depuis la liste -->
+<div class="modal-overlay" id="rating-modal">
+  <div class="modal" style="max-width:360px;">
+    <div class="modal-header">
+      <span class="modal-title" id="rating-modal-title">Noter la recette</span>
+      <button class="modal-close" data-close-modal>×</button>
+    </div>
+    <div class="modal-body" style="padding:24px 20px; text-align:center;">
+      <div id="rating-modal-picker"></div>
+      <div class="rating-modal-value" id="rating-modal-value">Non notée</div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-danger btn-sm" id="rating-modal-clear"><span class="tb-ico" data-icon="x"></span>Retirer la note</button>
+      <button class="btn" data-close-modal>Fermer</button>
     </div>
   </div>
 </div>
@@ -3516,6 +3566,49 @@ function ratingStars(r) {
   const empty = 5 - full - (half ? 1 : 0);
   for (let i = 0; i < empty; i++) s += ICONS.star;
   return s;
+}
+
+/* Sélecteur d'étoiles cliquable. Valeur 0..10 : chaque étoile = 2 points,
+   sa moitié gauche donne le demi-point. Ne pas l'instancier au boot :
+   il appelle ratingStars() → ICONS, qui est un const déclaré en fin de script. */
+function createStarPicker(container, opts = {}) {
+  const onPick = opts.onPick || (() => {});
+  const onPreview = opts.onPreview || (() => {});
+  let value = Number(opts.value) || 0;
+
+  container.className = 'star-picker';
+  container.style.setProperty('--sp-size', (opts.size || 34) + 'px');
+  container.innerHTML = '';
+  const starsEl = document.createElement('div');
+  starsEl.className = 'star-picker-stars';
+  const hitEl = document.createElement('div');
+  hitEl.className = 'star-picker-hit';
+  container.appendChild(starsEl);
+  container.appendChild(hitEl);
+
+  const paint = v => { starsEl.innerHTML = ratingStars(v || 0); onPreview(v || 0); };
+
+  for (let v = 1; v <= 10; v++) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.title = v + '/10';
+    b.setAttribute('aria-label', 'Noter ' + v + ' sur 10');
+    b.onmouseenter = () => paint(v);
+    b.onfocus = () => paint(v);
+    b.onclick = e => { e.stopPropagation(); value = v; paint(v); onPick(v); };
+    hitEl.appendChild(b);
+  }
+  // Quitter la zone (souris ou clavier) restaure la valeur réelle, pas l'aperçu survolé.
+  container.onmouseleave = () => paint(value);
+  hitEl.addEventListener('focusout', () => setTimeout(() => {
+    if (!hitEl.contains(document.activeElement)) paint(value);
+  }, 0));
+
+  paint(value);
+  return {
+    getValue: () => value,
+    setValue: v => { value = Number(v) || 0; paint(value); }
+  };
 }
 
 /* ========================================================================
@@ -4849,8 +4942,14 @@ function renderRecipes() {
 
     const buildMetaHtml = () => {
       let html = '';
-      if (r.rating != null && r.rating !== '') {
+      const rated = r.rating != null && r.rating !== '';
+      const canRate = canRateRecipes();
+      if (rated && canRate) {
+        html += '<button type="button" class="meta-item rating-badge" data-rate title="Modifier la note"><span class="rating-stars">' + ratingStars(r.rating) + '</span> <b>' + r.rating + '/10</b></button>';
+      } else if (rated) {
         html += '<span class="meta-item"><span class="rating-stars">' + ratingStars(r.rating) + '</span> <b>' + r.rating + '/10</b></span>';
+      } else if (canRate) {
+        html += '<button type="button" class="meta-item rating-badge rating-badge-empty" data-rate title="Noter cette recette"><span class="rating-stars">' + ICONS.star + '</span> <span>Noter</span></button>';
       }
       if (r.servings) html += '<span class="meta-item">' + ICONS.users + ' ' + r.servings + '</span>';
       if (r.prepTime) html += '<span class="meta-item">' + ICONS.utensils + ' ' + formatTime(r.prepTime) + '</span>';
@@ -4865,6 +4964,9 @@ function renderRecipes() {
     const meta = document.createElement('div');
     meta.className = 'recipe-meta';
     meta.innerHTML = buildMetaHtml();
+    // stopPropagation : le header de la carte déplie la recette au clic.
+    const rateBtn = meta.querySelector('[data-rate]');
+    if (rateBtn) rateBtn.onclick = e => { e.stopPropagation(); openRatingDialog(r); };
     main.appendChild(meta);
     header.appendChild(main);
 
@@ -5133,10 +5235,28 @@ function openRecipeModal(recipe = null) {
   setTimeout(() => document.getElementById('recipe-name').focus(), 100);
 }
 
+// Instancié à la première ouverture de la modale : createStarPicker() dépend de ICONS (const de fin de script).
+let recipeRatingPicker = null;
+function ensureRecipeRatingPicker() {
+  if (recipeRatingPicker) return recipeRatingPicker;
+  const label = document.getElementById('rating-preview');
+  recipeRatingPicker = createStarPicker(document.getElementById('recipe-rating-picker'), {
+    size: 22,
+    onPreview: v => { label.textContent = v ? v + '/10' : 'Non notée'; },
+    onPick: v => { document.getElementById('recipe-rating').value = v; }
+  });
+  return recipeRatingPicker;
+}
+
 function updateRatingPreview() {
   const v = document.getElementById('recipe-rating').value;
-  document.getElementById('rating-preview').innerHTML = v !== '' ? ratingStars(v) : '';
+  ensureRecipeRatingPicker().setValue(v === '' ? 0 : parseFloat(v));
 }
+
+document.getElementById('recipe-rating-clear').onclick = () => {
+  document.getElementById('recipe-rating').value = '';
+  ensureRecipeRatingPicker().setValue(0);
+};
 
 function updateOriginFieldsVisibility() {
   const t = document.querySelector('input[name="origin-type"]:checked')?.value;
@@ -5345,7 +5465,6 @@ document.getElementById('btn-delete-ing').onclick = () => {
   toast('Ingrédient supprimé', 'success');
 };
 
-document.getElementById('recipe-rating').addEventListener('input', updateRatingPreview);
 document.querySelectorAll('input[name="origin-type"]').forEach(r => r.addEventListener('change', updateOriginFieldsVisibility));
 document.getElementById('btn-add-ing').onclick = () => addIngRow();
 
@@ -6532,6 +6651,43 @@ function openMergeMealTypeDialog(sourceMealType) {
     }
   );
 }
+
+/* ========================================================================
+   NOTATION RAPIDE — pop-up d'étoiles depuis la liste des recettes
+   ======================================================================== */
+let _ratingRecipeId = null;
+let _ratingPicker = null;
+
+// Lecture seule (invité viewer) : pas de notation. Le co-éditeur, lui, peut noter.
+function canRateRecipes() { return !document.body.classList.contains('guest-mode'); }
+
+function openRatingDialog(recipe) {
+  if (!canRateRecipes()) return;
+  _ratingRecipeId = recipe.id;
+  document.getElementById('rating-modal-title').textContent = recipe.name || 'Noter la recette';
+  const label = document.getElementById('rating-modal-value');
+  const rated = recipe.rating != null && recipe.rating !== '';
+  document.getElementById('rating-modal-clear').style.display = rated ? '' : 'none';
+  _ratingPicker = createStarPicker(document.getElementById('rating-modal-picker'), {
+    value: rated ? recipe.rating : 0,
+    size: 40,
+    onPreview: v => { label.textContent = v ? v + '/10' : 'Non notée'; },
+    onPick: v => applyRecipeRating(v)
+  });
+  document.getElementById('rating-modal').classList.add('active');
+}
+
+function applyRecipeRating(v) {
+  const r = state.recipes.find(x => x.id === _ratingRecipeId);
+  if (!r) return;
+  r.rating = v; // v === null → note retirée
+  save();
+  closeAllModals();
+  renderRecipes();  // le filtre « Note ≥ » peut faire disparaître la carte : c'est voulu
+  buildFilterBar();
+}
+
+document.getElementById('rating-modal-clear').onclick = () => applyRecipeRating(null);
 
 /* ========================================================================
    AFFECTATION EN MASSE — recettes d'un type de plat
