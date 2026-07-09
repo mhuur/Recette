@@ -14,7 +14,7 @@ Guide pour Claude Code sur ce projet.
 - Données : `localStorage` + sync temps réel Firestore.
 
 ## Fichiers du dossier
-- `index.html` — **l'app Recettes** (titre « 🍳 Mes Recettes », ~7 600 lignes), suivi par git.
+- `index.html` — **l'app Recettes** (titre « Mes Recettes », ~7 600 lignes), suivi par git.
 - `manifest.webmanifest`, `sw.js`, `icons/` — **PWA** (installable + offline). `sw.js` : stale-while-revalidate shell/CDN, **bypass total Firestore/Auth** ; bumper `CACHE_VERSION` à chaque déploiement. Icônes = `chef-hat` Lucide néon ; source vectorielle = `icons/icon.svg`, PNG régénérables par capture Chrome headless (`--screenshot --window-size=NxN` vers `C:/Temp`).
 - `index - <timestamp>.html` (titre « Devis Photo ») — **autre outil**, gardé en local comme **référence de design** (sidebar, menu « Signaler un bug ») ; **gitignored** (hors repo). Ne pas le confondre avec l'app.
 
@@ -36,11 +36,15 @@ Guide pour Claude Code sur ce projet.
 - **Accès** : Google perso ; **invité via lien** `#guestAccess=` (collection `accessRequests/{uid}`, champ `guestRole` `viewer`/`editor`) approuvé en **lecture** (CSS `body.guest-mode`) ou **modification** (`body.coeditor-mode` : co-éditeur écrit le carnet du proprio `users/{owner}/app/data`, sync deux-sens). Règle Firestore `isApprovedEditor` (fichier `firestore.rules`, déployé via CLI). L'ancien « mode partagé »/`sharedData` est **retiré de l'UI** ; helpers `getSharedMode`/`getFirebaseDocRef` conservés (routent vers le perso). Le **contexte invité est persisté** (`GUEST_CTX_KEY` localStorage, `persistGuestContext`/`restoreGuestContext`) : sans ça, rouvrir l'app sans le hash `#guestAccess=` (favori, PWA installée) renvoie l'invité sur SON propre carnet vide. **Piège** : une PWA iOS « sur l'écran d'accueil » a un localStorage **isolé** de Safari → l'invité doit cliquer le lien _dans le contexte qui sert l'app_ (au pire, utiliser le lien/favori navigateur plutôt que l'icône installée).
 
 ## Conventions
-- Échappement HTML : **`escapeHtml()`** — il n'existe **pas** de `esc()` (piège fréquent en portant du code de « Devis Photo »).
+- Échappement HTML : **`escapeHtml()`** ; `esc()` existe comme simple alias (ajouté pour le code porté de « Devis Photo »).
 - Composants réutilisables : `createAutocomplete()`, `createChipsInput()`. Modals in-app `showConfirm()`, `openMergeModal()` au lieu de `confirm()`/`prompt()` natifs.
 - Inputs texte : `autocomplete/autocorrect/autocapitalize=off`, `spellcheck=false` (anti AutoFill iOS).
 - Sidebar : desktop = onglets primaires (Recettes/Courses) visibles, secondaires (Données/Réglages/Debug) dans le menu « Mon compte » ; mobile = tous dans la barre du bas.
-- **Icônes** : Lucide SVG inline via `ICONS{}` + `injectIcons()` (rempli au boot, après `detectGuestMode()`). Ajouter une icône avec `data-icon="clé"` sur un élément vide. Pas d'emoji dans la sidebar.
+- **Icônes** : **zéro emoji dans l'UI** — que du Lucide SVG inline via `ICONS{}` + `injectIcons()` (rempli au boot, après `detectGuestMode()`). Ajouter une icône avec `data-icon="clé"` sur un élément vide ; sur du HTML rendu **après** le boot, soit interpoler `${ICONS.clé}` directement, soit rappeler `injectIcons(container)`. Taille = CSS sur le `svg` enfant (`_ICO` pose `width=18` en dur) ; `.tb-ico` donne un défaut en `em`.
+  - Là où un SVG est **impossible** (`<option>`, `placeholder`, `content:` CSS, `confirm()`, `toast()`, texte copié) → texte nu, pas d'emoji. Exception : `::before` peut porter un `mask` CSS (cf. `.autocomplete-item.selected`).
+  - Un bouton qui sauve/restaure son libellé doit utiliser `innerHTML`, pas `textContent` (sinon le SVG est détruit).
+  - `ICONS` est un `const` déclaré **en fin de script** : toute fonction qui l'utilise ne doit être appelée qu'après (le bloc d'init l'est).
+  - Les `★` de `parseRating()` sont de la **donnée** (cellules Excel), pas de la déco : ne pas les toucher.
 - Hauteurs en `dvh` (gère le clavier iOS).
 
 ## Workflows

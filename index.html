@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="format-detection" content="telephone=no, date=no, email=no, address=no">
-<title>🍳 Mes Recettes</title>
+<title>Mes Recettes</title>
 <!-- PWA / app installable -->
 <meta name="description" content="Recettes, liste de courses et ingrédients de saison.">
 <meta name="theme-color" content="#0a1628">
@@ -317,7 +317,9 @@ html, body { overflow-x: hidden; }
 .sidebar-user-chevron { flex-shrink: 0; color: var(--text-dim); display: inline-flex; align-items: center; transition: transform .15s; }
 .sidebar-user-chevron svg { width: 16px; height: 16px; }
 .user-avatar-wrapper.open .sidebar-user-chevron { transform: rotate(180deg); }
-.sidebar-sync { font-size: 10px; color: var(--success); text-align: center; padding: 3px 8px 6px; }
+.sidebar-sync { font-size: 10px; color: var(--success); padding: 3px 8px 6px; display: flex; align-items: center; justify-content: center; gap: 5px; }
+.sidebar-sync svg, #firebase-sync-status svg { width: 13px; height: 13px; flex-shrink: 0; }
+#firebase-sync-status { display: flex; align-items: center; gap: 5px; }
 .count-badge {
   display: inline-block;
   background: rgba(255,255,255,0.15);
@@ -356,6 +358,10 @@ button {
   gap: 6px;
 }
 .btn:hover { background: var(--surface-2); border-color: var(--border-light); }
+/* Icône Lucide inline — taille par défaut relative au texte ; les règles ciblées ci-dessous priment */
+.tb-ico { display: inline-flex; align-items: center; flex-shrink: 0; vertical-align: -.15em; }
+.tb-ico svg { width: 1.15em; height: 1.15em; }
+.btn .tb-ico svg { width: 15px; height: 15px; }
 .btn-primary { background: var(--primary); border-color: var(--primary); color: white; }
 .btn-primary:hover { background: var(--primary-dark); border-color: var(--primary-dark); }
 .btn-success { background: var(--success); border-color: var(--success); color: white; }
@@ -366,6 +372,7 @@ button {
 .btn-ghost:hover { background: var(--surface); color: var(--text); }
 .btn-sm { padding: 5px 10px; font-size: 13px; }
 .btn-xs { padding: 3px 8px; font-size: 12px; }
+.btn-xs svg { width: 14px; height: 14px; flex-shrink: 0; }
 .btn.active { background: var(--primary); border-color: var(--primary); color: white; }
 .btn.active:hover { background: var(--primary-dark); border-color: var(--primary-dark); }
 /* Toggles de la barre d'outils Recettes — icône Lucide + état actif néon (façon Devis Photo seg-neon) */
@@ -399,6 +406,15 @@ button {
 }
 .btn-neon .tb-ico { display: inline-flex; align-items: center; }
 .btn-neon .tb-ico svg { width: 15px; height: 15px; }
+
+/* Champ de recherche avec icône Lucide incrustée */
+.search-wrap { position: relative; display: flex; align-items: center; }
+.search-wrap .search-ico {
+  position: absolute; left: 11px; display: inline-flex;
+  color: var(--text-muted); pointer-events: none;
+}
+.search-wrap .search-ico svg { width: 16px; height: 16px; }
+.search-wrap input[type="text"] { width: 100%; padding-left: 35px; }
 
 /* Inputs */
 input[type="text"], input[type="number"], input[type="url"], select, textarea {
@@ -516,7 +532,8 @@ label {
 }
 /* Icônes Lucide de la méta : taille uniforme, ton discret */
 .recipe-meta svg { width: 14px; height: 14px; color: var(--text-dim); flex-shrink: 0; }
-.rating-stars { color: var(--star); font-size: 11px; }
+.rating-stars { color: var(--star); display: inline-flex; align-items: center; gap: 1px; vertical-align: -2px; }
+.rating-stars svg { width: 12px; height: 12px; }
 .meal-tags { display: flex; flex-wrap: wrap; gap: 3px; }
 /* Tag de plat en lecture seule (en-tête de carte) — même famille tonale, plus discret */
 .meal-tag {
@@ -585,10 +602,13 @@ label {
 .recipe-types-label { font-size: 11px; color: var(--text-muted); flex-shrink: 0; margin-right: 2px; }
 .recipe-expand {
   color: var(--text-dim);
-  font-size: 14px;
   transition: transform 0.2s;
   flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  line-height: 0;
 }
+.recipe-expand svg { width: 15px; height: 15px; }
 .recipe-card.expanded .recipe-expand { transform: rotate(90deg); }
 .recipe-body {
   display: none;
@@ -640,6 +660,7 @@ label {
   color: var(--text-muted);
 }
 .empty-icon { font-size: 48px; margin-bottom: 12px; opacity: 0.5; }
+.empty-icon svg { width: 48px; height: 48px; }
 
 /* Modal */
 .modal-overlay {
@@ -714,7 +735,8 @@ label {
   border-radius: 8px;
   padding: 5px 10px;
 }
-.form-compact-icon { font-size:15px; flex-shrink:0; }
+.form-compact-icon { flex-shrink:0; display:inline-flex; align-items:center; color:var(--text-muted); }
+.form-compact-icon svg { width:16px; height:16px; }
 .form-compact-item input[type="number"] {
   width: 56px;
   border: none;
@@ -770,9 +792,17 @@ label {
   background: var(--primary-dark);
   opacity: 0.7;
 }
+/* Coche Lucide « check » — un ::before ne peut pas porter de SVG inline, d'où le masque CSS */
 .autocomplete-item.selected::before {
-  content: '✓ ';
-  margin-right: 3px;
+  content: '';
+  display: inline-block;
+  width: 13px;
+  height: 13px;
+  margin-right: 5px;
+  vertical-align: -1px;
+  background: currentColor;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'/%3E%3C/svg%3E") center / contain no-repeat;
 }
 .autocomplete-create {
   padding: 9px 12px;
@@ -921,7 +951,8 @@ label {
 .manual-add-row { display: flex; gap: 8px; align-items: center; margin: 0 0 14px; flex-wrap: wrap; }
 .manual-add-row .autocomplete { flex: 1; min-width: 180px; }
 .manual-add-qty { width: 120px; flex-shrink: 0; }
-.manual-del { border: none; background: transparent; color: var(--text-dim); cursor: pointer; font-size: 14px; flex-shrink: 0; padding: 2px 6px; border-radius: 4px; align-self: center; }
+.manual-del { border: none; background: transparent; color: var(--text-dim); cursor: pointer; flex-shrink: 0; padding: 2px 6px; border-radius: 4px; align-self: center; display: inline-flex; align-items: center; line-height: 0; }
+.manual-del svg { width: 14px; height: 14px; }
 .manual-del:hover { color: var(--danger); background: rgba(239,68,68,0.12); }
 .shopping-item-name .manual-tag { font-size: 10px; color: var(--text-dim); font-weight: 400; margin-left: 4px; }
 .shopping-group {
@@ -999,6 +1030,11 @@ label {
   user-select: none;
 }
 .checked-toggle-header:hover { background: var(--surface); }
+.checked-toggle-label { display: inline-flex; align-items: center; gap: 7px; }
+.checked-toggle-label svg { width: 15px; height: 15px; color: var(--success); flex-shrink: 0; }
+.checked-toggle-chevron { display: inline-flex; line-height: 0; transition: transform .15s; }
+.checked-toggle-chevron svg { width: 15px; height: 15px; }
+.checked-toggle.open .checked-toggle-chevron { transform: rotate(180deg); }
 .checked-toggle-content { display: none; }
 .checked-toggle.open .checked-toggle-content { display: block; }
 .checked-toggle.open .checked-toggle-header { border-bottom: 1px solid var(--border); }
@@ -1016,7 +1052,12 @@ label {
   font-size: 16px;
   margin-bottom: 10px;
   color: var(--accent);
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
+.data-section h3 .tb-ico { display: inline-flex; align-items: center; flex-shrink: 0; }
+.data-section h3 .tb-ico svg { width: 17px; height: 17px; }
 .data-section p { color: var(--text-muted); font-size: 14px; margin-bottom: 12px; }
 .data-buttons { display: flex; gap: 8px; flex-wrap: wrap; }
 .data-list {
@@ -1099,7 +1140,8 @@ label {
   gap: 8px;
 }
 .rating-input input { width: 70px; }
-.rating-stars-display { color: var(--star); font-size: 14px; }
+.rating-stars-display { color: var(--star); display: inline-flex; align-items: center; gap: 1px; }
+.rating-stars-display svg { width: 15px; height: 15px; }
 
 .quick-filter-chk {
   display: flex;
@@ -1214,12 +1256,14 @@ label {
 .rating-filter { display: flex; align-items: center; gap: 3px; }
 .star-btn {
   background: none; border: 0; padding: 2px;
-  font-size: 24px; line-height: 1; cursor: pointer;
+  line-height: 0; cursor: pointer;
   color: var(--border-light);
-  transition: color .12s, text-shadow .12s, transform .08s;
+  transition: color .12s, filter .12s, transform .08s;
 }
+.star-btn svg { width: 24px; height: 24px; fill: none; }
 .star-btn:hover { transform: scale(1.12); }
-.star-btn.on { color: var(--star); text-shadow: 0 0 10px rgba(250,204,21,.5); }
+.star-btn.on { color: var(--star); filter: drop-shadow(0 0 6px rgba(250,204,21,.5)); }
+.star-btn.on svg { fill: currentColor; }
 .rating-min-label { margin-left: 10px; font-size: 13px; color: var(--text-muted); }
 .rating-unrated {
   display: flex; align-items: center; gap: 7px;
@@ -1670,6 +1714,21 @@ select.bug-tab-select option{background:var(--bg-2);color:var(--text);font-weigh
 .bug-status-open{background:var(--warning-soft);color:var(--warning)}
 .bug-status-done{background:var(--success-soft);color:var(--success)}
 .bug-card-date{font-size:11px;color:var(--text-dim);margin-left:auto;font-style:italic;cursor:help}
+/* Icônes Lucide de l'onglet Debug (.fb-check garde color:transparent → coche invisible tant que non validée) */
+.fb-check svg,.fb-step-del svg,.bug-card-copy svg{width:13px;height:13px}
+.fb-copy-btn svg,.bug-stat-toggle svg,.bug-card-edit-btn svg{width:14px;height:14px}
+.bug-form-add-btn svg{width:18px;height:18px}
+.bug-status-pill svg{width:11px;height:11px}
+.bug-empty-icon svg{width:42px;height:42px}
+.bug-card-copy{display:inline-flex;align-items:center;gap:5px}
+.fb-card.bug-card-v3 .bug-card-chevron{display:inline-flex;align-items:center;justify-content:center;line-height:0}
+.fb-card.bug-card-v3 .bug-card-chevron svg{width:14px;height:14px}
+.fb-card.bug-card-v3 .bug-card-actions-row .fb-del-text{display:inline-flex;align-items:center;gap:5px}
+.fb-card.bug-card-v3 .bug-card-actions-row .fb-del-text svg{width:12px;height:12px}
+.fb-step-bul{display:inline-flex;align-items:center;line-height:0}
+.fb-step-bul svg{width:13px;height:13px}
+.fb-add-step{display:inline-flex;align-items:center;gap:4px}
+.fb-add-step svg{width:12px;height:12px}
 
 /* FAB (désactivé : remplacé par bouton Ajouter inline) */
 .fab {
@@ -1965,7 +2024,8 @@ select.bug-tab-select option{background:var(--bg-2);color:var(--text);font-weigh
 }
 .guest-card h2 { margin: 0 0 8px; font-size: 20px; }
 .guest-card .guest-subtitle { color: var(--text-muted); font-size: 14px; margin: 0 0 24px; line-height: 1.5; }
-.guest-state-icon { font-size: 44px; margin-bottom: 14px; display: block; }
+.guest-state-icon { margin-bottom: 14px; display: block; color: var(--primary); }
+.guest-state-icon svg { width: 44px; height: 44px; }
 
 /* Panneau gestion des accès (admin) */
 .access-request-item {
@@ -1980,7 +2040,8 @@ select.bug-tab-select option{background:var(--bg-2);color:var(--text);font-weigh
 .req-info { flex: 1; min-width: 0; }
 .req-name { font-weight: 500; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .req-email { font-size: 11px; color: var(--text-muted); }
-.req-badge { font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 4px; white-space: nowrap; flex-shrink: 0; }
+.req-badge { font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 4px; white-space: nowrap; flex-shrink: 0; display: inline-flex; align-items: center; gap: 4px; }
+.req-badge svg { width: 11px; height: 11px; }
 .req-badge.pending  { background: #fff3cd; color: #856404; }
 .req-badge.approved { background: #d1e7dd; color: #0f5132; }
 .req-badge.denied   { background: #f8d7da; color: #842029; }
@@ -2020,7 +2081,8 @@ select.bug-tab-select option{background:var(--bg-2);color:var(--text);font-weigh
   max-width: 360px;
   width: 100%;
 }
-.login-card .app-icon { font-size: 52px; margin-bottom: 12px; display: block; }
+.login-card .app-icon { margin-bottom: 12px; display: block; color: var(--primary); }
+.login-card .app-icon svg { width: 52px; height: 52px; }
 .login-card h1 { font-size: 24px; margin-bottom: 6px; }
 .login-card p { color: var(--text-muted); font-size: 14px; margin-bottom: 28px; }
 #btn-login-google {
@@ -2047,7 +2109,7 @@ body.guest-mode .tab-btn[data-tab="settings"],
 body.guest-mode .tab-btn[data-tab="debug"],
 body.guest-mode .tab-btn[data-tab="shopping"] { display: none !important; }
 body.guest-mode .sidebar::after {
-  content: '👁 Lecture seule';
+  content: 'Lecture seule';
   font-size: 11px;
   color: var(--text-muted);
   padding: 3px 8px;
@@ -2060,7 +2122,7 @@ body.guest-mode .sidebar::after {
 body.coeditor-mode .tab-btn[data-tab="settings"],
 body.coeditor-mode .tab-btn[data-tab="debug"] { display: none !important; }
 body.coeditor-mode .sidebar::after {
-  content: '✏ Co-édition';
+  content: 'Co-édition';
   font-size: 11px;
   color: var(--accent);
   padding: 3px 8px;
@@ -2072,7 +2134,7 @@ body.coeditor-mode .sidebar::after {
 </head>
 <body>
 
-<div class="app-layout" data-appbar="🍳 Recettes">
+<div class="app-layout" data-appbar="Recettes">
 <aside class="sidebar">
   <nav role="tablist" aria-label="Navigation principale">
     <button class="tab-btn active" data-tab="recipes" role="tab" aria-selected="true"><span class="tab-icon" data-icon="chefHat" aria-hidden="true"></span><span class="tab-label">Recettes</span> <span class="count-badge" id="recipe-count">0</span></button>
@@ -2080,7 +2142,7 @@ body.coeditor-mode .sidebar::after {
     <button class="tab-btn tab-btn-secondary" data-tab="data" role="tab" aria-selected="false"><span class="tab-icon" data-icon="database" aria-hidden="true"></span><span class="tab-label">Données</span></button>
     <button class="tab-btn tab-btn-secondary" data-tab="settings" role="tab" aria-selected="false"><span class="tab-icon" data-icon="settings" aria-hidden="true"></span><span class="tab-label">Réglages</span></button>
     <button class="tab-btn tab-btn-secondary" data-tab="debug" role="tab" aria-selected="false"><span class="tab-icon" data-icon="bug" aria-hidden="true"></span><span class="tab-label">Debug</span> <span class="count-badge hide-if-zero" id="debug-count">0</span></button>
-    <button class="btn btn-primary" id="mobile-login-btn">🔑 Connexion</button>
+    <button class="btn btn-primary" id="mobile-login-btn"><span class="tb-ico" data-icon="key"></span>Connexion</button>
   </nav>
   <div class="sidebar-user" id="sidebar-user">
     <div class="user-avatar-wrapper" id="user-avatar-wrapper">
@@ -2101,7 +2163,7 @@ body.coeditor-mode .sidebar::after {
         <span class="sidebar-user-chevron" data-icon="chevronDown" aria-hidden="true"></span>
       </button>
     </div>
-    <div class="sidebar-sync" id="sidebar-sync-status">☁</div>
+    <div class="sidebar-sync" id="sidebar-sync-status" data-icon="cloud"></div>
   </div>
 </aside>
 
@@ -2110,7 +2172,10 @@ body.coeditor-mode .sidebar::after {
   <section id="tab-recipes" class="tab active">
     <div class="toolbar">
       <div class="toolbar-row">
-        <input type="text" id="search-input" placeholder="🔍 Rechercher..." style="flex:1;" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" data-form-type="other">
+        <div class="search-wrap" style="flex:1;">
+          <span class="search-ico" data-icon="search" aria-hidden="true"></span>
+          <input type="text" id="search-input" placeholder="Rechercher..." autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" data-form-type="other">
+        </div>
         <span id="recipe-count-display" style="font-size:12px; color:var(--text-muted); margin-left:8px; white-space:nowrap; flex-shrink:0;">0 / 0</span>
       </div>
       <div class="toolbar-row" style="justify-content:space-between;">
@@ -2148,7 +2213,7 @@ body.coeditor-mode .sidebar::after {
         <label style="display:flex; align-items:center; gap:6px; font-size:14px; color:var(--text-muted); margin:0;">
           <input type="checkbox" id="group-by-type" checked style="width:auto;"> Grouper par rayon
         </label>
-        <button class="btn btn-sm" id="btn-print-shopping">🖨 Imprimer</button>
+        <button class="btn btn-sm" id="btn-print-shopping"><span class="tb-ico" data-icon="printer"></span>Imprimer</button>
         <button class="btn btn-sm" id="btn-clear-checks">Décocher tout</button>
         <button class="btn btn-sm" id="btn-clear-selection">Vider sélection</button>
       </div>
@@ -2169,20 +2234,20 @@ body.coeditor-mode .sidebar::after {
   <!-- Onglet Données -->
   <section id="tab-data" class="tab">
     <div class="data-section">
-      <h3>🧂 Ingrédients <span id="ing-count-badge" class="count-badge" style="background:var(--surface);">0</span></h3>
+      <h3><span class="tb-ico" data-icon="carrot"></span>Ingrédients <span id="ing-count-badge" class="count-badge" style="background:var(--surface);">0</span></h3>
       <div id="ingredients-list" class="data-list"></div>
     </div>
     <div class="data-section">
-      <h3>📏 Unités <span id="unit-count-badge" class="count-badge" style="background:var(--surface);">0</span></h3>
+      <h3><span class="tb-ico" data-icon="ruler"></span>Unités <span id="unit-count-badge" class="count-badge" style="background:var(--surface);">0</span></h3>
       <div id="units-list" class="data-list"></div>
     </div>
     <div class="data-section">
-      <h3>🏷 Types d'ingrédients <span id="type-count-badge" class="count-badge" style="background:var(--surface);">0</span></h3>
+      <h3><span class="tb-ico" data-icon="tag"></span>Types d'ingrédients <span id="type-count-badge" class="count-badge" style="background:var(--surface);">0</span></h3>
       <p style="font-size:13px; color:var(--text-muted);">Les types servent de <b>rayons</b> dans la liste de courses. Réordonne-les avec ▲▼ pour suivre ton parcours en magasin.</p>
       <div id="types-list" class="data-list"></div>
     </div>
     <div class="data-section">
-      <h3>👪 Familles d'ingrédients <span id="family-count-badge" class="count-badge" style="background:var(--surface);">0</span></h3>
+      <h3><span class="tb-ico" data-icon="layers"></span>Familles d'ingrédients <span id="family-count-badge" class="count-badge" style="background:var(--surface);">0</span></h3>
       <p style="font-size:13px; color:var(--text-muted);">Un ingrédient peut appartenir à plusieurs familles (ex: "Poulet" → Viande + Volaille). Sert à filtrer les recettes par famille.</p>
       <div id="families-list" class="data-list"></div>
       <div style="margin-top:10px; display:flex; gap:8px;">
@@ -2191,7 +2256,7 @@ body.coeditor-mode .sidebar::after {
       </div>
     </div>
     <div class="data-section">
-      <h3>🍽 Types de plats <span id="meal-count-badge" class="count-badge" style="background:var(--surface);">0</span></h3>
+      <h3><span class="tb-ico" data-icon="utensils"></span>Types de plats <span id="meal-count-badge" class="count-badge" style="background:var(--surface);">0</span></h3>
       <div id="meals-list" class="data-list"></div>
       <div style="margin-top:10px; display:flex; gap:8px;">
         <input type="text" id="new-meal-type" placeholder="Nouveau type de plat..." autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" data-form-type="other">
@@ -2199,7 +2264,7 @@ body.coeditor-mode .sidebar::after {
       </div>
     </div>
     <div class="data-section">
-      <h3>🗑 Corbeille <span id="trash-count-badge" class="count-badge" style="background:var(--surface);">0</span></h3>
+      <h3><span class="tb-ico" data-icon="trash2"></span>Corbeille <span id="trash-count-badge" class="count-badge" style="background:var(--surface);">0</span></h3>
       <p style="font-size:13px; color:var(--text-muted);">Les recettes supprimées arrivent ici. Tu peux les <b>restaurer</b> ou les supprimer définitivement.</p>
       <div id="trash-list" class="data-list"></div>
       <div style="margin-top:10px;">
@@ -2213,13 +2278,13 @@ body.coeditor-mode .sidebar::after {
 
     <!-- Mon compte -->
     <div class="data-section">
-      <h3>👤 Mon compte</h3>
+      <h3><span class="tb-ico" data-icon="user"></span>Mon compte</h3>
       <div id="firebase-not-configured" style="display:none;">
-        <button class="btn btn-primary" id="btn-setup-firebase">⚙ Configurer Firebase</button>
+        <button class="btn btn-primary" id="btn-setup-firebase"><span class="tb-ico" data-icon="settings"></span>Configurer Firebase</button>
       </div>
       <div id="firebase-configured">
         <div id="firebase-signed-out">
-          <button class="btn btn-primary" id="btn-sign-in">🔑 Se connecter avec Google</button>
+          <button class="btn btn-primary" id="btn-sign-in"><span class="tb-ico" data-icon="key"></span>Se connecter avec Google</button>
         </div>
         <div id="firebase-signed-in" style="display:none;">
           <div style="display:flex; align-items:center; gap:12px; background:var(--surface); padding:12px; border-radius:10px;">
@@ -2227,20 +2292,20 @@ body.coeditor-mode .sidebar::after {
             <div style="flex:1; min-width:0;">
               <div id="firebase-user-name" style="font-weight:600;">—</div>
               <div id="firebase-user-email" style="font-size:12px; color:var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">—</div>
-              <div id="firebase-sync-status" style="font-size:12px; color:var(--success); margin-top:2px;">☁ Synchronisé</div>
+              <div id="firebase-sync-status" style="font-size:12px; color:var(--success); margin-top:2px;"><span data-icon="cloud"></span><span>Synchronisé</span></div>
             </div>
             <button class="btn btn-sm btn-danger" id="btn-sign-out" style="flex-shrink:0;">Déconnexion</button>
           </div>
           <div class="data-buttons" style="margin-top:10px;">
-            <button class="btn btn-sm" id="btn-push-cloud">⬆ Forcer l'envoi</button>
-            <button class="btn btn-sm" id="btn-pull-cloud">⬇ Forcer le téléchargement</button>
-            <button class="btn btn-sm" id="btn-export-backup">💾 Sauvegarde (.json)</button>
+            <button class="btn btn-sm" id="btn-push-cloud"><span class="tb-ico" data-icon="uploadCloud"></span>Forcer l'envoi</button>
+            <button class="btn btn-sm" id="btn-pull-cloud"><span class="tb-ico" data-icon="downloadCloud"></span>Forcer le téléchargement</button>
+            <button class="btn btn-sm" id="btn-export-backup"><span class="tb-ico" data-icon="save"></span>Sauvegarde (.json)</button>
           </div>
           <details style="margin-top:12px;">
             <summary style="cursor:pointer; font-size:12px; color:var(--text-muted); padding:4px 0;">Identifiant (UID)</summary>
             <div style="display:flex; gap:6px; align-items:center; margin-top:6px;">
               <code id="firebase-user-uid" style="flex:1; background:var(--bg); padding:6px 8px; border-radius:6px; font-size:11px; word-break:break-all; color:var(--accent);">—</code>
-              <button class="btn btn-xs" id="btn-copy-uid">📋</button>
+              <button class="btn btn-xs" id="btn-copy-uid" title="Copier l'UID" aria-label="Copier l'UID"><span class="tb-ico" data-icon="copy"></span></button>
             </div>
           </details>
           <div style="margin-top:8px; font-size:11px; color:var(--text-dim);">
@@ -2252,16 +2317,16 @@ body.coeditor-mode .sidebar::after {
 
     <!-- Accès invités -->
     <div class="data-section" id="guest-mgmt-section" style="display:none;">
-      <h3>🔗 Accès invités <span id="access-requests-badge"></span></h3>
+      <h3><span class="tb-ico" data-icon="link2"></span>Accès invités <span id="access-requests-badge"></span></h3>
       <p style="font-size:13px; color:var(--text-muted);">Partagez vos recettes : la personne reçoit un lien, se connecte avec Google, puis vous l'approuvez en <b>lecture</b> ou en <b>modification</b> (co-édition à deux comptes).</p>
 
       <div style="margin-bottom:16px;">
-        <button class="btn btn-primary" id="btn-gen-share-link">🔗 Générer le lien de partage</button>
+        <button class="btn btn-primary" id="btn-gen-share-link"><span class="tb-ico" data-icon="link2"></span>Générer le lien de partage</button>
         <div id="share-link-box" style="display:none; margin-top:10px; background:var(--bg); border-radius:8px; padding:10px;">
           <div style="font-size:12px; color:var(--text-muted); margin-bottom:6px;">Envoyez ce lien à la personne souhaitée :</div>
           <div style="display:flex; gap:6px;">
             <input type="text" id="share-link-value" readonly style="font-size:11px; font-family:monospace; background:var(--surface);" autocomplete="off" data-form-type="other">
-            <button class="btn btn-sm" id="btn-copy-share-link">📋 Copier</button>
+            <button class="btn btn-sm" id="btn-copy-share-link"><span class="tb-ico" data-icon="copy"></span>Copier</button>
           </div>
         </div>
       </div>
@@ -2276,7 +2341,7 @@ body.coeditor-mode .sidebar::after {
         <div style="margin-top:8px;">
           <p style="font-size:12px; color:var(--text-muted); margin-bottom:6px;">À coller dans <a href="https://console.firebase.google.com/" target="_blank" style="color:var(--primary);">Firebase Console → Firestore → Règles</a>.</p>
           <pre id="firestore-rules-text" style="background:var(--bg); padding:10px; border-radius:6px; font-size:10px; overflow-x:auto; white-space:pre-wrap; word-break:break-all; max-height:180px; overflow-y:auto; text-align:left;"></pre>
-          <button class="btn btn-sm" id="btn-copy-firestore-rules" style="margin-top:6px;">📋 Copier</button>
+          <button class="btn btn-sm" id="btn-copy-firestore-rules" style="margin-top:6px;"><span class="tb-ico" data-icon="copy"></span>Copier</button>
         </div>
       </details>
     </div>
@@ -2284,7 +2349,7 @@ body.coeditor-mode .sidebar::after {
     <!-- Config avancée -->
     <div class="data-section">
       <details>
-        <summary style="cursor:pointer; font-size:13px; color:var(--text-muted); font-weight:500; padding:4px 0;">⚙ Configuration avancée Firebase</summary>
+        <summary style="cursor:pointer; font-size:13px; color:var(--text-muted); font-weight:500; padding:4px 0;"><span class="tb-ico" data-icon="settings"></span> Configuration avancée Firebase</summary>
         <div style="margin-top:10px;">
           <button class="btn btn-ghost btn-sm" id="btn-edit-firebase">Modifier la config Firebase</button>
         </div>
@@ -2298,7 +2363,7 @@ body.coeditor-mode .sidebar::after {
 <!-- Écran de connexion -->
 <div id="login-overlay">
   <div class="login-card">
-    <span class="app-icon">🍳</span>
+    <span class="app-icon" data-icon="chefHat" aria-hidden="true"></span>
     <h1>Mes Recettes</h1>
     <p>Connectez-vous pour accéder à vos recettes</p>
     <button class="btn btn-primary" id="btn-login-google">
@@ -2312,10 +2377,10 @@ body.coeditor-mode .sidebar::after {
 <!-- Overlay mode invité -->
 <div id="guest-overlay">
   <div class="guest-card">
-    <span id="guest-state-icon" class="guest-state-icon">🍽</span>
+    <span id="guest-state-icon" class="guest-state-icon" data-icon="utensils" aria-hidden="true"></span>
     <h2 id="guest-title">Recettes partagées</h2>
     <p class="guest-subtitle" id="guest-subtitle">Connectez-vous avec votre compte Google pour accéder aux recettes.</p>
-    <button class="btn btn-primary" id="btn-guest-sign-in" style="width:100%;">🔑 Se connecter avec Google</button>
+    <button class="btn btn-primary" id="btn-guest-sign-in" style="width:100%;"><span class="tb-ico" data-icon="key"></span>Se connecter avec Google</button>
     <p id="guest-error-msg" style="color:#e74c3c; font-size:13px; margin-top:12px; display:none;"></p>
   </div>
 </div>
@@ -2336,22 +2401,22 @@ body.coeditor-mode .sidebar::after {
       </div>
       <div class="form-compact-row">
         <div class="form-compact-item" title="Note / 10">
-          <span class="form-compact-icon">⭐</span>
+          <span class="form-compact-icon" data-icon="starFull" aria-hidden="true"></span>
           <div class="rating-input">
             <input type="number" id="recipe-rating" min="0" max="10" step="0.5" placeholder="/10" autocomplete="off" data-form-type="other">
             <span class="rating-stars-display" id="rating-preview"></span>
           </div>
         </div>
         <div class="form-compact-item" title="Nombre de personnes">
-          <span class="form-compact-icon">👥</span>
+          <span class="form-compact-icon" data-icon="users" aria-hidden="true"></span>
           <input type="number" id="recipe-servings" min="1" value="4" autocomplete="off" data-form-type="other">
         </div>
         <div class="form-compact-item" title="Temps de préparation (min)">
-          <span class="form-compact-icon">🔪</span>
+          <span class="form-compact-icon" data-icon="utensilsCrossed" aria-hidden="true"></span>
           <input type="number" id="recipe-prep" min="0" placeholder="min" autocomplete="off" data-form-type="other">
         </div>
         <div class="form-compact-item" title="Temps de cuisson (min)">
-          <span class="form-compact-icon">🔥</span>
+          <span class="form-compact-icon" data-icon="flame" aria-hidden="true"></span>
           <input type="number" id="recipe-cook" min="0" placeholder="min" autocomplete="off" data-form-type="other">
         </div>
       </div>
@@ -2416,9 +2481,9 @@ body.coeditor-mode .sidebar::after {
         <div id="new-ing-families-wrapper"></div>
       </div>
       <div class="form-group">
-        <label>🗓 Mois de saison (vide = intemporel)</label>
+        <label><span class="tb-ico" data-icon="calendar"></span> Mois de saison (vide = intemporel)</label>
         <div id="new-ing-seasons" style="display:grid; grid-template-columns:repeat(6, 1fr); gap:4px;"></div>
-        <div style="font-size:12px; color:var(--text-muted); margin-top:6px;">💡 Laisse vide pour un ingrédient disponible toute l'année. Sinon, sélectionne les mois où il est de saison.</div>
+        <div style="font-size:12px; color:var(--text-muted); margin-top:6px;"><span class="tb-ico" data-icon="lightbulb"></span> Laisse vide pour un ingrédient disponible toute l'année. Sinon, sélectionne les mois où il est de saison.</div>
       </div>
       <div id="ing-usage-info" style="font-size:12px; color:var(--text-muted); padding:8px 10px; background:var(--surface); border-radius:6px; display:none;"></div>
     </div>
@@ -2457,12 +2522,12 @@ body.coeditor-mode .sidebar::after {
 <div class="modal-overlay" id="firebase-modal">
   <div class="modal" style="max-width:640px;">
     <div class="modal-header">
-      <span class="modal-title">⚙ Configurer Firebase</span>
+      <span class="modal-title"><span class="tb-ico" data-icon="settings"></span> Configurer Firebase</span>
       <button class="modal-close" data-close-modal>×</button>
     </div>
     <div class="modal-body">
       <details style="margin-bottom:14px;">
-        <summary style="cursor:pointer; color:var(--accent); font-weight:500;">📖 Étapes pour créer ta config Firebase (cliquer pour voir)</summary>
+        <summary style="cursor:pointer; color:var(--accent); font-weight:500;"><span class="tb-ico" data-icon="bookOpen"></span> Étapes pour créer ta config Firebase (cliquer pour voir)</summary>
         <div style="background:var(--surface); padding:12px; border-radius:8px; font-size:13px; line-height:1.7; color:var(--text-muted); margin-top:10px;">
           <ol style="padding-left:20px; margin:0;">
             <li>Va sur <a href="https://console.firebase.google.com/" target="_blank" style="color:var(--primary);">console.firebase.google.com</a> et connecte-toi avec ton compte Google</li>
@@ -2496,7 +2561,7 @@ service cloud.firestore {
   messagingSenderId: "...",
   appId: "..."
 }'></textarea>
-        <div style="font-size:12px; color:var(--text-muted); margin-top:6px;">💡 Tu peux coller soit l'objet entier <code>{ apiKey: ..., ... }</code>, soit du JSON.</div>
+        <div style="font-size:12px; color:var(--text-muted); margin-top:6px;"><span class="tb-ico" data-icon="lightbulb"></span> Tu peux coller soit l'objet entier <code>{ apiKey: ..., ... }</code>, soit du JSON.</div>
       </div>
     </div>
     <div class="modal-footer">
@@ -2532,14 +2597,14 @@ service cloud.firestore {
       <div class="modal-body" style="padding:20px;">
         <div style="text-align:center; padding:10px 0;">
           <div id="merge-confirm-source" style="font-size:16px; font-weight:600; color:var(--danger);"></div>
-          <div style="font-size:24px; margin:8px 0; color:var(--text-muted);">↓</div>
+          <div style="margin:8px 0; color:var(--text-muted); line-height:0;"><span class="tb-ico" data-icon="arrowDown" style="font-size:24px;"></span></div>
           <div id="merge-confirm-target" style="font-size:16px; font-weight:600; color:var(--success);"></div>
         </div>
         <p id="merge-confirm-detail" style="font-size:13px; color:var(--text-muted); text-align:center; margin:12px 0 0;"></p>
       </div>
       <div class="modal-footer">
-        <button class="btn" id="merge-confirm-back">← Retour</button>
-        <button class="btn btn-primary" id="merge-confirm-ok">✓ Fusionner</button>
+        <button class="btn" id="merge-confirm-back"><span class="tb-ico" data-icon="arrowLeft"></span>Retour</button>
+        <button class="btn btn-primary" id="merge-confirm-ok"><span class="tb-ico" data-icon="check"></span>Fusionner</button>
       </div>
     </div>
   </div>
@@ -2833,7 +2898,7 @@ function initFirebase() {
               const data = snap.data();
               if ((data.lastModified || 0) > (state.lastModified || 0)) {
                 applyCloudData(data);
-                setSyncStatus('☁ Mis à jour', 'success');
+                setSyncStatus('Mis à jour', 'success', 'cloud');
               }
             }
           }).catch(() => {});
@@ -2888,16 +2953,16 @@ async function onFirebaseSignIn() {
       if (fbSaveTimer) return; // modifs locales non encore envoyées
       if (snap.exists) {
         applyCloudData(snap.data());
-        setSyncStatus('☁ Synchronisé', 'success');
+        setSyncStatus('Synchronisé', 'success', 'cloud');
       }
     }, err => {
       console.error('Snapshot error:', err);
-      setSyncStatus('⚠ Erreur de synchro', 'error');
+      setSyncStatus('Erreur de synchro', 'error', 'alertTriangle');
     });
-    setSyncStatus('☁ Synchronisé', 'success');
+    setSyncStatus('Synchronisé', 'success', 'cloud');
   } catch (e) {
     console.error(e);
-    setSyncStatus('⚠ ' + e.message, 'error');
+    setSyncStatus(e.message, 'error', 'alertTriangle');
     toast('Erreur synchro : ' + e.message, 'error');
   }
 }
@@ -2945,9 +3010,9 @@ function applyCloudData(data) {
 }
 
 function fbSchedulePush() {
-  if (!fbDocRef) { setSyncStatus('⚠ Non connecté — données locales seulement', 'error'); return; }
+  if (!fbDocRef) { setSyncStatus('Non connecté — données locales seulement', 'error', 'alertTriangle'); return; }
   clearTimeout(fbSaveTimer);
-  setSyncStatus('💾 Modifs non enregistrées...', 'muted');
+  setSyncStatus('Modifs non enregistrées...', 'muted', 'save');
   fbSaveTimer = setTimeout(() => {
     fbSaveTimer = null; // IMPORTANT: reset pour débloquer les snapshots cloud
     pushToCloud();
@@ -3013,10 +3078,10 @@ async function pushToCloud() {
       bugs: state.bugs || { items: [], lastNum: 0 },
       lastModified: state.lastModified
     });
-    setSyncStatus('☁ Synchronisé', 'success');
+    setSyncStatus('Synchronisé', 'success', 'cloud');
   } catch (e) {
     console.error(e);
-    setSyncStatus('⚠ Échec : ' + e.message, 'error');
+    setSyncStatus('Échec : ' + e.message, 'error', 'alertTriangle');
     toast('Échec synchro : ' + e.message, 'error');
   }
 }
@@ -3036,12 +3101,14 @@ async function pullFromCloud() {
   }
 }
 
-function setSyncStatus(text, kind) {
+// `icon` = clé de ICONS{} (cloud, alertTriangle, save…) rendue devant le texte.
+function setSyncStatus(text, kind, icon) {
   const el = document.getElementById('firebase-sync-status');
   const sb = document.getElementById('sidebar-sync-status');
   const color = kind === 'success' ? 'var(--success)' : kind === 'error' ? 'var(--danger)' : 'var(--text-muted)';
-  if (el) { el.textContent = text; el.style.color = color; }
-  if (sb) { sb.textContent = text; sb.style.color = color; }
+  const html = (ICONS[icon] || '') + '<span>' + escapeHtml(text) + '</span>';
+  if (el) { el.innerHTML = html; el.style.color = color; }
+  if (sb) { sb.innerHTML = html; sb.style.color = color; }
 }
 
 function renderFirebaseUI() {
@@ -3381,16 +3448,17 @@ function formatTime(mins) {
   return m === 0 ? h + 'h' : h + 'h' + String(m).padStart(2, '0');
 }
 
+// Renvoie du HTML (5 SVG Lucide), pas du texte : les consommateurs doivent utiliser innerHTML.
 function ratingStars(r) {
   if (r == null || r === '') return '';
   const v = parseFloat(r);
   const full = Math.floor(v / 2);
   const half = (v / 2 - full) >= 0.25 && (v / 2 - full) < 0.75;
   let s = '';
-  for (let i = 0; i < full; i++) s += '★';
-  if (half) s += '⯨';
+  for (let i = 0; i < full; i++) s += ICONS.starFull;
+  if (half) s += ICONS.starHalf;
   const empty = 5 - full - (half ? 1 : 0);
-  for (let i = 0; i < empty; i++) s += '☆';
+  for (let i = 0; i < empty; i++) s += ICONS.star;
   return s;
 }
 
@@ -3897,8 +3965,8 @@ function switchTab(tabId) {
   // App bar mobile : titre = onglet courant
   const _al = document.querySelector('.app-layout');
   if (_al) {
-    const _t = { recipes: '🍳 Recettes', shopping: '🍳 Courses', data: '🍳 Données', settings: '🍳 Réglages', debug: '🍳 Debug' };
-    _al.dataset.appbar = _t[tabId] || '🍳 Mes Recettes';
+    const _t = { recipes: 'Recettes', shopping: 'Courses', data: 'Données', settings: 'Réglages', debug: 'Debug' };
+    _al.dataset.appbar = _t[tabId] || 'Mes Recettes';
   }
 }
 
@@ -4127,7 +4195,7 @@ function bugItemToText(it, idx) {
   lines.push(`${prefix}${numTag}${head}${tabLbl ? ` [${tabLbl}]` : ""}`);
   if (it.text && it.title && it.text.trim()) it.text.trim().split("\n").forEach(l => lines.push(`   ${l}`));
   (it.steps || []).forEach(s => { const st = (s || "").trim(); if (st) lines.push(`   - ${st}`); });
-  if (it.num) lines.push(`   📎 captures éventuelles : note-${it.num}*.png`);
+  if (it.num) lines.push(`   Captures éventuelles : note-${it.num}*.png`);
   return lines.join("\n");
 }
 
@@ -4144,9 +4212,9 @@ window.bugCopyOne = function(id) {
   const btn = document.querySelector(`[data-bug-copy="${id}"]`);
   const flash = () => {
     if (!btn) return;
-    const old = btn.textContent;
-    btn.textContent = "✓"; btn.classList.add("copied");
-    setTimeout(() => { btn.textContent = old; btn.classList.remove("copied"); }, 1500);
+    const old = btn.innerHTML; // innerHTML (pas textContent) : le bouton contient un SVG Lucide
+    btn.innerHTML = ICONS.check; btn.classList.add("copied");
+    setTimeout(() => { btn.innerHTML = old; btn.classList.remove("copied"); }, 1500);
   };
   if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(flash).catch(() => bugCopyFallback(txt, flash));
   else bugCopyFallback(txt, flash);
@@ -4156,11 +4224,11 @@ function bugCopy() {
   const txt = bugBuildText();
   const btn = document.getElementById("bug-copy-btn");
   if (!txt) {
-    if (btn) { const old = btn.textContent; btn.textContent = "Aucune action en cours"; setTimeout(() => { btn.textContent = old; }, 1500); }
+    if (btn) { const old = btn.innerHTML; btn.textContent = "Aucune action en cours"; setTimeout(() => { btn.innerHTML = old; }, 1500); }
     return;
   }
   const done = () => {
-    if (btn) { const old = btn.textContent; btn.textContent = "✓ Copié !"; btn.classList.add("copied"); setTimeout(() => { btn.textContent = old; btn.classList.remove("copied"); }, 1800); }
+    if (btn) { const old = btn.innerHTML; btn.innerHTML = ICONS.check + "<span>Copié !</span>"; btn.classList.add("copied"); setTimeout(() => { btn.innerHTML = old; btn.classList.remove("copied"); }, 1800); }
   };
   if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(done).catch(() => bugCopyFallback(txt, done));
   else bugCopyFallback(txt, done);
@@ -4194,7 +4262,7 @@ function renderDebug() {
 
   let h = `<div class="fb-bar">
     <div class="fb-title">Notes &amp; Remarques</div>
-    <button class="fb-copy-btn" onclick="bugCopy()" id="bug-copy-btn">📋 Copier toutes les actions en cours</button>
+    <button class="fb-copy-btn" onclick="bugCopy()" id="bug-copy-btn">${ICONS.copy}<span>Copier toutes les actions en cours</span></button>
   </div>`;
   h += `<div class="fb-subtitle">Note ici les remarques ou bugs à transmettre à Claude. Chaque remarque peut être détaillée (onglet, étapes), copiée individuellement, validée ou supprimée. Sauvegarde automatique (local + cloud).</div>`;
 
@@ -4204,7 +4272,7 @@ function renderDebug() {
   h += `<div class="bug-stats-bar">
     <div class="bug-stat ${!bugFilters.showValidated ? "active" : ""}"><span class="bug-stat-num">${nOpen}</span> en cours</div>
     <button class="bug-stat-toggle ${bugFilters.showValidated ? "active" : ""}" onclick="bugFilterToggleValidated()" title="${bugFilters.showValidated ? "Masquer les validées" : "Afficher les validées"}">
-      <span class="bug-stat-num">${nDone}</span> validée${nDone > 1 ? "s" : ""} ${bugFilters.showValidated ? "👁" : "👁‍🗨"}
+      <span class="bug-stat-num">${nDone}</span> validée${nDone > 1 ? "s" : ""} ${bugFilters.showValidated ? ICONS.eye : ICONS.eyeOff}
     </button>
     ${totalAll > 0 ? `<div class="bug-progress" title="${nDone} validée${nDone > 1 ? "s" : ""} sur ${totalAll}">
       <div class="bug-progress-bar"><div class="bug-progress-fill" style="width:${progressPct}%"></div></div>
@@ -4222,17 +4290,17 @@ function renderDebug() {
   h += `<div class="bug-form ${hasDraftContent ? "has-content" : ""}">
     <div class="bug-form-quick">
       <select class="bug-form-tab-quick" onchange="bugDraftSet('tab', this.value)" title="Onglet concerné">
-        <option value="" ${!draftTab ? "selected" : ""}>📂 —</option>
+        <option value="" ${!draftTab ? "selected" : ""}>—</option>
         ${tabOptions}
       </select>
       <input id="bugTitleInput" class="bug-form-title-quick" type="text" placeholder="Nouvelle remarque…  (Alt+N)" title="Raccourci : Alt+N" value="${esc(bugDraft.title || "")}" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" oninput="bugDraftSet('title', this.value)" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();bugAdd()}">
       <span class="bug-form-next-num" title="Numéro qui sera attribué">#${nextNum}</span>
-      <button class="bug-form-add-btn" onclick="bugAdd()" title="Ajouter (Entrée)" aria-label="Ajouter">＋</button>
+      <button class="bug-form-add-btn" onclick="bugAdd()" title="Ajouter (Entrée)" aria-label="Ajouter">${ICONS.plus}</button>
     </div>
     <div class="bug-form-extra">
       <textarea class="bug-form-text-quick" rows="8" placeholder="Description (optionnelle) — étapes pour reproduire, ce qui s'est passé, ce que tu attendais…" oninput="bugDraftSet('text', this.value)">${esc(bugDraft.text || "")}</textarea>
       <div class="bug-form-hint" style="display:flex;align-items:flex-start;gap:6px">
-        <span style="flex-shrink:0">💡</span>
+        <span class="tb-ico" style="flex-shrink:0;margin-top:1px">${ICONS.lightbulb}</span>
         <span><strong>Capture :</strong> renomme-la selon <code>note-${nextNum}.png</code> et envoie-la par mail.</span>
       </div>
     </div>
@@ -4261,13 +4329,13 @@ function renderDebug() {
 
   if (!items.length) {
     if (allItems.length === 0) {
-      h += `<div class="bug-empty"><div class="bug-empty-icon">📝</div><div class="bug-empty-title">Aucune remarque pour l'instant</div><div class="bug-empty-hint">Utilise le formulaire ci-dessus pour signaler un bug ou noter une idée d'amélioration.</div></div>`;
+      h += `<div class="bug-empty"><div class="bug-empty-icon">${ICONS.fileText}</div><div class="bug-empty-title">Aucune remarque pour l'instant</div><div class="bug-empty-hint">Utilise le formulaire ci-dessus pour signaler un bug ou noter une idée d'amélioration.</div></div>`;
     } else if (bugFilters.q) {
-      h += `<div class="bug-empty"><div class="bug-empty-icon">🔎</div><div class="bug-empty-title">Aucun résultat pour « ${esc(bugFilters.q)} »</div><div class="bug-empty-hint"><button class="bug-empty-action" onclick="bugFilterSetQ('')">Effacer la recherche</button></div></div>`;
+      h += `<div class="bug-empty"><div class="bug-empty-icon">${ICONS.search}</div><div class="bug-empty-title">Aucun résultat pour « ${esc(bugFilters.q)} »</div><div class="bug-empty-hint"><button class="bug-empty-action" onclick="bugFilterSetQ('')">Effacer la recherche</button></div></div>`;
     } else if (bugFilters.tab !== "all") {
-      h += `<div class="bug-empty"><div class="bug-empty-icon">📂</div><div class="bug-empty-title">Aucune remarque pour ${esc(bugTabLabel(bugFilters.tab))}</div><div class="bug-empty-hint"><button class="bug-empty-action" onclick="bugFilterSetTab('all')">Voir toutes les remarques</button></div></div>`;
+      h += `<div class="bug-empty"><div class="bug-empty-icon">${ICONS.folder}</div><div class="bug-empty-title">Aucune remarque pour ${esc(bugTabLabel(bugFilters.tab))}</div><div class="bug-empty-hint"><button class="bug-empty-action" onclick="bugFilterSetTab('all')">Voir toutes les remarques</button></div></div>`;
     } else {
-      h += `<div class="bug-empty"><div class="bug-empty-icon">✓</div><div class="bug-empty-title">Toutes les remarques sont validées</div><div class="bug-empty-hint"><button class="bug-empty-action" onclick="bugFilterToggleValidated()">Afficher les validées</button></div></div>`;
+      h += `<div class="bug-empty"><div class="bug-empty-icon">${ICONS.checkCircle}</div><div class="bug-empty-title">Toutes les remarques sont validées</div><div class="bug-empty-hint"><button class="bug-empty-action" onclick="bugFilterToggleValidated()">Afficher les validées</button></div></div>`;
     }
   }
 
@@ -4278,7 +4346,7 @@ function renderDebug() {
     </select>`;
     const numBadge = it.num ? `<span class="bug-num-badge" title="Pour les captures : note-${it.num}.png">#${it.num}</span>` : "";
     const statusPill = it.validated
-      ? `<span class="bug-status-pill bug-status-done">✓ Validée</span>`
+      ? `<span class="bug-status-pill bug-status-done">${ICONS.check}Validée</span>`
       : `<span class="bug-status-pill bug-status-open">À traiter</span>`;
     const dateRel = it.createdAt
       ? `<span class="bug-card-date" title="${esc(new Date(it.createdAt).toLocaleString("fr-FR"))}">${esc(bugRelativeTime(it.createdAt))}</span>`
@@ -4300,16 +4368,16 @@ function renderDebug() {
       descHtml = `<div class="bug-card-text-empty">Aucune description.</div>`;
     }
     const steps = (it.steps || []).filter(s => (s || "").trim());
-    const chevron = `<span class="bug-card-chevron">${expanded ? "▾" : "▸"}</span>`;
+    const chevron = `<span class="bug-card-chevron">${expanded ? ICONS.chevronDown : ICONS.chevronRight}</span>`;
     const editBtn = expanded
       ? (editing
-          ? `<button class="bug-card-edit-btn editing" onclick="event.stopPropagation();bugCardEditEnd()" title="Terminer la modification">✓</button>`
-          : `<button class="bug-card-edit-btn" onclick="event.stopPropagation();bugCardEditStart('${it.id}')" title="Modifier">⋮</button>`)
+          ? `<button class="bug-card-edit-btn editing" onclick="event.stopPropagation();bugCardEditEnd()" title="Terminer la modification">${ICONS.check}</button>`
+          : `<button class="bug-card-edit-btn" onclick="event.stopPropagation();bugCardEditStart('${it.id}')" title="Modifier">${ICONS.moreVertical}</button>`)
       : "";
 
     h += `<div class="fb-card bug-card-v3 ${it.validated ? "fb-done" : ""} ${expanded ? "expanded" : ""} ${editing ? "editing" : ""}" data-bug-id="${esc(it.id)}">
       <div class="bug-card-head" onclick="bugCardToggleExpand('${it.id}')">
-        <button class="fb-check ${it.validated ? "on" : ""}" onclick="event.stopPropagation();bugToggleValid('${it.id}')" title="${it.validated ? "Marquer en cours" : "Valider"}">✓</button>
+        <button class="fb-check ${it.validated ? "on" : ""}" onclick="event.stopPropagation();bugToggleValid('${it.id}')" title="${it.validated ? "Marquer en cours" : "Valider"}">${ICONS.check}</button>
         ${numBadge}
         ${tabBadgeFinal}
         ${titleHtml}
@@ -4321,15 +4389,15 @@ function renderDebug() {
         ${descHtml}
         ${editing
           ? (it.steps || []).map((st, idx) => `<div class="fb-step">
-              <span class="fb-step-bul">↳</span>
+              <span class="fb-step-bul">${ICONS.cornerDownRight}</span>
               <input class="fb-step-text" data-bug-step="${it.id}-${idx}" value="${esc(st || "")}" placeholder="Étape complémentaire…" oninput="bugUpdateStep('${it.id}',${idx},this.value)" onkeydown="if(event.key==='Enter'){event.preventDefault();bugAddStep('${it.id}')}">
-              <button class="fb-step-del" onclick="bugDelStep('${it.id}',${idx})" title="Supprimer étape">✕</button>
+              <button class="fb-step-del" onclick="bugDelStep('${it.id}',${idx})" title="Supprimer étape">${ICONS.x}</button>
             </div>`).join("")
-          : steps.map(st => `<div class="fb-step"><span class="fb-step-bul">↳</span><span class="fb-step-text-readonly">${esc(st)}</span></div>`).join("")}
+          : steps.map(st => `<div class="fb-step"><span class="fb-step-bul">${ICONS.cornerDownRight}</span><span class="fb-step-text-readonly">${esc(st)}</span></div>`).join("")}
         <div class="bug-card-actions-row">
-          ${editing ? `<button class="fb-add-step" onclick="bugAddStep('${it.id}')" title="Ajouter une étape complémentaire">＋ étape</button>` : ""}
-          <button class="bug-card-copy" data-bug-copy="${it.id}" onclick="bugCopyOne('${it.id}')" title="Copier cette remarque">📋 Copier</button>
-          <button class="fb-del-text" onclick="bugDel('${it.id}')" title="Supprimer">× Supprimer</button>
+          ${editing ? `<button class="fb-add-step" onclick="bugAddStep('${it.id}')" title="Ajouter une étape complémentaire">${ICONS.plus}<span>étape</span></button>` : ""}
+          <button class="bug-card-copy" data-bug-copy="${it.id}" onclick="bugCopyOne('${it.id}')" title="Copier cette remarque">${ICONS.copy}<span>Copier</span></button>
+          <button class="fb-del-text" onclick="bugDel('${it.id}')" title="Supprimer">${ICONS.trash2}<span>Supprimer</span></button>
         </div>
       </div>` : ""}
     </div>`;
@@ -4435,11 +4503,11 @@ function notesRedo() {
       updateNotesWordcount();
       maybeTakeNotesSnapshot(ed);
       const status = document.getElementById('notes-status');
-      if (status) { status.textContent = '✏ Modifications en cours...'; status.style.color = 'var(--text-muted)'; }
+      if (status) { status.textContent = 'Modifications en cours...'; status.style.color = 'var(--text-muted)'; }
       clearTimeout(notesSaveTimer);
       notesSaveTimer = setTimeout(() => {
         fbSchedulePush();
-        if (status) { status.textContent = '💾 Sauvegardé'; status.style.color = 'var(--success)'; }
+        if (status) { status.textContent = 'Sauvegardé'; status.style.color = 'var(--success)'; }
       }, 600);
     });
     // Ctrl+Z / Ctrl+Y custom pour undo par mot
@@ -4681,9 +4749,10 @@ function renderRecipes() {
   }
 
   if (recipes.length === 0) {
-    container.innerHTML = '<div class="empty"><div class="empty-icon">🍳</div>' +
+    container.innerHTML = '<div class="empty"><div class="empty-icon" data-icon="chefHat" aria-hidden="true"></div>' +
       (state.recipes.length === 0 ? '<div>Aucune recette pour le moment.<br>Clique sur le bouton <b>+</b> pour en créer une, ou importe un Excel depuis l\'onglet <b>Données</b>.</div>'
        : '<div>Aucune recette ne correspond aux filtres.</div>') + '</div>';
+    injectIcons(container);
     return;
   }
 
@@ -4755,7 +4824,7 @@ function renderRecipes() {
 
     const expand = document.createElement('span');
     expand.className = 'recipe-expand';
-    expand.textContent = '▸';
+    expand.innerHTML = ICONS.chevronRight;
     header.appendChild(expand);
 
     header.onclick = () => {
@@ -4789,12 +4858,13 @@ function renderRecipes() {
       if (r.origin && r.origin.type !== 'none') {
         const o = document.createElement('div');
         o.className = 'recipe-origin';
+        const oIco = k => '<span class="tb-ico">' + ICONS[k] + '</span> ';
         if (r.origin.type === 'book') {
-          o.innerHTML = '📖 ' + escapeHtml(r.origin.book || 'Livre') + (r.origin.page ? ', p. ' + escapeHtml(r.origin.page) : '');
+          o.innerHTML = oIco('bookOpen') + escapeHtml(r.origin.book || 'Livre') + (r.origin.page ? ', p. ' + escapeHtml(r.origin.page) : '');
         } else if (r.origin.type === 'url' && r.origin.url) {
-          o.innerHTML = '🔗 <a href="' + escapeHtml(r.origin.url) + '" target="_blank" rel="noopener">' + escapeHtml(r.origin.url) + '</a>';
+          o.innerHTML = oIco('link2') + '<a href="' + escapeHtml(r.origin.url) + '" target="_blank" rel="noopener">' + escapeHtml(r.origin.url) + '</a>';
         } else if (r.origin.type === 'other' && r.origin.other) {
-          o.innerHTML = 'ℹ ' + escapeHtml(r.origin.other);
+          o.innerHTML = oIco('info') + escapeHtml(r.origin.other);
         }
         if (o.innerHTML) body.appendChild(o);
       }
@@ -5008,7 +5078,7 @@ function openRecipeModal(recipe = null) {
 
 function updateRatingPreview() {
   const v = document.getElementById('recipe-rating').value;
-  document.getElementById('rating-preview').textContent = v !== '' ? ratingStars(v) : '';
+  document.getElementById('rating-preview').innerHTML = v !== '' ? ratingStars(v) : '';
 }
 
 function updateOriginFieldsVisibility() {
@@ -5371,11 +5441,11 @@ function renderTrash() {
     actions.className = 'data-list-item-actions';
     const restoreBtn = document.createElement('button');
     restoreBtn.className = 'btn btn-xs';
-    restoreBtn.textContent = '↩ Restaurer';
+    restoreBtn.innerHTML = ICONS.rotateCcw + '<span>Restaurer</span>';
     restoreBtn.onclick = () => restoreFromTrash(t.id);
     const purgeBtn = document.createElement('button');
     purgeBtn.className = 'btn btn-xs btn-danger';
-    purgeBtn.textContent = '🗑';
+    purgeBtn.innerHTML = ICONS.trash2;
     purgeBtn.title = 'Supprimer définitivement';
     purgeBtn.onclick = () => showConfirm('Supprimer définitivement', 'Supprimer « ' + (t.name || 'cette recette') + ' » définitivement ?', 'Supprimer', () => purgeFromTrash(t.id));
     actions.appendChild(restoreBtn);
@@ -5579,7 +5649,7 @@ function buildFilterBar() {
     const star = document.createElement('button');
     star.type = 'button';
     star.className = 'star-btn' + (min != null && val <= min ? ' on' : '');
-    star.textContent = '★';
+    star.innerHTML = ICONS.star; // remplissage plein/vide géré en CSS via .on
     star.title = '≥ ' + val + '/10';
     star.setAttribute('aria-label', 'Note minimale ' + val + ' sur 10');
     star.onclick = () => {
@@ -5834,7 +5904,7 @@ function updateActiveChips() {
     bar.appendChild(chip);
   };
   (f.mealTypes || []).forEach(mt => addChip(mt, () => { state.filters.mealTypes = state.filters.mealTypes.filter(x => x !== mt); }));
-  if (f.ratingMin != null) addChip('★ ≥ ' + f.ratingMin + '/10', () => { state.filters.ratingMin = null; state.filters.includeUnrated = false; });
+  if (f.ratingMin != null) addChip('Note ≥ ' + f.ratingMin + '/10', () => { state.filters.ratingMin = null; state.filters.includeUnrated = false; });
   if (f.prepMax !== null && f.prepMax !== undefined) addChip('Prép. ≤ ' + f.prepMax + ' min', () => { state.filters.prepMax = null; });
   if (f.cookMax !== null && f.cookMax !== undefined) addChip('Cuisson ≤ ' + f.cookMax + ' min', () => { state.filters.cookMax = null; });
   (f.includeIngredients || []).forEach(id => { const n = getIngredientName(id); if (n) addChip('+ ' + n, () => { state.filters.includeIngredients = state.filters.includeIngredients.filter(x => x !== id); }); });
@@ -6009,13 +6079,13 @@ function buildShoppingPrintHtml() {
   const today = new Date().toLocaleDateString('fr-FR');
   return '<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Liste de courses</title><style>'
     + 'body{font-family:Arial,Helvetica,sans-serif;color:#111;max-width:680px;margin:24px auto;padding:0 16px;}'
-    + 'h1{font-size:20px;margin:0 0 4px;}.sub{color:#666;font-size:12px;margin-bottom:18px;}'
+    + 'h1{font-size:20px;margin:0 0 4px;}h1 svg{width:19px;height:19px;vertical-align:-2px;}.sub{color:#666;font-size:12px;margin-bottom:18px;}'
     + 'h2{font-size:13px;text-transform:uppercase;letter-spacing:.05em;color:#444;border-bottom:1px solid #ccc;padding-bottom:3px;margin:18px 0 6px;}'
     + 'ul{list-style:none;padding:0;margin:0;}li{padding:5px 0;font-size:14px;display:flex;align-items:center;gap:8px;}'
     + '.box{width:13px;height:13px;border:1.5px solid #333;border-radius:3px;flex-shrink:0;}'
     + '.nm{flex:1;}.q{color:#555;}@media print{body{margin:0;}}'
     + '</style></head><body>'
-    + '<h1>🛒 Liste de courses</h1>'
+    + '<h1>' + ICONS.shoppingCart + ' Liste de courses</h1>'
     + '<div class="sub">' + escapeHtml(today) + (recipeNames.length ? ' &middot; ' + escapeHtml(recipeNames.join(', ')) : '') + '</div>'
     + body + '</body></html>';
 }
@@ -6065,7 +6135,8 @@ function renderShopping() {
   });
 
   if (selected.length === 0 && (state.manualShoppingItems || []).length === 0) {
-    container.innerHTML = '<div class="empty"><div class="empty-icon">🛒</div><div>Aucune recette sélectionnée.<br>Coche des recettes dans l\'onglet <b>Recettes</b>, ou ajoute un article ci-dessus.</div></div>';
+    container.innerHTML = '<div class="empty"><div class="empty-icon" data-icon="shoppingCart" aria-hidden="true"></div><div>Aucune recette sélectionnée.<br>Coche des recettes dans l\'onglet <b>Recettes</b>, ou ajoute un article ci-dessus.</div></div>';
+    injectIcons(container);
     return;
   }
 
@@ -6099,7 +6170,7 @@ function renderShopping() {
     toggle.className = 'checked-toggle';
     const header = document.createElement('div');
     header.className = 'checked-toggle-header';
-    header.innerHTML = '<span>✅ ' + checkedItems.length + ' élément' + (checkedItems.length > 1 ? 's' : '') + ' coché' + (checkedItems.length > 1 ? 's' : '') + '</span><span>▾</span>';
+    header.innerHTML = '<span class="checked-toggle-label">' + ICONS.checkCircle + '<span>' + checkedItems.length + ' élément' + (checkedItems.length > 1 ? 's' : '') + ' coché' + (checkedItems.length > 1 ? 's' : '') + '</span></span><span class="checked-toggle-chevron">' + ICONS.chevronDown + '</span>';
     header.onclick = () => toggle.classList.toggle('open');
     toggle.appendChild(header);
     const content = document.createElement('div');
@@ -6160,7 +6231,7 @@ function buildGroupEl(title, items, allChecked = false) {
     if (it.sources.length > 1) {
       const s = document.createElement('div');
       s.className = 'shopping-item-sources';
-      s.textContent = '↳ ' + it.sources.join(', ');
+      s.innerHTML = '<span class="tb-ico">' + ICONS.cornerDownRight + '</span> ' + escapeHtml(it.sources.join(', '));
       content.appendChild(s);
     }
     li.appendChild(content);
@@ -6168,7 +6239,7 @@ function buildGroupEl(title, items, allChecked = false) {
       const del = document.createElement('button');
       del.className = 'manual-del';
       del.type = 'button';
-      del.textContent = '✕';
+      del.innerHTML = ICONS.x;
       del.title = 'Retirer cet article';
       del.onclick = () => {
         state.manualShoppingItems = state.manualShoppingItems.filter(x => x.id !== it.manualId);
@@ -6486,7 +6557,7 @@ function renderDataTab() {
       const meta = [
         getTypeName(ing.typeId),
         families.length > 0 ? 'familles: ' + families.join(', ') : null,
-        months ? '🗓 ' + months : null,
+        months ? 'saison: ' + months : null,
         'utilisé dans ' + usage
       ].filter(Boolean).join(' · ');
       el.innerHTML = '<span>' + escapeHtml(ing.name) + ' <span style="color:var(--text-dim); font-size:12px;">(' + escapeHtml(meta) + ')</span></span>';
@@ -6494,12 +6565,12 @@ function renderDataTab() {
       actions.className = 'data-list-item-actions';
       const editBtn = document.createElement('button');
       editBtn.className = 'btn btn-xs';
-      editBtn.textContent = '✏';
+      editBtn.innerHTML = ICONS.pencil;
       editBtn.title = 'Modifier';
       editBtn.onclick = () => editIngredient(ing);
       const delBtn = document.createElement('button');
       delBtn.className = 'btn btn-xs btn-danger';
-      delBtn.textContent = '🗑';
+      delBtn.innerHTML = ICONS.trash2;
       delBtn.title = 'Supprimer';
       delBtn.onclick = () => {
         const msg = usage > 0
@@ -6514,7 +6585,7 @@ function renderDataTab() {
       };
       const mergeIngBtn = document.createElement('button');
       mergeIngBtn.className = 'btn btn-xs';
-      mergeIngBtn.textContent = '🔗';
+      mergeIngBtn.innerHTML = ICONS.link2;
       mergeIngBtn.title = 'Fusionner avec un autre ingrédient';
       mergeIngBtn.onclick = () => openMergeIngredientDialog(ing);
       actions.appendChild(editBtn);
@@ -6538,7 +6609,7 @@ function renderDataTab() {
     actions.className = 'data-list-item-actions';
     const editBtn = document.createElement('button');
     editBtn.className = 'btn btn-xs';
-    editBtn.textContent = '✏';
+    editBtn.innerHTML = ICONS.pencil;
     editBtn.title = 'Renommer';
     editBtn.onclick = () => openRenameModal('Renommer l\'unité', u.name, (nv) => {
       u.name = nv.trim();
@@ -6547,7 +6618,7 @@ function renderDataTab() {
     });
     const delBtn = document.createElement('button');
     delBtn.className = 'btn btn-xs btn-danger';
-    delBtn.textContent = '🗑';
+    delBtn.innerHTML = ICONS.trash2;
     delBtn.onclick = () => {
       showConfirm('Supprimer l\'unité', 'Supprimer l\'unité « ' + u.name + ' » ? Les ingrédients l\'utilisant n\'auront plus d\'unité.', 'Supprimer', () => {
         el.remove();
@@ -6559,7 +6630,7 @@ function renderDataTab() {
     };
     const mergeUnitBtn = document.createElement('button');
     mergeUnitBtn.className = 'btn btn-xs';
-    mergeUnitBtn.textContent = '🔗';
+    mergeUnitBtn.innerHTML = ICONS.link2;
     mergeUnitBtn.title = 'Fusionner avec une autre unité';
     mergeUnitBtn.onclick = () => openMergeUnitDialog(u);
     actions.appendChild(editBtn);
@@ -6583,8 +6654,9 @@ function renderDataTab() {
     el.className = 'data-list-item family-header';
     el.style.cursor = 'pointer';
     const arrow = document.createElement('span');
-    arrow.textContent = '▸';
-    arrow.style.cssText = 'display:inline-block; transition:transform 0.15s; margin-right:6px; color:var(--text-dim);';
+    arrow.innerHTML = ICONS.chevronRight;
+    arrow.style.cssText = 'display:inline-flex; align-items:center; line-height:0; transition:transform 0.15s; margin-right:6px; color:var(--text-dim);';
+    arrow.querySelector('svg').style.cssText = 'width:14px;height:14px;';
     const nameSpan = document.createElement('span');
     nameSpan.innerHTML = '<b>' + escapeHtml(t.name) + '</b> <span style="color:var(--text-dim); font-size:12px;">(' + usage + ' ingrédients)</span>';
     const headerLeft = document.createElement('span');
@@ -6596,19 +6668,19 @@ function renderDataTab() {
     actions.className = 'data-list-item-actions';
     const editBtn = document.createElement('button');
     editBtn.className = 'btn btn-xs';
-    editBtn.textContent = '✏';
+    editBtn.innerHTML = ICONS.pencil;
     editBtn.title = 'Renommer';
     editBtn.onclick = (e) => { e.stopPropagation(); openRenameModal('Renommer le type', t.name, (nv) => {
       t.name = nv.trim(); save(); rerenderAll();
     }); };
     const mergeBtn = document.createElement('button');
     mergeBtn.className = 'btn btn-xs';
-    mergeBtn.textContent = '🔗';
+    mergeBtn.innerHTML = ICONS.link2;
     mergeBtn.title = 'Fusionner avec un autre type';
     mergeBtn.onclick = (e) => { e.stopPropagation(); openMergeTypeDialog(t); };
     const delBtn = document.createElement('button');
     delBtn.className = 'btn btn-xs btn-danger';
-    delBtn.textContent = '🗑';
+    delBtn.innerHTML = ICONS.trash2;
     delBtn.title = 'Supprimer';
     delBtn.onclick = (e) => {
       e.stopPropagation();
@@ -6707,7 +6779,7 @@ function renderDataTab() {
     el.innerHTML = '<span>' + escapeHtml(m) + ' <span style="color:var(--text-dim); font-size:12px;">(' + usage + ' recettes)</span></span>';
     const delBtn = document.createElement('button');
     delBtn.className = 'btn btn-xs btn-danger';
-    delBtn.textContent = '🗑';
+    delBtn.innerHTML = ICONS.trash2;
     delBtn.onclick = () => {
       showConfirm('Supprimer le type de plat', 'Supprimer « ' + m + ' » des types de plats ?', 'Supprimer', () => {
         el.remove();
@@ -6719,7 +6791,7 @@ function renderDataTab() {
     };
     const mergeMealBtn = document.createElement('button');
     mergeMealBtn.className = 'btn btn-xs';
-    mergeMealBtn.textContent = '🔗';
+    mergeMealBtn.innerHTML = ICONS.link2;
     mergeMealBtn.title = 'Fusionner avec un autre type de plat';
     mergeMealBtn.onclick = () => openMergeMealTypeDialog(m);
     const actions = document.createElement('span');
@@ -6750,8 +6822,9 @@ function renderDataTab() {
         const memberIngs = state.ingredients.filter(i => (i.familyIds || []).includes(f.id));
         const usage = memberIngs.length;
         const arrow = document.createElement('span');
-        arrow.textContent = '▸';
-        arrow.style.cssText = 'display:inline-block; transition:transform 0.15s; margin-right:6px; color:var(--text-dim);';
+        arrow.innerHTML = ICONS.chevronRight;
+        arrow.style.cssText = 'display:inline-flex; align-items:center; line-height:0; transition:transform 0.15s; margin-right:6px; color:var(--text-dim);';
+        arrow.querySelector('svg').style.cssText = 'width:14px;height:14px;';
         const nameSpan = document.createElement('span');
         nameSpan.innerHTML = '<b>' + escapeHtml(f.name) + '</b> <span style="color:var(--text-dim); font-size:12px;">(' + usage + ' ingrédients)</span>';
         const headerLeft = document.createElement('span');
@@ -6763,7 +6836,7 @@ function renderDataTab() {
         actions.className = 'data-list-item-actions';
         const editBtn = document.createElement('button');
         editBtn.className = 'btn btn-xs';
-        editBtn.textContent = '✏';
+        editBtn.innerHTML = ICONS.pencil;
         editBtn.title = 'Renommer';
         editBtn.onclick = (e) => {
           e.stopPropagation();
@@ -6775,7 +6848,7 @@ function renderDataTab() {
         };
         const delBtn = document.createElement('button');
         delBtn.className = 'btn btn-xs btn-danger';
-        delBtn.textContent = '🗑';
+        delBtn.innerHTML = ICONS.trash2;
         delBtn.title = 'Supprimer';
         delBtn.onclick = (e) => {
           e.stopPropagation();
@@ -6789,7 +6862,7 @@ function renderDataTab() {
         };
         const mergeFamBtn = document.createElement('button');
         mergeFamBtn.className = 'btn btn-xs';
-        mergeFamBtn.textContent = '🔗';
+        mergeFamBtn.innerHTML = ICONS.link2;
         mergeFamBtn.title = 'Fusionner avec une autre famille';
         mergeFamBtn.onclick = (e) => { e.stopPropagation(); openMergeFamilyDialog(f); };
         actions.appendChild(editBtn);
@@ -6959,7 +7032,7 @@ document.getElementById('btn-add-family').onclick = () => {
 
   const btnResetAll = document.getElementById('btn-reset-all');
   if (btnResetAll) btnResetAll.onclick = () => {
-    if (!confirm('⚠️ ATTENTION : cela supprimera TOUTES tes données (recettes, ingrédients, unités, types). Continuer ?')) return;
+    if (!confirm('ATTENTION : cela supprimera TOUTES tes données (recettes, ingrédients, unités, types). Continuer ?')) return;
     if (!confirm('Vraiment sûr ? Cette action est irréversible.')) return;
     localStorage.removeItem(STORAGE_KEY);
     location.reload();
@@ -7123,15 +7196,15 @@ function renderListeCoursesImport(wb) {
 
   container.innerHTML = `
     <div style="background:var(--surface); padding:14px; border-radius:8px; border:1px solid var(--accent); margin-bottom:14px;">
-      <h4 style="color:var(--accent); margin-bottom:8px;">✨ Format <b>LISTE_COURSES</b> détecté</h4>
+      <h4 style="color:var(--accent); margin-bottom:8px;"><span class="tb-ico">${ICONS.sparkles}</span> Format <b>LISTE_COURSES</b> détecté</h4>
       <p style="color:var(--text-muted); font-size:14px; margin-bottom:10px;">L'import va créer :</p>
       <ul style="list-style:none; padding-left:8px; color:var(--text); font-size:14px;">
-        <li>📖 <b>${recipeNames.length}</b> recettes depuis <i>INGREDIENTS</i> (dont <b>${recipesInSelection}</b> enrichies avec les infos de <i>SELECTION</i>)</li>
-        <li>🧂 <b>${totalIngsInMaster}</b> ingrédients (liste maître avec unité + type)</li>
-        <li>📏 <b>${unitsFound.size}</b> unités distinctes</li>
-        <li>🏷 <b>${typesFound.size}</b> types d'ingrédients</li>
+        <li><span class="tb-ico">${ICONS.bookOpen}</span> <b>${recipeNames.length}</b> recettes depuis <i>INGREDIENTS</i> (dont <b>${recipesInSelection}</b> enrichies avec les infos de <i>SELECTION</i>)</li>
+        <li><span class="tb-ico">${ICONS.carrot}</span> <b>${totalIngsInMaster}</b> ingrédients (liste maître avec unité + type)</li>
+        <li><span class="tb-ico">${ICONS.ruler}</span> <b>${unitsFound.size}</b> unités distinctes</li>
+        <li><span class="tb-ico">${ICONS.tag}</span> <b>${typesFound.size}</b> types d'ingrédients</li>
       </ul>
-      <p style="color:var(--text-muted); font-size:13px; margin-top:10px;">💡 Les "--" sont convertis en vide. Les notes étoilées deviennent des notes sur 10 (★★★★ = 8/10, ★★★★★ = 10/10, ☆☆☆☆☆ = non noté).</p>
+      <p style="color:var(--text-muted); font-size:13px; margin-top:10px;"><span class="tb-ico">${ICONS.lightbulb}</span> Les "--" sont convertis en vide. Les notes étoilées deviennent des notes sur 10 (★★★★ = 8/10, ★★★★★ = 10/10, ☆☆☆☆☆ = non noté).</p>
     </div>
     <div style="display:flex; gap:10px; flex-wrap:wrap;">
       <label style="display:flex; align-items:center; gap:6px; font-size:14px; color:var(--text-muted);">
@@ -7139,7 +7212,7 @@ function renderListeCoursesImport(wb) {
       </label>
     </div>
     <div style="margin-top:14px; display:flex; gap:8px;">
-      <button class="btn btn-primary" id="btn-do-liste-import">📥 Lancer l'import</button>
+      <button class="btn btn-primary" id="btn-do-liste-import"><span class="tb-ico">${ICONS.download}</span>Lancer l'import</button>
       <button class="btn" id="btn-cancel-import">Annuler</button>
     </div>
   `;
@@ -7150,7 +7223,7 @@ function renderListeCoursesImport(wb) {
 
 function doListeCoursesImport(masterIngs, recipesMap, metaMap) {
   const replace = document.getElementById('import-replace-all').checked;
-  if (replace && !confirm('⚠️ Toutes tes données actuelles seront effacées. Continuer ?')) return;
+  if (replace && !confirm('Toutes tes données actuelles seront effacées. Continuer ?')) return;
   if (replace) {
     state.recipes = [];
     state.ingredients = [];
@@ -7301,7 +7374,7 @@ function doListeCoursesImport(masterIngs, recipesMap, metaMap) {
   buildFilterBar();
   document.getElementById('excel-mapping').style.display = 'none';
   document.getElementById('excel-mapping').innerHTML = '';
-  toast('✅ ' + created + ' recettes importées' + (renamed > 0 ? ' (' + renamed + ' renommées)' : ''), 'success');
+  toast(created + ' recettes importées' + (renamed > 0 ? ' (' + renamed + ' renommées)' : ''), 'success');
   document.querySelector('.tab-btn[data-tab="recipes"]').click();
 }
 
@@ -7401,12 +7474,12 @@ function renderExcelMapping(wb) {
     // Champ info pour ingrédients
     const info = document.createElement('div');
     info.style.cssText = 'background:var(--surface); padding:10px 12px; border-radius:8px; font-size:13px; color:var(--text-muted); margin-top:10px;';
-    info.innerHTML = '💡 <b>Format des ingrédients</b> : sépare chaque ingrédient par un retour à la ligne, un point-virgule ou une virgule, ex. « <i>200 g farine ; 2 œufs ; 1 cuillère à soupe huile</i> ». Le parseur tente automatiquement d\'extraire <b>quantité + unité + nom</b>.';
+    info.innerHTML = '<span class="tb-ico">' + ICONS.lightbulb + '</span> <b>Format des ingrédients</b> : sépare chaque ingrédient par un retour à la ligne, un point-virgule ou une virgule, ex. « <i>200 g farine ; 2 œufs ; 1 cuillère à soupe huile</i> ». Le parseur tente automatiquement d\'extraire <b>quantité + unité + nom</b>.';
     mappingSection.appendChild(info);
 
     const btnImport = document.createElement('button');
     btnImport.className = 'btn btn-primary';
-    btnImport.textContent = '📥 Importer ' + dataRows.length + ' recette(s)';
+    btnImport.innerHTML = '<span class="tb-ico">' + ICONS.download + '</span>Importer ' + dataRows.length + ' recette(s)';
     btnImport.style.marginTop = '16px';
     btnImport.onclick = () => doExcelImport(headers, dataRows, selects);
     mappingSection.appendChild(btnImport);
@@ -7622,23 +7695,26 @@ function showGuestState(state, msg) {
   const err      = document.getElementById('guest-error-msg');
   if (err) err.style.display = 'none';
 
+  // `icon` = clé de ICONS{}
   const states = {
-    login:    { icon:'🍽', title:'Recettes partagées',   sub:'Connectez-vous avec votre compte Google pour accéder aux recettes.', showBtn:true },
-    loading:  { icon:'⏳', title:'Connexion…',           sub:'Vérification de vos accès…', showBtn:false },
-    pending:  { icon:'⏳', title:'Demande envoyée',       sub:'Votre demande a été transmise. Vous serez notifié(e) une fois approuvé(e).', showBtn:false },
-    approved: { icon:'✅', title:'Accès accordé !',       sub:'Chargement de vos recettes…', showBtn:false },
-    denied:   { icon:'🚫', title:'Accès refusé',          sub:'Votre demande d\'accès a été refusée.', showBtn:false },
-    error:    { icon:'⚠️', title:'Erreur',               sub: msg || 'Une erreur est survenue.', showBtn:true }
+    login:    { icon:'utensils',      title:'Recettes partagées',   sub:'Connectez-vous avec votre compte Google pour accéder aux recettes.', showBtn:true },
+    loading:  { icon:'hourglass',     title:'Connexion…',           sub:'Vérification de vos accès…', showBtn:false },
+    pending:  { icon:'hourglass',     title:'Demande envoyée',       sub:'Votre demande a été transmise. Vous serez notifié(e) une fois approuvé(e).', showBtn:false },
+    approved: { icon:'checkCircle',   title:'Accès accordé !',       sub:'Chargement de vos recettes…', showBtn:false },
+    denied:   { icon:'ban',           title:'Accès refusé',          sub:'Votre demande d\'accès a été refusée.', showBtn:false },
+    error:    { icon:'alertTriangle', title:'Erreur',               sub: msg || 'Une erreur est survenue.', showBtn:true }
   };
 
   const s = states[state] || states.error;
-  if (icon)     icon.textContent     = s.icon;
+  if (icon)     icon.innerHTML       = ICONS[s.icon] || '';
   if (title)    title.textContent    = s.title;
   if (subtitle) subtitle.textContent = s.sub;
   if (btn) {
     btn.style.display = s.showBtn ? '' : 'none';
     btn.disabled = false;
-    btn.textContent = state === 'error' ? '🔄 Réessayer' : '🔑 Se connecter avec Google';
+    btn.innerHTML = state === 'error'
+      ? '<span class="tb-ico">' + ICONS.refreshCw + '</span><span>Réessayer</span>'
+      : '<span class="tb-ico">' + ICONS.key + '</span><span>Se connecter avec Google</span>';
   }
 }
 
@@ -7736,13 +7812,13 @@ async function loadGuestData(asEditor) {
       // Co-édition : on écrit dans le carnet du propriétaire, sync deux-sens (même logique que onFirebaseSignIn)
       fbDocRef = docRef;
       document.body.classList.add('coeditor-mode');
-      setSyncStatus('☁ Co-édition', 'success');
+      setSyncStatus('Co-édition', 'success', 'cloud');
       fbUnsubscribe = docRef.onSnapshot(snap => {
         if (fbSkipNextSnapshot) { fbSkipNextSnapshot = false; return; }
         if (snap.metadata.hasPendingWrites) return;
         if (fbSaveTimer) return; // modifs locales non encore envoyées
-        if (snap.exists) { applyCloudData(snap.data()); setSyncStatus('☁ Synchronisé', 'success'); }
-      }, err => { console.error('Snapshot error:', err); setSyncStatus('⚠ Erreur de synchro', 'error'); });
+        if (snap.exists) { applyCloudData(snap.data()); setSyncStatus('Synchronisé', 'success', 'cloud'); }
+      }, err => { console.error('Snapshot error:', err); setSyncStatus('Erreur de synchro', 'error', 'alertTriangle'); });
     } else {
       // Lecture seule
       document.body.classList.add('guest-mode');
@@ -7833,20 +7909,24 @@ function renderAccessRequestsList(requests) {
       const photo = req.guestPhotoURL
         ? '<img src="' + escapeHtml(req.guestPhotoURL) + '" style="width:32px;height:32px;border-radius:50%;object-fit:cover;flex-shrink:0;" onerror="this.style.display=\'none\'">'
         : '<div style="width:32px;height:32px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;color:white;font-weight:600;flex-shrink:0;">' + escapeHtml((req.guestName||'?').charAt(0).toUpperCase()) + '</div>';
-      const labels = { pending:'⏳ En attente', approved:'✅ Approuvé', denied:'🚫 Refusé' };
+      const labels = {
+        pending:  ICONS.hourglass   + '<span>En attente</span>',
+        approved: ICONS.checkCircle + '<span>Approuvé</span>',
+        denied:   ICONS.ban         + '<span>Refusé</span>'
+      };
       const isEditor = req.guestRole === 'editor';
       const badge = req.status === 'approved'
-        ? '<span class="req-badge approved">' + (isEditor ? '✏ Modifie' : '👁 Lecture') + '</span>'
-        : '<span class="req-badge ' + req.status + '">' + (labels[req.status]||req.status) + '</span>';
+        ? '<span class="req-badge approved">' + (isEditor ? ICONS.pencil + '<span>Modifie</span>' : ICONS.eye + '<span>Lecture</span>') + '</span>'
+        : '<span class="req-badge ' + req.status + '">' + (labels[req.status]||escapeHtml(req.status)) + '</span>';
       let actions;
       if (req.status === 'pending') {
-        actions = '<button class="btn btn-xs" style="background:#d1e7dd;color:#0f5132;" onclick="approveGuest(\''+req.uid+'\',\'viewer\')">👁 Lecture</button>'
-                + '<button class="btn btn-xs" style="background:#cfe0ff;color:#0b3d91;" onclick="approveGuest(\''+req.uid+'\',\'editor\')">✏ Modifier</button>'
-                + '<button class="btn btn-xs btn-danger" onclick="denyGuest(\''+req.uid+'\')">✗</button>';
+        actions = '<button class="btn btn-xs" style="background:#d1e7dd;color:#0f5132;" onclick="approveGuest(\''+req.uid+'\',\'viewer\')">' + ICONS.eye + '<span>Lecture</span></button>'
+                + '<button class="btn btn-xs" style="background:#cfe0ff;color:#0b3d91;" onclick="approveGuest(\''+req.uid+'\',\'editor\')">' + ICONS.pencil + '<span>Modifier</span></button>'
+                + '<button class="btn btn-xs btn-danger" title="Refuser" onclick="denyGuest(\''+req.uid+'\')">' + ICONS.x + '</button>';
       } else if (req.status === 'approved') {
         actions = (isEditor
-                    ? '<button class="btn btn-xs" onclick="approveGuest(\''+req.uid+'\',\'viewer\')">👁 Lecture seule</button>'
-                    : '<button class="btn btn-xs" onclick="approveGuest(\''+req.uid+'\',\'editor\')">✏ Autoriser modif</button>')
+                    ? '<button class="btn btn-xs" onclick="approveGuest(\''+req.uid+'\',\'viewer\')">' + ICONS.eye + '<span>Lecture seule</span></button>'
+                    : '<button class="btn btn-xs" onclick="approveGuest(\''+req.uid+'\',\'editor\')">' + ICONS.pencil + '<span>Autoriser modif</span></button>')
                 + '<button class="btn btn-xs btn-danger" onclick="denyGuest(\''+req.uid+'\')">Révoquer</button>';
       } else {
         actions = '<button class="btn btn-xs" style="background:#d1e7dd;color:#0f5132;" onclick="approveGuest(\''+req.uid+'\',\'viewer\')">Ré-approuver</button>';
@@ -7985,6 +8065,41 @@ const ICONS = {
   copy:          _ICO('<rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>'),
   trash2:        _ICO('<path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/>'),
   externalLink:  _ICO('<path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>'),
+  // Étoiles de notation — l'outline sert aussi de « vide » (fill piloté en CSS pour .star-btn)
+  starFull:      _ICO('<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" fill="currentColor"/>'),
+  starHalf:      _ICO('<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/><path d="M12 2 8.91 8.26 2 9.27l5 4.87-1.18 6.88L12 17.77z" fill="currentColor" stroke="none"/>'),
+  // Onglet Données / Réglages
+  ruler:         _ICO('<path d="M21.3 15.3a2.4 2.4 0 0 1 0 3.4l-2.6 2.6a2.4 2.4 0 0 1-3.4 0L2.7 8.7a2.41 2.41 0 0 1 0-3.4l2.6-2.6a2.41 2.41 0 0 1 3.4 0Z"/><path d="m14.5 12.5 2-2"/><path d="m11.5 9.5 2-2"/><path d="m8.5 6.5 2-2"/><path d="m17.5 15.5 2-2"/>'),
+  tag:           _ICO('<path d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42z"/><circle cx="7.5" cy="7.5" r=".5" fill="currentColor"/>'),
+  user:          _ICO('<path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>'),
+  link2:         _ICO('<path d="M9 17H7A5 5 0 0 1 7 7h2"/><path d="M15 7h2a5 5 0 1 1 0 10h-2"/><line x1="8" x2="16" y1="12" y2="12"/>'),
+  key:           _ICO('<path d="m15.5 7.5 2.3 2.3a1 1 0 0 0 1.4 0l2.1-2.1a1 1 0 0 0 0-1.4L19 4"/><path d="m21 2-9.6 9.6"/><circle cx="7.5" cy="15.5" r="5.5"/>'),
+  save:          _ICO('<path d="M15.2 3a2 2 0 0 1 1.4.6l3.8 3.8a2 2 0 0 1 .6 1.4V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M17 21v-7a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v7"/><path d="M7 3v4a1 1 0 0 0 1 1h7"/>'),
+  cloud:         _ICO('<path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/>'),
+  alertTriangle: _ICO('<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/>'),
+  checkCircle:   _ICO('<path d="M21.801 10A10 10 0 1 1 17 3.335"/><path d="m9 11 3 3L22 4"/>'),
+  // Divers UI
+  search:        _ICO('<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>'),
+  printer:       _ICO('<path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 9V3a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v6"/><rect x="6" y="14" width="12" height="8" rx="1"/>'),
+  calendar:      _ICO('<path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/>'),
+  lightbulb:     _ICO('<path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/>'),
+  bookOpen:      _ICO('<path d="M12 7v14"/><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/>'),
+  fileText:      _ICO('<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/>'),
+  folder:        _ICO('<path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/>'),
+  sparkles:      _ICO('<path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/>'),
+  download:      _ICO('<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/>'),
+  eyeOff:        _ICO('<path d="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49"/><path d="M14.084 14.158a3 3 0 0 1-4.242-4.242"/><path d="M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143"/><path d="m2 2 20 20"/>'),
+  utensilsCrossed: _ICO('<path d="m16 2-2.3 2.3a3 3 0 0 0 0 4.2l1.8 1.8a3 3 0 0 0 4.2 0L22 8"/><path d="M15 15 3.3 3.3a4.2 4.2 0 0 0 0 6l7.3 7.3c.7.7 2 .7 2.8 0L15 15Zm0 0 7 7"/><path d="M2.1 21.8 13 11"/><path d="m9 11-1.5 1.5"/>'),
+  // Écran invité
+  hourglass:     _ICO('<path d="M5 22h14"/><path d="M5 2h14"/><path d="M17 22v-4.172a2 2 0 0 0-.586-1.414L12 12l-4.414 4.414A2 2 0 0 0 7 17.828V22"/><path d="M7 2v4.172a2 2 0 0 0 .586 1.414L12 12l4.414-4.414A2 2 0 0 0 17 6.172V2"/>'),
+  ban:           _ICO('<circle cx="12" cy="12" r="10"/><path d="m4.9 4.9 14.2 14.2"/>'),
+  refreshCw:     _ICO('<path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/>'),
+  arrowLeft:     _ICO('<path d="m12 19-7-7 7-7"/><path d="M19 12H5"/>'),
+  arrowDown:     _ICO('<path d="M12 5v14"/><path d="m19 12-7 7-7-7"/>'),
+  chevronRight:  _ICO('<path d="m9 18 6-6-6-6"/>'),
+  info:          _ICO('<circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/>'),
+  rotateCcw:     _ICO('<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/>'),
+  cornerDownRight: _ICO('<path d="m15 10 5 5-5 5"/><path d="M4 4v7a4 4 0 0 0 4 4h12"/>'),
 };
 // Remplit tout [data-icon="key"] par le SVG correspondant. Idempotent.
 function injectIcons(root = document) {
