@@ -8,26 +8,30 @@ Guide pour Claude Code sur ce projet.
 - État : **en prod**, utilisée au quotidien sur mobile et desktop.
 
 ## Stack & versions
-- **App = `index.html`** (HTML + CSS + JS dans un seul fichier, pas de build/bundler/npm) **+ fichiers PWA** : `manifest.webmanifest`, `sw.js`, `icons/`. Le code de l'app reste tout dans `index.html`.
+- **Pas de build/bundler/npm.** 3 fichiers de code, chargés dans cet ordre : `styles.css` → `icons.js` → le `<script>` inline d'`index.html`.
 - Vanilla JS ; CSS dark « néon » (variables `--bg`, `--primary`…) ; polices Google Inter + Tilt Neon.
 - CDN dans `<head>` : Firebase compat **10.12.5** (app/auth/firestore), SheetJS **xlsx 0.18.5** (import Excel).
 - Données : `localStorage` + sync temps réel Firestore.
 
 ## Fichiers du dossier
-- `index.html` — **l'app Recettes** (titre « Mes Recettes », ~7 600 lignes), suivi par git.
-- `manifest.webmanifest`, `sw.js`, `icons/` — **PWA** (installable + offline). `sw.js` : stale-while-revalidate shell/CDN, **bypass total Firestore/Auth** ; bumper `CACHE_VERSION` à chaque déploiement. Icônes = `chef-hat` Lucide néon ; source vectorielle = `icons/icon.svg`, PNG régénérables par capture Chrome headless (`--screenshot --window-size=NxN` vers `C:/Temp`).
+- `index.html` — balisage + **tout le JS applicatif** (~6 300 lignes).
+- `styles.css` — toute la CSS (~2 160 lignes). Thème + responsive `@media (max-width:768px)`.
+- `icons.js` — `_ICO`/`ICONS`/`injectIcons`, **script classique** (pas un module : les `const` top-level restent visibles depuis `index.html`). Chargé **avant** le script principal.
+- `tools/smoke.py` — test de fumée (cf. Commandes). Non déployé (`firebase.json` → `ignore: tools/**`).
+- `manifest.webmanifest`, `sw.js`, `icons/` — **PWA** (installable + offline). `sw.js` : stale-while-revalidate shell/CDN, **bypass total Firestore/Auth** ; bumper `CACHE_VERSION` à chaque déploiement, et **ajouter tout nouveau fichier servi à `PRECACHE_URLS`**. Icônes = `chef-hat` Lucide néon ; source vectorielle = `icons/icon.svg`, PNG régénérables par capture Chrome headless (`--screenshot --window-size=NxN` vers `C:/Temp`).
 - `index - <timestamp>.html` (titre « Devis Photo ») — **autre outil**, gardé en local comme **référence de design** (sidebar, menu « Signaler un bug ») ; **gitignored** (hors repo). Ne pas le confondre avec l'app.
 
 ## Commandes
-- **Aucun build / install / lint / test.** On édite `index.html` directement.
-- **Dépôt git lié** : ce dossier est un clone de `github.com/mhuur/Recette` (branche `main`). Workflow : éditer `index.html` → `git add/commit/push` direct (le dossier vit dans OneDrive, comme le projet todolist).
+- **Aucun build / install / lint.** Un seul test : `py tools/smoke.py` (Chrome headless, sert le dossier en HTTP local). Code 0 = OK. Vérifie : 0 erreur JS, `ICONS` chargé, aucun `[data-icon]` vide, `styles.css` appliquée, les 4 `render*` définies. **À lancer avant chaque `firebase deploy`** (`py tools/smoke.py && firebase deploy --only hosting`).
+- **Dépôt git lié** : ce dossier est un clone de `github.com/mhuur/Recette` (branche `main`). Workflow : éditer → `git add/commit/push` direct (le dossier vit dans OneDrive, comme le projet todolist).
 - **Déploiement prod ≠ git push** : `git push` ne met RIEN en ligne. Le site est servi par **Firebase Hosting** : `firebase deploy --only hosting` (et `,firestore:rules` si les règles changent). CLI déjà authentifiée (`saintilan.romain@gmail.com`, projet `mes-recettes-ff138`). Toujours **bumper `CACHE_VERSION` dans `sw.js`** sinon la PWA installée garde l'ancien code.
+- **Nouveau fichier servi** = 3 endroits : `PRECACHE_URLS` (`sw.js`), en-tête `Cache-Control: no-cache` (`firebase.json`, **avant** la règle `/icons/**`), et la balise dans `index.html`.
 - **OneDrive crée des copies de conflit** « `nom (2).ext` » — ignorées via `.gitignore` (`* (2).*`). Ne pas les committer.
 - Test local : `py -m http.server 8000` dans le dossier → `http://localhost:8000/index.html`.
 - Le **login Google exige `http://localhost`** (échoue en `file://`).
 
 ## Architecture (fichier Recettes)
-- Ordre interne : `<head>` CDN → `<style>` (~1900 lignes : thème + responsive `@media (max-width:768px)`) → `<body>` (sidebar + onglets + modals) → `<script>`.
+- Ordre interne : `<head>` CDN + `<link styles.css>` → `<body>` (sidebar + onglets + modals) → `<script src="icons.js">` → `<script>` principal (~5 600 lignes, une seule portée globale : ~160 fonctions, ~60 globales).
 - **État unique** `state` : `recipes`, `ingredients`, `units`, `ingredientTypes`, `ingredientFamilies`, `mealTypes`, `filters`, `notes`, `bugs`, sélection… IDs via `uid()`.
 - **Persistance** : `save()` = localStorage + push Firestore débouncé (5 s) ; `saveLocal()` = local seul (filtres/UI).
 - **Sync** : `fbDocRef` → `users/{uid}/app/data` (perso) ou `sharedData/{espace}` (partagé) ; `onSnapshot` temps réel ; `applyCloudData()` applique le cloud.
@@ -44,12 +48,12 @@ Guide pour Claude Code sur ce projet.
 - **Icônes** : **zéro emoji dans l'UI** — que du Lucide SVG inline via `ICONS{}` + `injectIcons()` (rempli au boot, après `detectGuestMode()`). Ajouter une icône avec `data-icon="clé"` sur un élément vide ; sur du HTML rendu **après** le boot, soit interpoler `${ICONS.clé}` directement, soit rappeler `injectIcons(container)`. Taille = CSS sur le `svg` enfant (`_ICO` pose `width=18` en dur) ; `.tb-ico` donne un défaut en `em`.
   - Là où un SVG est **impossible** (`<option>`, `placeholder`, `content:` CSS, `confirm()`, `toast()`, texte copié) → texte nu, pas d'emoji. Exception : `::before` peut porter un `mask` CSS (cf. `.autocomplete-item.selected`).
   - Un bouton qui sauve/restaure son libellé doit utiliser `innerHTML`, pas `textContent` (sinon le SVG est détruit).
-  - `ICONS` est un `const` déclaré **en fin de script** : toute fonction qui l'utilise ne doit être appelée qu'après (le bloc d'init l'est).
+  - `ICONS` vit dans `icons.js`, chargé avant : plus de zone morte temporelle, utilisable partout.
   - Les `★` de `parseRating()` sont de la **donnée** (cellules Excel), pas de la déco : ne pas les toucher.
 - Hauteurs en `dvh` (gère le clavier iOS).
 
 ## Workflows
-- **Livraison automatique (demandé par l'utilisateur, 2026-07-09)** : à la fin de chaque tâche qui modifie l'app, enchaîner **sans redemander** : bumper `CACHE_VERSION` (`sw.js`) → `git commit` + `push` → `firebase deploy --only hosting`. Vérifier avant, pas après (sonde headless ; cf. ci-dessous). Retour arrière = `git revert <sha>` puis redéployer.
+- **Livraison automatique (demandé par l'utilisateur, 2026-07-09)** : à la fin de chaque tâche qui modifie l'app, enchaîner **sans redemander** : bumper `CACHE_VERSION` (`sw.js`) → `git commit` + `push` → `py tools/smoke.py && firebase deploy --only hosting`. Le smoke test est le **dernier verrou avant la prod** : s'il sort ≠ 0, ne pas déployer. Retour arrière = `git revert <sha>` puis redéployer.
 - **Feature / fix** : éditer le `.html` → tester via serveur local → vérifier à la main les onglets touchés + un cycle save/sync.
 - **Vérification — adapter l'effort au risque (3 niveaux)** :
   - *Visuel / CSS / icônes* → l'utilisateur regarde `__preview.html` (cf. ci-dessous). **Pas** de screenshot headless de ma part.
