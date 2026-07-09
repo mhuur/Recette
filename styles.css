@@ -659,6 +659,21 @@ label {
   font: inherit; font-size: 13.5px; line-height: 1.55;
 }
 
+/* Modale « Ajouter avec Claude » */
+.toolbar-add-group { display: flex; gap: 6px; align-items: center; }
+.claude-steps { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 18px; }
+.claude-steps > li { font-size: 13.5px; line-height: 1.55; color: var(--text-muted); }
+.claude-steps > li::marker { color: var(--primary); font-weight: 700; }
+.claude-steps b { color: var(--text); font-weight: 600; }
+.claude-actions { display: flex; gap: 8px; flex-wrap: wrap; margin: 10px 0 6px; }
+.claude-hint { font-size: 12px; color: var(--text-dim); }
+.claude-steps textarea { margin-top: 10px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; }
+.claude-feedback { margin-top: 8px; font-size: 12.5px; line-height: 1.5; display: none; }
+.claude-feedback.error { display: block; color: var(--danger); }
+.claude-feedback.ok { display: block; color: var(--text-muted); }
+.claude-feedback .cf-title { color: var(--success); font-weight: 600; margin-bottom: 4px; }
+.claude-feedback .cf-new { color: var(--accent); }
+
 /* Empty state */
 .empty {
   text-align: center;
@@ -2160,6 +2175,7 @@ select.bug-tab-select option{background:var(--bg-2);color:var(--text);font-weigh
 /* Mode invité : masquer les contrôles d'édition */
 body.guest-mode .fab { display: none !important; }
 body.guest-mode .recipe-actions { display: none !important; }
+body.guest-mode .toolbar-add-group { display: none !important; }
 body.guest-mode .tab-btn[data-tab="data"],
 body.guest-mode .tab-btn[data-tab="settings"],
 body.guest-mode .tab-btn[data-tab="debug"],

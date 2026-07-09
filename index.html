@@ -89,7 +89,10 @@
             </div>
           </div>
         </div>
-        <button class="btn-neon" id="btn-new-recipe-inline"><span class="tb-ico" data-icon="plus"></span>Ajouter</button>
+        <div class="toolbar-add-group">
+          <button class="btn btn-sm" id="btn-claude-import" title="Créer une recette à partir d'un lien, d'un texte ou d'une photo, avec Claude"><span class="tb-ico" data-icon="sparkles"></span>Avec Claude</button>
+          <button class="btn-neon" id="btn-new-recipe-inline"><span class="tb-ico" data-icon="plus"></span>Ajouter</button>
+        </div>
       </div>
       <div id="active-filter-bar" style="display:none;"></div>
     </div>
@@ -512,6 +515,37 @@ service cloud.firestore {
         <button class="btn" id="merge-confirm-back"><span class="tb-ico" data-icon="arrowLeft"></span>Retour</button>
         <button class="btn btn-primary" id="merge-confirm-ok"><span class="tb-ico" data-icon="check"></span>Fusionner</button>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal : créer une recette via Claude (prompt prérempli -> JSON recolle ici) -->
+<div class="modal-overlay" id="claude-modal">
+  <div class="modal" style="max-width:600px;">
+    <div class="modal-header">
+      <span class="modal-title"><span class="tb-ico" data-icon="sparkles"></span> Ajouter une recette avec Claude</span>
+      <button class="modal-close" data-close-modal>×</button>
+    </div>
+    <div class="modal-body">
+      <ol class="claude-steps">
+        <li>
+          <b>Ouvre Claude avec le prompt prérempli</b>, puis colle-lui le lien, le texte ou la photo de la recette.
+          <div class="claude-actions">
+            <button class="btn btn-sm btn-primary" id="btn-claude-open"><span class="tb-ico" data-icon="externalLink"></span>Ouvrir Claude</button>
+            <button class="btn btn-sm" id="btn-claude-copy"><span class="tb-ico" data-icon="copy"></span>Copier le prompt</button>
+          </div>
+          <div class="claude-hint">Le prompt contient déjà tes types de plat et tes unités, pour que Claude réutilise tes libellés.</div>
+        </li>
+        <li>
+          <b>Colle ici le JSON</b> que Claude te renvoie.
+          <textarea id="claude-json" class="recipe-textarea" rows="7" placeholder='{ "name": "Ratatouille", "ingredients": [ … ] }' spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off"></textarea>
+          <div id="claude-feedback" class="claude-feedback"></div>
+        </li>
+      </ol>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" data-close-modal>Annuler</button>
+      <button class="btn btn-primary" id="btn-claude-import-do" disabled><span class="tb-ico" data-icon="check"></span>Créer la recette</button>
     </div>
   </div>
 </div>
@@ -3555,7 +3589,7 @@ function openRenameModal(title, currentValue, onSave) {
 document.querySelectorAll('[data-close-modal]').forEach(b => b.onclick = closeAllModals);
 // Clic sur le fond : ferme seulement les modales "action" (confirmation, fusion).
 // Les modales de SAISIE ne se ferment PAS au clic extérieur (anti-perte de données non sauvegardées).
-const NO_BACKDROP_CLOSE = new Set(['recipe-modal', 'ing-create-modal', 'firebase-modal', 'rename-modal', 'meal-recipes-modal']);
+const NO_BACKDROP_CLOSE = new Set(['recipe-modal', 'ing-create-modal', 'firebase-modal', 'rename-modal', 'meal-recipes-modal', 'claude-modal']);
 document.querySelectorAll('.modal-overlay').forEach(m => {
   m.addEventListener('click', e => {
     if (e.target === m && !NO_BACKDROP_CLOSE.has(m.id)) closeAllModals();
@@ -4541,6 +4575,235 @@ function openMergeMealTypeDialog(sourceMealType) {
     }
   );
 }
+
+/* ========================================================================
+   AJOUT VIA CLAUDE — prompt prérempli, puis JSON recollé et validé ici.
+   JAMAIS d'eval() : le texte collé vient de l'extérieur, il est parsé et
+   chaque champ est vérifié avant de toucher à state.
+   ======================================================================== */
+const CLAUDE_URL = 'https://claude.ai/new';
+
+function buildClaudePrompt() {
+  const meals = sortMealTypes(state.mealTypes).join(', ');
+  const units = [...state.units].map(u => u.name)
+    .sort((a, b) => a.localeCompare(b, 'fr', { sensitivity: 'base' })).join(', ');
+
+  return [
+    "Tu m'aides à ajouter une recette dans mon carnet de recettes.",
+    '',
+    'Je te donne ci-dessous une recette sous forme de LIEN, de TEXTE ou de PHOTO.',
+    'Analyse-la et réponds UNIQUEMENT par un bloc de code JSON valide, sans aucune',
+    'phrase avant ni après.',
+    '',
+    'Schéma attendu (noms de clés exacts) :',
+    '',
+    '{',
+    '  "name": "Nom de la recette",',
+    '  "servings": 4,',
+    '  "prepTime": 20,',
+    '  "cookTime": 45,',
+    '  "rating": null,',
+    '  "mealTypes": ["Plat chaud"],',
+    '  "origin": { "type": "url", "url": "https://..." },',
+    '  "ingredients": [',
+    '    { "name": "Aubergine", "quantity": "2", "unit": "" },',
+    '    { "name": "Huile d\'olive", "quantity": "3", "unit": "c. à s." }',
+    '  ],',
+    '  "instructions": "Couper les légumes.\\nFaire revenir 5 min.",',
+    '  "notes": ""',
+    '}',
+    '',
+    'Règles :',
+    '- "name" est obligatoire. Tout le reste peut valoir null ou "".',
+    '- "prepTime" et "cookTime" : entiers en MINUTES, ou null.',
+    '- "servings" : entier (nombre de personnes), ou null.',
+    '- "rating" : toujours null, c\'est moi qui note.',
+    '- "quantity" : toujours une chaîne ("2", "1/2", "200"), jamais un nombre.',
+    '- "unit" : "" si l\'ingrédient n\'en a pas (ex. "3 oeufs").',
+    '- "instructions" : une étape par ligne (séparées par \\n), sans numéroter.',
+    '- "notes" : astuces, variantes, ou "".',
+    '- "origin" : {"type":"url","url":"..."} si tu as un lien ; sinon',
+    '  {"type":"book","book":"Titre","page":"42"}, {"type":"other","other":"..."}',
+    '  ou {"type":"none"}.',
+    '',
+    'IMPORTANT — réutilise MES libellés existants plutôt que d\'en inventer :',
+    '- "mealTypes" : choisis uniquement dans cette liste : ' + meals + '.',
+    '  Si vraiment rien ne convient, mets ["Aucun"].',
+    '- "unit" : privilégie ces unités : ' + units + '.',
+    '',
+    'Voici la recette (lien, texte ou photo) :',
+    ''
+  ].join('\n');
+}
+
+// claude.ai accepte un prompt en ?q= ; au-delà d'une URL très longue, certains
+// navigateurs tronquent → on retombe sur « copier le prompt ».
+function claudePromptUrl(prompt) {
+  const url = CLAUDE_URL + '?q=' + encodeURIComponent(prompt);
+  return url.length > 7500 ? null : url;
+}
+
+async function copyClaudePrompt() {
+  const p = buildClaudePrompt();
+  try {
+    await navigator.clipboard.writeText(p);
+    toast('Prompt copié — colle-le dans Claude', 'success');
+  } catch {
+    toast('Copie impossible : sélectionne le prompt à la main', 'error');
+  }
+}
+
+function openClaudeModal() {
+  document.getElementById('claude-json').value = '';
+  document.getElementById('claude-feedback').className = 'claude-feedback';
+  document.getElementById('claude-feedback').innerHTML = '';
+  document.getElementById('btn-claude-import-do').disabled = true;
+  _claudeParsed = null;
+  document.getElementById('claude-modal').classList.add('active');
+}
+
+// Extrait le 1er objet JSON du texte collé (tolère les ``` et le blabla autour).
+function extractJsonObject(text) {
+  const t = (text || '').trim().replace(/^```(?:json)?/i, '').replace(/```$/, '').trim();
+  const a = t.indexOf('{');
+  const z = t.lastIndexOf('}');
+  if (a === -1 || z <= a) throw new Error('aucun objet JSON trouvé');
+  return JSON.parse(t.slice(a, z + 1));
+}
+
+const asInt = v => {
+  if (v === null || v === undefined || v === '') return null;
+  const n = parseInt(v, 10);
+  return isFinite(n) && n >= 0 ? n : null;
+};
+const asStr = v => (v === null || v === undefined) ? '' : String(v).trim();
+
+// Renvoie un objet propre, ou lève une erreur explicite. Ne touche pas à state.
+function validateClaudeRecipe(raw) {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) throw new Error('le JSON doit être un objet');
+  const name = asStr(raw.name);
+  if (!name) throw new Error('champ "name" manquant ou vide');
+
+  const mealTypes = Array.isArray(raw.mealTypes)
+    ? raw.mealTypes.map(asStr).filter(Boolean) : [];
+
+  const ingredients = (Array.isArray(raw.ingredients) ? raw.ingredients : [])
+    .filter(i => i && typeof i === 'object' && asStr(i.name))
+    .map(i => ({ name: asStr(i.name), quantity: asStr(i.quantity), unit: asStr(i.unit) }));
+
+  let origin = { type: 'none' };
+  const o = raw.origin;
+  if (o && typeof o === 'object' && ['book', 'url', 'other'].includes(o.type)) {
+    if (o.type === 'book' && asStr(o.book)) origin = { type: 'book', book: asStr(o.book), page: asStr(o.page) };
+    else if (o.type === 'url' && /^https?:\/\//i.test(asStr(o.url))) origin = { type: 'url', url: asStr(o.url) };
+    else if (o.type === 'other' && asStr(o.other)) origin = { type: 'other', other: asStr(o.other) };
+  }
+
+  return {
+    name,
+    servings: asInt(raw.servings),
+    prepTime: asInt(raw.prepTime),
+    cookTime: asInt(raw.cookTime),
+    mealTypes,
+    origin,
+    ingredients,
+    instructions: asStr(raw.instructions),
+    notes: asStr(raw.notes)
+  };
+}
+
+let _claudeParsed = null;
+
+function previewClaudeJson() {
+  const fb = document.getElementById('claude-feedback');
+  const btn = document.getElementById('btn-claude-import-do');
+  const raw = document.getElementById('claude-json').value.trim();
+  _claudeParsed = null;
+  btn.disabled = true;
+  if (!raw) { fb.className = 'claude-feedback'; fb.innerHTML = ''; return; }
+
+  let rec;
+  try {
+    rec = validateClaudeRecipe(extractJsonObject(raw));
+  } catch (e) {
+    fb.className = 'claude-feedback error';
+    fb.textContent = 'JSON invalide : ' + e.message;
+    return;
+  }
+
+  const known = (list, n) => list.some(x => normalizeText(x) === normalizeText(n));
+  const newIngs = rec.ingredients.filter(i => !known(state.ingredients.map(x => x.name), i.name));
+  const newUnits = [...new Set(rec.ingredients.map(i => i.unit).filter(Boolean))]
+    .filter(u => !known(state.units.map(x => x.name), u));
+  const newMeals = rec.mealTypes.filter(m => !known(state.mealTypes, m));
+  const steps = rec.instructions.split('\n').filter(s => s.trim()).length;
+
+  const nameTaken = known(state.recipes.map(r => r.name), rec.name);
+  const bits = [
+    rec.ingredients.length + ' ingrédient' + (rec.ingredients.length > 1 ? 's' : ''),
+    steps + ' étape' + (steps > 1 ? 's' : ''),
+    rec.mealTypes.length ? rec.mealTypes.join(', ') : 'aucun type'
+  ];
+  const created = [];
+  if (newIngs.length) created.push(newIngs.length + ' ingrédient(s) : ' + newIngs.map(i => i.name).join(', '));
+  if (newUnits.length) created.push(newUnits.length + ' unité(s) : ' + newUnits.join(', '));
+  if (newMeals.length) created.push(newMeals.length + ' type(s) de plat : ' + newMeals.join(', '));
+
+  fb.className = 'claude-feedback ok';
+  fb.innerHTML = '<div class="cf-title">' + escapeHtml(rec.name) + '</div>'
+    + escapeHtml(bits.join(' · '))
+    + (created.length ? '<div class="cf-new">Sera créé : ' + escapeHtml(created.join(' — ')) + '</div>' : '')
+    + (nameTaken ? '<div class="cf-new">Une recette porte déjà ce nom : la nouvelle sera suffixée.</div>' : '');
+  _claudeParsed = rec;
+  btn.disabled = false;
+}
+
+function importClaudeRecipe() {
+  if (!_claudeParsed) return;
+  const rec = _claudeParsed;
+  const finalName = ensureUniqueName(rec.name, state.recipes.map(r => r.name));
+
+  rec.mealTypes.forEach(m => findOrCreateMealType(m));
+  const ingredients = rec.ingredients.map(i => {
+    const ing = findOrCreateIngredient(i.name);
+    const unit = i.unit ? findOrCreateUnit(i.unit) : null;
+    return { ingredientId: ing.id, unitId: unit ? unit.id : null, quantity: i.quantity };
+  }).filter(x => x.ingredientId);
+
+  state.recipes.push({
+    id: uid(),
+    name: finalName,
+    rating: null,
+    servings: rec.servings,
+    prepTime: rec.prepTime,
+    cookTime: rec.cookTime,
+    mealTypes: rec.mealTypes.length ? rec.mealTypes : ['Aucun'],
+    origin: rec.origin,
+    ingredients,
+    instructions: rec.instructions,
+    notes: rec.notes,
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
+    importedFromClaude: true
+  });
+
+  closeAllModals();
+  save();
+  rerenderAll();
+  toast('« ' + finalName +' » créée', 'success');
+}
+
+document.getElementById('btn-claude-import').onclick = openClaudeModal;
+document.getElementById('btn-claude-copy').onclick = copyClaudePrompt;
+document.getElementById('btn-claude-open').onclick = () => {
+  const prompt = buildClaudePrompt();
+  const url = claudePromptUrl(prompt);
+  if (url) { window.open(url, '_blank', 'noopener'); return; }
+  copyClaudePrompt(); // prompt trop long pour l'URL : on ouvre Claude vide, presse-papier prêt
+  window.open(CLAUDE_URL, '_blank', 'noopener');
+};
+document.getElementById('claude-json').addEventListener('input', previewClaudeJson);
+document.getElementById('btn-claude-import-do').onclick = importClaudeRecipe;
 
 /* ========================================================================
    NOTATION RAPIDE — pop-up d'étoiles depuis la liste des recettes
