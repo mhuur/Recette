@@ -7,12 +7,12 @@
 <title>Mes Recettes</title>
 <!-- PWA / app installable -->
 <meta name="description" content="Recettes, liste de courses et ingrédients de saison.">
-<meta name="theme-color" content="#0a1628">
-<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#eef4f0">
+<meta name="color-scheme" content="light">
 <meta name="application-name" content="Recettes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Recettes">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/svg+xml" href="icons/icon.svg">
@@ -20,7 +20,7 @@
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Tilt+Neon&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400..700&family=Manrope:wght@400..700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
@@ -30,103 +30,83 @@
 <body>
 
 <div class="app-layout" data-appbar="Recettes">
-<aside class="sidebar">
-  <nav role="tablist" aria-label="Navigation principale">
-    <button class="tab-btn active" data-tab="recipes" role="tab" aria-selected="true"><span class="tab-icon" data-icon="chefHat" aria-hidden="true"></span><span class="tab-label">Recettes</span> <span class="count-badge" id="recipe-count">0</span></button>
-    <button class="tab-btn" data-tab="shopping" role="tab" aria-selected="false"><span class="tab-icon" data-icon="shoppingCart" aria-hidden="true"></span><span class="tab-label">Courses</span> <span class="count-badge hide-if-zero" id="selected-badge">0</span></button>
-    <button class="tab-btn tab-btn-secondary" data-tab="data" role="tab" aria-selected="false"><span class="tab-icon" data-icon="database" aria-hidden="true"></span><span class="tab-label">Données</span></button>
-    <button class="tab-btn tab-btn-secondary" data-tab="settings" role="tab" aria-selected="false"><span class="tab-icon" data-icon="settings" aria-hidden="true"></span><span class="tab-label">Réglages</span></button>
-    <button class="tab-btn tab-btn-secondary" data-tab="debug" role="tab" aria-selected="false"><span class="tab-icon" data-icon="bug" aria-hidden="true"></span><span class="tab-label">Debug</span> <span class="count-badge hide-if-zero" id="debug-count">0</span></button>
+<!-- Barre supérieure (maquette Sylva : plus de sidebar) -->
+<header class="topbar">
+  <button class="topbar-brand tab-btn" data-tab="recipes" type="button" title="Recettes">
+    <span class="tb-ico" data-icon="chefHat" aria-hidden="true"></span>
+    <span class="topbar-brand-label">Mes recettes</span>
+  </button>
+  <span class="topbar-crumb" id="topbar-crumb"><span class="tb-ico" data-icon="chevronRight" aria-hidden="true"></span><span class="topbar-crumb-label" id="topbar-crumb-label"></span></span>
+  <div class="topbar-actions">
     <button class="btn btn-primary" id="mobile-login-btn"><span class="tb-ico" data-icon="key"></span>Connexion</button>
-  </nav>
-  <div class="sidebar-user" id="sidebar-user">
-    <div class="user-avatar-wrapper" id="user-avatar-wrapper">
-      <div class="user-menu" id="user-menu" role="menu">
-        <div class="user-menu-header">
-          <div class="user-menu-name" id="user-menu-name">—</div>
-          <div class="user-menu-email" id="user-menu-email">—</div>
+    <button class="topbar-cart-btn" id="topbar-cart-btn" type="button" title="Liste de courses">
+      <span class="tb-ico" data-icon="shoppingCart" aria-hidden="true"></span><span class="topbar-cart-label">Courses</span>
+      <span class="count-badge hide-if-zero" id="selected-badge" data-value="0">0</span>
+    </button>
+    <div class="sidebar-user" id="sidebar-user">
+      <div class="user-avatar-wrapper" id="user-avatar-wrapper">
+        <button class="sidebar-user-trigger" id="sidebar-user-trigger" type="button" aria-label="Mon compte">
+          <span class="sidebar-user-avatar" id="sidebar-user-avatar"></span>
+        </button>
+        <div class="user-menu" id="user-menu" role="menu">
+          <div class="user-menu-header">
+            <div class="user-menu-name" id="user-menu-name">—</div>
+            <div class="user-menu-email" id="user-menu-email">—</div>
+            <div class="sidebar-sync" id="sidebar-sync-status" data-icon="cloud"></div>
+          </div>
+          <button class="user-menu-item" role="menuitem" data-go="data"><span class="um-ico" data-icon="database"></span><span>Données</span></button>
+          <button class="user-menu-item" role="menuitem" data-go="settings"><span class="um-ico" data-icon="settings"></span><span>Réglages</span></button>
+          <div class="user-menu-sep"></div>
+          <button class="user-menu-item danger" role="menuitem" id="menu-sign-out"><span class="um-ico" data-icon="logOut"></span><span>Se déconnecter</span></button>
         </div>
-        <button class="user-menu-item" role="menuitem" data-go="data"><span class="um-ico" data-icon="database"></span><span>Données</span></button>
-        <button class="user-menu-item" role="menuitem" data-go="settings"><span class="um-ico" data-icon="settings"></span><span>Réglages</span></button>
-        <button class="user-menu-item" role="menuitem" data-go="debug"><span class="um-ico" data-icon="bug"></span><span>Debug</span> <span class="um-badge hide-if-zero" id="menu-debug-count">0</span></button>
-        <div class="user-menu-sep"></div>
-        <button class="user-menu-item danger" role="menuitem" id="menu-sign-out"><span class="um-ico" data-icon="logOut"></span><span>Se déconnecter</span></button>
       </div>
-      <button class="sidebar-user-trigger" id="sidebar-user-trigger" type="button" aria-label="Mon compte">
-        <span class="sidebar-user-avatar" id="sidebar-user-avatar"></span>
-        <span class="sidebar-user-trigger-label">Mon compte</span>
-        <span class="sidebar-user-chevron" data-icon="chevronDown" aria-hidden="true"></span>
-      </button>
     </div>
-    <div class="sidebar-sync" id="sidebar-sync-status" data-icon="cloud"></div>
+    <!-- Compteurs hérités (mis à jour par le JS, plus affichés dans la nav) -->
+    <span id="recipe-count" hidden>0</span>
+    <span id="menu-debug-count" hidden>0</span>
   </div>
-</aside>
+</header>
 
 <main>
   <!-- Onglet Recettes -->
   <section id="tab-recipes" class="tab active">
-    <div class="toolbar">
-      <div class="toolbar-row">
-        <div class="search-wrap" style="flex:1;">
-          <span class="search-ico" data-icon="search" aria-hidden="true"></span>
-          <input type="text" id="search-input" placeholder="Rechercher..." autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" data-form-type="other">
-        </div>
-        <span id="recipe-count-display" style="font-size:12px; color:var(--text-muted); margin-left:8px; white-space:nowrap; flex-shrink:0;">0 / 0</span>
-      </div>
-      <div class="toolbar-row" style="justify-content:space-between;">
-        <div style="display:flex; gap:6px; align-items:center;">
-          <button class="btn btn-sm tb-toggle" id="btn-toggle-filter" title="Filtres"><span class="tb-ico" data-icon="filter"></span>Filtre<span class="filter-count-badge" id="filter-count-badge" style="display:none;">0</span></button>
-          <button class="btn btn-sm tb-toggle" id="btn-toggle-selection-only" title="Afficher uniquement la sélection" aria-pressed="false"><span class="tb-ico" data-icon="check"></span></button>
-          <div style="position:relative;">
-            <button class="btn btn-ghost btn-sm tb-toggle" id="sort-btn" title="Trier"><span class="tb-ico" data-icon="arrowUpDown"></span><span id="sort-label">A→Z</span></button>
-            <div class="sort-popup" id="sort-popup">
-              <div class="sort-option active-sort" data-sort="name-asc">Nom A → Z</div>
-              <div class="sort-option" data-sort="name-desc">Nom Z → A</div>
-              <div class="sort-option" data-sort="rating-desc">Note ↓</div>
-              <div class="sort-option" data-sort="rating-asc">Note ↑</div>
-              <div class="sort-option" data-sort="time-asc">Temps ↑</div>
-              <div class="sort-option" data-sort="time-desc">Temps ↓</div>
+    <div class="recipes-layout">
+      <div class="recipes-main">
+        <div class="toolbar">
+          <div class="toolbar-row">
+            <div class="search-wrap" style="flex:1; min-width:200px;">
+              <span class="search-ico" data-icon="search" aria-hidden="true"></span>
+              <input type="text" id="search-input" placeholder="Rechercher une recette…" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" data-form-type="other">
+            </div>
+            <button class="btn btn-sm tb-toggle" id="btn-toggle-filter" title="Filtres"><span class="tb-ico" data-icon="filter"></span>Filtres<span class="filter-count-badge" id="filter-count-badge" style="display:none;">0</span></button>
+            <div style="position:relative;">
+              <button class="btn btn-sm tb-toggle" id="sort-btn" title="Trier"><span class="tb-ico" data-icon="arrowUpDown"></span><span id="sort-label">A→Z</span></button>
+              <div class="sort-popup" id="sort-popup">
+                <div class="sort-option active-sort" data-sort="name-asc">Nom A → Z</div>
+                <div class="sort-option" data-sort="name-desc">Nom Z → A</div>
+                <div class="sort-option" data-sort="rating-desc">Note ↓</div>
+                <div class="sort-option" data-sort="rating-asc">Note ↑</div>
+                <div class="sort-option" data-sort="time-asc">Temps ↑</div>
+                <div class="sort-option" data-sort="time-desc">Temps ↓</div>
+              </div>
+            </div>
+            <button class="btn btn-sm tb-toggle" id="btn-toggle-selection-only" title="Afficher uniquement la sélection" aria-pressed="false"><span class="tb-ico" data-icon="check"></span></button>
+            <span id="recipe-count-display" style="font-size:12px; color:var(--text-muted); white-space:nowrap; flex-shrink:0;">0 / 0</span>
+            <div class="toolbar-add-group" style="margin-left:auto;">
+              <button class="btn btn-sm" id="btn-claude-import" title="Créer une recette à partir d'un lien, d'un texte ou d'une photo, avec Claude"><span class="tb-ico" data-icon="sparkles"></span>Claude</button>
+              <button class="btn-neon btn-sm" id="btn-new-recipe-inline"><span class="tb-ico" data-icon="plus"></span>Ajouter</button>
             </div>
           </div>
+          <div id="active-filter-bar" style="display:none;"></div>
         </div>
-        <div class="toolbar-add-group">
-          <button class="btn btn-sm" id="btn-claude-import" title="Créer une recette à partir d'un lien, d'un texte ou d'une photo, avec Claude"><span class="tb-ico" data-icon="sparkles"></span>Avec Claude</button>
-          <button class="btn-neon" id="btn-new-recipe-inline"><span class="tb-ico" data-icon="plus"></span>Ajouter</button>
-        </div>
-      </div>
-      <div id="active-filter-bar" style="display:none;"></div>
-    </div>
 
-    <div id="recipes-container" class="recipe-list"></div>
-  </section>
-
-  <!-- Onglet Liste de courses -->
-  <section id="tab-shopping" class="tab">
-    <div class="shopping-toolbar">
-      <div>
-        <span class="selected-count" id="shopping-selected-count">0 recettes sélectionnées</span>
-        <div id="selected-recipes-list" style="font-size:13px; color:var(--text-muted); margin-top:4px;"></div>
+        <div id="recipes-container" class="recipe-list"></div>
       </div>
-      <div style="display:flex; gap:8px; flex-wrap:wrap;">
-        <label style="display:flex; align-items:center; gap:6px; font-size:14px; color:var(--text-muted); margin:0;">
-          <input type="checkbox" id="group-by-type" checked style="width:auto;"> Grouper par rayon
-        </label>
-        <button class="btn btn-sm" id="btn-print-shopping"><span class="tb-ico" data-icon="printer"></span>Imprimer</button>
-        <button class="btn btn-sm" id="btn-clear-checks">Décocher tout</button>
-        <button class="btn btn-sm" id="btn-clear-selection">Vider sélection</button>
-      </div>
-    </div>
-    <div class="manual-add-row">
-      <div class="manual-add-name" id="manual-add-name"></div>
-      <input type="text" id="manual-add-qty" class="manual-add-qty" placeholder="Qté (ex: 2 rouleaux)" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" data-form-type="other">
-      <button class="btn btn-sm btn-primary" id="btn-add-manual">+ Ajouter</button>
-    </div>
-    <div id="shopping-container"></div>
-  </section>
 
-  <!-- Onglet Debug — Notes & Remarques (à transmettre à Claude) -->
-  <section id="tab-debug" class="tab">
-    <div id="debug-container"></div>
+      <!-- Panneau détail (maquette Sylva : colonne fixe à droite, volet superposé < 1100px) -->
+      <aside class="recipe-detail" id="recipe-detail" aria-label="Détail recette"></aside>
+    </div>
+    <div class="detail-scrim" id="detail-scrim"></div>
   </section>
 
   <!-- Onglet Données -->
@@ -173,6 +153,44 @@
 
   <!-- Onglet Paramètres -->
   <section id="tab-settings" class="tab">
+
+    <!-- Apparence — fond forêt (maquette Sylva) -->
+    <div class="data-section">
+      <h3><span class="tb-ico" data-icon="image"></span>Apparence — fond forêt</h3>
+      <div class="setting-row">
+        <span class="setting-row-label">Transparence du fond</span>
+        <input type="range" min="0" max="100" id="bg-opacity-range">
+        <span class="setting-row-val" id="bg-opacity-val">35%</span>
+      </div>
+      <div class="setting-row">
+        <span class="setting-row-label">Style des encadrés</span>
+        <div class="setting-chips" id="panel-style-chips">
+          <button type="button" class="setting-chip" data-style="glass">Verre</button>
+          <button type="button" class="setting-chip" data-style="flouPlus">Flou intense</button>
+          <button type="button" class="setting-chip" data-style="net">Net</button>
+          <button type="button" class="setting-chip" data-style="teinte">Teinté vert</button>
+          <button type="button" class="setting-chip" data-style="contour">Contour</button>
+        </div>
+      </div>
+      <div class="setting-row">
+        <span class="setting-row-label">Opacité des encadrés</span>
+        <input type="range" min="20" max="95" id="panel-opacity-range">
+        <span class="setting-row-val" id="panel-opacity-val">55%</span>
+      </div>
+      <div class="setting-row">
+        <span class="setting-row-label">Cadrage vertical</span>
+        <input type="range" min="0" max="100" id="bg-pos-range">
+        <span class="setting-row-val" id="bg-pos-val">50%</span>
+      </div>
+      <div class="setting-row">
+        <span class="setting-row-label">Ajustement de l'image</span>
+        <div class="setting-chips" id="bg-size-chips">
+          <button type="button" class="setting-chip" data-size="cover">Remplir</button>
+          <button type="button" class="setting-chip" data-size="contain">Entière</button>
+        </div>
+        <button type="button" class="setting-reset" id="btn-reset-appearance">Réinitialiser</button>
+      </div>
+    </div>
 
     <!-- Mon compte -->
     <div class="data-section">
@@ -244,6 +262,12 @@
       </details>
     </div>
 
+    <!-- Notes & remarques (ex-onglet Debug, fusionné ici — maquette Sylva) -->
+    <div class="data-section" id="notes-remarques-section">
+      <h3><span class="tb-ico" data-icon="bug"></span>Notes &amp; remarques <span id="debug-count" class="count-badge hide-if-zero" data-value="0">0</span></h3>
+      <div id="debug-container"></div>
+    </div>
+
     <!-- Config avancée -->
     <div class="data-section">
       <details>
@@ -257,6 +281,42 @@
   </section>
 </main>
 </div>
+
+<!-- Tiroir Courses (maquette Sylva : la liste de courses est un tiroir latéral) -->
+<div class="cart-scrim" id="cart-scrim"></div>
+<aside class="cart-drawer" id="cart-drawer" aria-label="Liste de courses">
+  <div class="cart-drawer-head">
+    <span class="tb-ico" data-icon="shoppingCart" aria-hidden="true"></span>
+    <div class="cart-drawer-titles">
+      <div class="cart-drawer-title">Liste de courses</div>
+      <div class="cart-drawer-sub" id="shopping-selected-count">0 recette sélectionnée</div>
+    </div>
+    <button class="cart-drawer-close" id="cart-drawer-close" type="button" title="Fermer"><span class="tb-ico" data-icon="x"></span></button>
+  </div>
+  <div class="cart-drawer-body">
+    <div class="shopping-toolbar">
+      <span class="selected-count">Recettes sélectionnées</span>
+      <div id="selected-recipes-list"></div>
+      <div style="display:flex; flex-direction:column; gap:8px;">
+        <button class="btn btn-sm" id="btn-print-shopping" style="justify-content:center;"><span class="tb-ico" data-icon="printer"></span>Imprimer la liste</button>
+        <div style="display:flex; gap:8px;">
+          <button class="btn btn-ghost btn-sm" id="btn-clear-checks" style="flex:1; justify-content:center;">Décocher tout</button>
+          <button class="btn btn-ghost btn-sm" id="btn-clear-selection" style="flex:1; justify-content:center;">Vider sélection</button>
+        </div>
+      </div>
+    </div>
+    <div class="manual-add-row">
+      <span class="selected-count" style="flex-basis:100%;">Ajouter un article</span>
+      <div class="manual-add-name" id="manual-add-name"></div>
+      <input type="text" id="manual-add-qty" class="manual-add-qty" placeholder="Qté (ex: 2 rouleaux)" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" data-form-type="other">
+      <button class="btn btn-sm btn-primary" id="btn-add-manual">Ajouter</button>
+    </div>
+    <label class="quick-filter-chk" style="padding:0 6px;">
+      <input type="checkbox" id="group-by-type" checked style="width:auto;"> Grouper par rayon
+    </label>
+    <div id="shopping-container"></div>
+  </div>
+</aside>
 
 <!-- Écran de connexion -->
 <div id="login-overlay">
@@ -734,11 +794,11 @@ function rerenderAll() {
   try { buildFilterBar(); } catch (e) { console.error(e); }
   try { renderDataTab(); } catch (e) { console.error(e); }
   try {
-    if (document.getElementById('tab-shopping')?.classList.contains('active')) renderShopping();
+    if (document.body.classList.contains('cart-open')) renderShopping();
   } catch (e) { console.error(e); }
   try {
     updateDebugBadges();
-    if (document.getElementById('tab-debug')?.classList.contains('active')) renderDebug();
+    if (document.getElementById('tab-settings')?.classList.contains('active')) renderDebug();
   } catch (e) { console.error(e); }
 }
 
@@ -993,9 +1053,9 @@ function applyCloudData(data) {
   renderRecipes();
   renderDataTab();
   buildFilterBar();
-  if (document.getElementById('tab-shopping').classList.contains('active')) renderShopping();
+  if (document.body.classList.contains('cart-open')) renderShopping();
   try { updateDebugBadges(); } catch {}
-  try { if (document.getElementById('tab-debug')?.classList.contains('active')) renderDebug(); } catch {}
+  try { if (document.getElementById('tab-settings')?.classList.contains('active')) renderDebug(); } catch {}
 }
 
 function fbSchedulePush() {
@@ -1983,9 +2043,13 @@ function getTypeName(id) {
    ======================================================================== */
 // Bascule d'onglet — utilisable par la nav ET par les items du menu utilisateur.
 function switchTab(tabId) {
-  // Suit le dernier onglet visité avant Debug → pré-remplit « Onglet concerné ».
+  // Courses = tiroir latéral (maquette Sylva), plus un onglet.
+  if (tabId === 'shopping') { openCartDrawer(); return; }
+  // L'onglet Debug a fusionné dans Réglages (carte « Notes & remarques »).
+  if (tabId === 'debug') tabId = 'settings';
+  // Suit le dernier onglet visité avant Réglages → pré-remplit « Onglet concerné » des remarques.
   const current = document.querySelector('.tab.active');
-  if (tabId === 'debug' && current && current.id !== 'tab-debug') {
+  if (tabId === 'settings' && current && current.id !== 'tab-settings') {
     lastTabBeforeDebug = (current.id || '').replace('tab-', '') || null;
   }
   document.querySelectorAll('.tab-btn').forEach(b => {
@@ -1994,15 +2058,19 @@ function switchTab(tabId) {
     b.setAttribute('aria-selected', on ? 'true' : 'false');
   });
   document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.id === 'tab-' + tabId));
-  if (tabId === 'shopping') renderShopping();
   if (tabId === 'data') renderDataTab();
-  if (tabId === 'debug') renderDebug();
-  if (typeof updateFilterRail === 'function') updateFilterRail(); // rail visible seulement sur Recettes
-  // App bar mobile : titre = onglet courant
+  if (tabId === 'settings') renderDebug();
+  if (typeof updateFilterRail === 'function') updateFilterRail();
+  // Titre d'app + fil d'Ariane topbar
+  const _t = { recipes: 'Recettes', data: 'Données', settings: 'Réglages' };
   const _al = document.querySelector('.app-layout');
-  if (_al) {
-    const _t = { recipes: 'Recettes', shopping: 'Courses', data: 'Données', settings: 'Réglages', debug: 'Debug' };
-    _al.dataset.appbar = _t[tabId] || 'Mes Recettes';
+  if (_al) _al.dataset.appbar = _t[tabId] || 'Mes Recettes';
+  const crumb = document.getElementById('topbar-crumb');
+  const crumbLabel = document.getElementById('topbar-crumb-label');
+  if (crumb && crumbLabel) {
+    const showCrumb = tabId !== 'recipes';
+    crumb.classList.toggle('visible', showCrumb);
+    crumbLabel.textContent = showCrumb ? (_t[tabId] || '') : '';
   }
 }
 
@@ -2010,13 +2078,31 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
   btn.addEventListener('click', () => switchTab(btn.dataset.tab));
 });
 
-// Items du menu utilisateur qui ouvrent un onglet secondaire (Données / Réglages / Debug)
+// Items du menu utilisateur qui ouvrent un onglet secondaire (Données / Réglages)
 document.querySelectorAll('.user-menu-item[data-go]').forEach(btn => {
   btn.addEventListener('click', () => {
     switchTab(btn.dataset.go);
     const wrap = document.getElementById('user-avatar-wrapper');
     if (wrap) wrap.classList.remove('open');
   });
+});
+
+/* ========================================================================
+   TIROIR COURSES (maquette Sylva)
+   ======================================================================== */
+function openCartDrawer() {
+  document.body.classList.add('cart-open');
+  renderShopping();
+}
+function closeCartDrawer() {
+  document.body.classList.remove('cart-open');
+}
+document.getElementById('topbar-cart-btn')?.addEventListener('click', openCartDrawer);
+document.getElementById('cart-drawer-close')?.addEventListener('click', closeCartDrawer);
+document.getElementById('cart-scrim')?.addEventListener('click', closeCartDrawer);
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && document.body.classList.contains('cart-open')
+      && !document.querySelector('.modal-overlay.active')) closeCartDrawer();
 });
 
 /* ========================================================================
@@ -2443,9 +2529,9 @@ function renderDebug() {
   updateDebugBadges();
 }
 
-// Raccourcis clavier dans l'onglet Debug : Alt+N (nouvelle remarque), / (recherche)
+// Raccourcis clavier des Notes & remarques (Réglages) : Alt+N (nouvelle remarque), / (recherche)
 document.addEventListener("keydown", e => {
-  const debugActive = document.getElementById("tab-debug")?.classList.contains("active");
+  const debugActive = document.getElementById("tab-settings")?.classList.contains("active");
   if (!debugActive) return;
   const tag = (e.target && e.target.tagName) || "";
   if (e.altKey && (e.key === "n" || e.key === "N")) {
@@ -2794,18 +2880,14 @@ function renderRecipes() {
 
   container.innerHTML = '';
   recipes.forEach(r => {
-    const card = document.createElement('div');
-    card.className = 'recipe-card' + (state.selectedRecipeIds.includes(r.id) ? ' selected' : '');
+    const row = document.createElement('div');
+    row.className = 'recipe-row' + (r.id === detailRecipeId && document.body.classList.contains('detail-open') ? ' open' : '');
+    row.dataset.id = r.id;
 
-    // Header
-    const header = document.createElement('div');
-    header.className = 'recipe-header';
-
-    const cbWrap = document.createElement('div');
-    cbWrap.className = 'recipe-checkbox';
     const cb = document.createElement('input');
     cb.type = 'checkbox';
     cb.checked = state.selectedRecipeIds.includes(r.id);
+    cb.title = 'Sélectionner pour la liste de courses';
     cb.onclick = e => {
       e.stopPropagation();
       if (cb.checked) {
@@ -2816,169 +2898,169 @@ function renderRecipes() {
       save();
       renderRecipes();
     };
-    cbWrap.appendChild(cb);
-    header.appendChild(cbWrap);
+    row.appendChild(cb);
 
-    const main = document.createElement('div');
-    main.className = 'recipe-main';
-    const title = document.createElement('div');
-    title.className = 'recipe-title';
-    title.textContent = r.name;
-    title.title = r.name;
-    main.appendChild(title);
+    const name = document.createElement('span');
+    name.className = 'recipe-row-name';
+    name.textContent = r.name;
+    name.title = r.name;
+    row.appendChild(name);
 
-    const buildMetaHtml = () => {
-      let html = '';
-      const rated = r.rating != null && r.rating !== '';
-      const canRate = canRateRecipes();
-      if (rated && canRate) {
-        html += '<button type="button" class="meta-item rating-badge" data-rate title="Modifier la note"><span class="rating-stars">' + ratingStars(r.rating) + '</span> <b>' + r.rating + '/10</b></button>';
-      } else if (rated) {
-        html += '<span class="meta-item"><span class="rating-stars">' + ratingStars(r.rating) + '</span> <b>' + r.rating + '/10</b></span>';
-      } else if (canRate) {
-        html += '<button type="button" class="meta-item rating-badge rating-badge-empty" data-rate title="Noter cette recette"><span class="rating-stars">' + ICONS.star + '</span> <span>Noter</span></button>';
-      }
-      if (r.servings) html += '<span class="meta-item">' + ICONS.users + ' ' + r.servings + '</span>';
-      if (r.prepTime) html += '<span class="meta-item">' + ICONS.utensils + ' ' + formatTime(r.prepTime) + '</span>';
-      if (r.cookTime) html += '<span class="meta-item">' + ICONS.flame + ' ' + formatTime(r.cookTime) + '</span>';
-      if (r.mealTypes && r.mealTypes.length > 0) {
-        // Tri alphabétique à l'affichage seulement — r.mealTypes garde son ordre (persisté/synchro).
-        const tagsHtml = sortMealTypes(r.mealTypes).map(m => '<span class="meal-tag">' + escapeHtml(m) + '</span>').join('');
-        html += '<span class="meta-item meal-tags">' + tagsHtml + '</span>';
-      }
-      return html;
-    };
-    const meta = document.createElement('div');
-    meta.className = 'recipe-meta';
-    meta.innerHTML = buildMetaHtml();
-    // stopPropagation : le header de la carte déplie la recette au clic.
-    const rateBtn = meta.querySelector('[data-rate]');
-    if (rateBtn) rateBtn.onclick = e => { e.stopPropagation(); openRatingDialog(r); };
-    main.appendChild(meta);
-    header.appendChild(main);
+    // Note (étoiles cliquables, sauf invité lecture seule)
+    const rated = r.rating != null && r.rating !== '';
+    const canRate = canRateRecipes();
+    const rating = document.createElement(canRate ? 'button' : 'span');
+    rating.className = 'recipe-row-rating';
+    if (canRate) { rating.type = 'button'; rating.title = rated ? 'Modifier la note' : 'Noter cette recette'; }
+    rating.innerHTML = rated
+      ? '<span class="rating-stars">' + ratingStars(r.rating) + '</span>'
+      : '<span class="rating-unrated-label">' + (canRate ? 'Noter' : 'Non notée') + '</span>';
+    if (canRate) rating.onclick = e => { e.stopPropagation(); openRatingDialog(r); };
+    row.appendChild(rating);
 
-    const actions = document.createElement('div');
-    actions.className = 'recipe-actions';
-    const editBtn = document.createElement('button');
-    editBtn.className = 'btn btn-ghost btn-xs recipe-menu-btn';
-    editBtn.innerHTML = ICONS.moreVertical;
-    editBtn.title = 'Actions';
-    editBtn.setAttribute('aria-label', 'Actions sur la recette');
-    editBtn.onclick = e => { e.stopPropagation(); openRecipeMenu(r, editBtn); };
-    actions.appendChild(editBtn);
-    header.appendChild(actions);
+    const servings = document.createElement('span');
+    servings.className = 'recipe-row-meta servings';
+    if (r.servings) servings.innerHTML = ICONS.users + ' ' + r.servings;
+    row.appendChild(servings);
 
-    const expand = document.createElement('span');
-    expand.className = 'recipe-expand';
-    expand.innerHTML = ICONS.chevronRight;
-    header.appendChild(expand);
+    const time = document.createElement('span');
+    time.className = 'recipe-row-meta time';
+    const times = [];
+    if (r.prepTime) times.push(formatTime(r.prepTime));
+    if (r.cookTime) times.push(formatTime(r.cookTime));
+    if (times.length) time.innerHTML = ICONS.clock + ' ' + times.join(' + ');
+    row.appendChild(time);
 
-    header.onclick = () => {
-      if (!card.classList.contains('expanded')) ensureBody();
-      card.classList.toggle('expanded');
-    };
-    card.appendChild(header);
-
-    // Body — lazy construction (only built on first expand to keep list rendering fast)
-    let bodyBuilt = false;
-    function ensureBody() {
-      if (bodyBuilt) return;
-      bodyBuilt = true;
-
-      const body = document.createElement('div');
-      body.className = 'recipe-body';
-      if (r.ingredients && r.ingredients.length > 0) {
-        const ul = document.createElement('ul');
-        ul.className = 'ingredients-list';
-        r.ingredients.forEach(i => {
-          const li = document.createElement('li');
-          const qty = i.quantity ? i.quantity + (i.unitId ? ' ' + getUnitName(i.unitId) : '') : '';
-          li.innerHTML = '<span class="ing-qty">' + escapeHtml(qty) + '</span><span class="ing-name">' + escapeHtml(getIngredientName(i.ingredientId)) + '</span>';
-          ul.appendChild(li);
-        });
-        body.appendChild(ul);
-      } else {
-        body.innerHTML = '<div style="color:var(--text-dim); font-style:italic;">Aucun ingrédient renseigné</div>';
-      }
-
-      if (r.origin && r.origin.type !== 'none') {
-        const o = document.createElement('div');
-        o.className = 'recipe-origin';
-        const oIco = k => '<span class="tb-ico">' + ICONS[k] + '</span> ';
-        if (r.origin.type === 'book') {
-          o.innerHTML = oIco('bookOpen') + escapeHtml(r.origin.book || 'Livre') + (r.origin.page ? ', p. ' + escapeHtml(r.origin.page) : '');
-        } else if (r.origin.type === 'url' && r.origin.url) {
-          o.innerHTML = oIco('link2') + '<a href="' + escapeHtml(r.origin.url) + '" target="_blank" rel="noopener">' + escapeHtml(r.origin.url) + '</a>';
-        } else if (r.origin.type === 'other' && r.origin.other) {
-          o.innerHTML = oIco('info') + escapeHtml(r.origin.other);
-        }
-        if (o.innerHTML) body.appendChild(o);
-      }
-
-      // Types de plat (lecture seule — édition via le menu ⋮ › Modifier)
-      if (r.mealTypes && r.mealTypes.length > 0) {
-        const mealRow = document.createElement('div');
-        mealRow.className = 'recipe-types-row';
-        const mealLabel = document.createElement('span');
-        mealLabel.className = 'recipe-types-label';
-        mealLabel.textContent = 'Types :';
-        mealRow.appendChild(mealLabel);
-        sortMealTypes(r.mealTypes).forEach(m => {
-          const tag = document.createElement('span');
-          tag.className = 'meal-tag';
-          tag.textContent = m;
-          mealRow.appendChild(tag);
-        });
-        body.appendChild(mealRow);
-      }
-
-      // Préparation : une étape par ligne non vide, numérotée à l'affichage.
-      const steps = (r.instructions || '').split('\n').map(s => s.trim()).filter(Boolean);
-      if (steps.length) {
-        const sec = document.createElement('div');
-        sec.className = 'recipe-section';
-        sec.innerHTML = '<div class="recipe-section-title">' + ICONS.utensilsCrossed + '<span>Préparation</span></div>';
-        const ol = document.createElement('ol');
-        ol.className = 'recipe-steps';
-        steps.forEach(s => {
-          const li = document.createElement('li');
-          li.textContent = s;
-          ol.appendChild(li);
-        });
-        sec.appendChild(ol);
-        body.appendChild(sec);
-      }
-
-      if ((r.notes || '').trim()) {
-        const sec = document.createElement('div');
-        sec.className = 'recipe-section';
-        sec.innerHTML = '<div class="recipe-section-title">' + ICONS.fileText + '<span>Notes</span></div>';
-        const p = document.createElement('div');
-        p.className = 'recipe-notes-text';
-        p.textContent = r.notes.trim(); // white-space:pre-wrap en CSS : les retours à la ligne sont gardés
-        sec.appendChild(p);
-        body.appendChild(sec);
-      }
-
-      card.appendChild(body);
+    const tags = document.createElement('span');
+    tags.className = 'recipe-row-tags';
+    if (r.mealTypes && r.mealTypes.length > 0) {
+      // Tri alphabétique à l'affichage seulement — r.mealTypes garde son ordre (persisté/synchro).
+      const sorted = sortMealTypes(r.mealTypes);
+      tags.innerHTML = sorted.slice(0, 2).map(m => '<span class="meal-tag">' + escapeHtml(m) + '</span>').join('')
+        + (sorted.length > 2 ? '<span class="meal-tag-more">+' + (sorted.length - 2) + '</span>' : '');
     }
+    row.appendChild(tags);
 
-    container.appendChild(card);
+    row.onclick = () => openRecipeDetail(r.id);
+    container.appendChild(row);
   });
+
+  // Le panneau détail reflète l'état courant (recette modifiée / supprimée / filtrée)
+  refreshRecipeDetail();
 }
 
 /* ========================================================================
-   FERMETURE AUTOMATIQUE DES CARTES AU CLIC EXTÉRIEUR
+   PANNEAU DÉTAIL RECETTE (maquette Sylva : colonne à droite / volet)
    ======================================================================== */
-document.addEventListener('click', (e) => {
-  if (document.querySelector('.modal-overlay.active')) return;
-  if (e.target.closest('.recipe-card')) return;
-  // Dropdown appended to body — don't close cards when clicking dropdown items
-  if (e.target.closest('.autocomplete-dropdown')) return;
-  if (e.target.closest('.recipe-context-menu')) return;
-  document.querySelectorAll('.recipe-card.expanded').forEach(card => {
-    card.classList.remove('expanded');
-  });
+let detailRecipeId = null;
+
+function openRecipeDetail(id) {
+  detailRecipeId = id;
+  renderRecipeDetail();
+  document.body.classList.add('detail-open');
+  document.querySelectorAll('.recipe-row').forEach(el => el.classList.toggle('open', el.dataset.id === id));
+}
+function closeRecipeDetail() {
+  detailRecipeId = null;
+  document.body.classList.remove('detail-open');
+  document.querySelectorAll('.recipe-row.open').forEach(el => el.classList.remove('open'));
+}
+function refreshRecipeDetail() {
+  if (!detailRecipeId || !document.body.classList.contains('detail-open')) return;
+  const r = state.recipes.find(x => x.id === detailRecipeId);
+  if (!r) { closeRecipeDetail(); return; }
+  renderRecipeDetail();
+}
+function renderRecipeDetail() {
+  const panel = document.getElementById('recipe-detail');
+  const r = state.recipes.find(x => x.id === detailRecipeId);
+  if (!panel || !r) return;
+  const rated = r.rating != null && r.rating !== '';
+  const canRate = canRateRecipes();
+  const inList = state.selectedRecipeIds.includes(r.id);
+
+  let head = '<div class="recipe-detail-head">';
+  head += '<div class="recipe-detail-topbtns">'
+    + '<button class="recipe-detail-iconbtn" id="detail-menu-btn" type="button" title="Actions" aria-label="Actions sur la recette">' + ICONS.moreVertical + '</button>'
+    + '<button class="recipe-detail-iconbtn" id="detail-close-btn" type="button" title="Fermer" aria-label="Fermer le détail">' + ICONS.x + '</button>'
+    + '</div>';
+  head += '<h2 class="recipe-detail-title">' + escapeHtml(r.name) + '</h2>';
+  if (rated) {
+    head += (canRate ? '<button type="button" class="recipe-detail-rating" data-rate title="Modifier la note">' : '<span class="recipe-detail-rating">')
+      + '<span class="rating-stars">' + ratingStars(r.rating) + '</span>'
+      + '<span class="rating-note">' + r.rating + '/10</span>'
+      + (canRate ? '</button>' : '</span>');
+  } else {
+    head += canRate
+      ? '<button type="button" class="recipe-detail-rating" data-rate title="Noter cette recette"><span class="recipe-detail-unrated">Non notée — noter</span></button>'
+      : '<span class="recipe-detail-unrated">Non notée</span>';
+  }
+  let chips = '';
+  if (r.servings) chips += '<span class="recipe-detail-chip">' + ICONS.users + ' ' + r.servings + ' pers.</span>';
+  if (r.prepTime) chips += '<span class="recipe-detail-chip">' + ICONS.utensils + ' Prépa ' + formatTime(r.prepTime) + '</span>';
+  if (r.cookTime) chips += '<span class="recipe-detail-chip">' + ICONS.flame + ' Cuisson ' + formatTime(r.cookTime) + '</span>';
+  if (chips) head += '<div class="recipe-detail-chips">' + chips + '</div>';
+  head += '<div class="recipe-detail-cta">'
+    + '<button class="btn btn-sm btn-primary" id="detail-shop-btn" type="button"><span class="tb-ico">' + ICONS.shoppingCart + '</span>' + (inList ? 'Retirer des courses' : 'Ajouter aux courses') + '</button>'
+    + '<button class="btn btn-sm" id="detail-edit-btn" type="button"><span class="tb-ico">' + ICONS.pencil + '</span>Modifier</button>'
+    + '</div>';
+  head += '</div>';
+
+  let body = '<div class="recipe-detail-body">';
+  if (r.mealTypes && r.mealTypes.length > 0) {
+    body += '<div class="meal-tags">' + sortMealTypes(r.mealTypes).map(m => '<span class="meal-tag">' + escapeHtml(m) + '</span>').join('') + '</div>';
+  }
+  const hasIngs = r.ingredients && r.ingredients.length > 0;
+  // Préparation : une étape par ligne non vide, numérotée à l'affichage.
+  const steps = (r.instructions || '').split('\n').map(s => s.trim()).filter(Boolean);
+  body += '<div class="recipe-detail-cols">';
+  if (hasIngs) {
+    body += '<div class="recipe-section"><div class="recipe-section-title"><span>Ingrédients</span></div><ul class="ingredients-list">'
+      + r.ingredients.map(i => {
+          const qty = i.quantity ? i.quantity + (i.unitId ? ' ' + getUnitName(i.unitId) : '') : '';
+          return '<li>' + (qty ? '<span class="ing-qty">' + escapeHtml(qty) + '</span>' : '') + '<span class="ing-name">' + escapeHtml(getIngredientName(i.ingredientId)) + '</span></li>';
+        }).join('')
+      + '</ul></div>';
+  }
+  if (steps.length) {
+    body += '<div class="recipe-section"><div class="recipe-section-title"><span>Préparation</span></div><ol class="recipe-steps">'
+      + steps.map(s => '<li><span>' + escapeHtml(s) + '</span></li>').join('')
+      + '</ol></div>';
+  }
+  body += '</div>';
+  if (!hasIngs && !steps.length) {
+    body += '<div style="color:var(--text-dim); font-style:italic; font-size:13px;">Aucun ingrédient renseigné</div>';
+  }
+  if ((r.notes || '').trim()) {
+    body += '<div class="recipe-section" style="margin-top:18px;"><div class="recipe-section-title"><span>Notes</span></div><div class="recipe-notes-text">' + escapeHtml(r.notes.trim()) + '</div></div>';
+  }
+  if (r.origin && r.origin.type !== 'none') {
+    let o = '';
+    if (r.origin.type === 'book') {
+      o = '<span class="tb-ico">' + ICONS.bookOpen + '</span>' + escapeHtml(r.origin.book || 'Livre') + (r.origin.page ? ', p. ' + escapeHtml(r.origin.page) : '');
+    } else if (r.origin.type === 'url' && r.origin.url) {
+      o = '<span class="tb-ico">' + ICONS.link2 + '</span><a href="' + escapeHtml(r.origin.url) + '" target="_blank" rel="noopener">' + escapeHtml(r.origin.url) + '</a>';
+    } else if (r.origin.type === 'other' && r.origin.other) {
+      o = '<span class="tb-ico">' + ICONS.info + '</span>' + escapeHtml(r.origin.other);
+    }
+    if (o) body += '<div class="recipe-origin">' + o + '</div>';
+  }
+  body += '</div>';
+
+  panel.innerHTML = head + body;
+
+  panel.querySelector('#detail-close-btn').onclick = closeRecipeDetail;
+  panel.querySelector('#detail-menu-btn').onclick = (e) => { e.stopPropagation(); openRecipeMenu(r, e.currentTarget); };
+  panel.querySelector('#detail-shop-btn').onclick = () => toggleRecipeSelection(r);
+  panel.querySelector('#detail-edit-btn').onclick = () => openRecipeModal(r);
+  const rateBtn = panel.querySelector('[data-rate]');
+  if (rateBtn) rateBtn.onclick = () => openRatingDialog(r);
+}
+document.getElementById('detail-scrim')?.addEventListener('click', closeRecipeDetail);
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && document.body.classList.contains('detail-open')
+      && !document.querySelector('.modal-overlay.active')
+      && !document.body.classList.contains('cart-open')) closeRecipeDetail();
 });
 
 /* ========================================================================
@@ -3896,19 +3978,21 @@ function openFilterSheet() {
     fc.textContent = n === 0 ? 'Aucune recette' : 'Voir ' + n + ' recette' + (n > 1 ? 's' : '');
   }
 }
-// Desktop (≥769px) : positionne le rail docké à gauche de la zone recettes, pleine hauteur.
+// Desktop (≥769px) : popover ancré sous le bouton « Filtres » (maquette Sylva).
 // Mobile : on retire les styles inline pour laisser le bottom-sheet CSS s'appliquer.
 function positionFilterSheet() {
   const sheet = document.querySelector('.filter-sheet');
   if (!sheet) return;
   if (window.innerWidth >= 769) {
-    const mainEl = document.querySelector('main');
-    const r = mainEl.getBoundingClientRect();
-    const pad = 16;
-    sheet.style.left = (r.left + pad) + 'px';
-    sheet.style.top = pad + 'px';
-    sheet.style.height = (window.innerHeight - pad * 2) + 'px';
-    sheet.style.maxHeight = (window.innerHeight - pad * 2) + 'px';
+    const btn = document.getElementById('btn-toggle-filter');
+    const r = btn ? btn.getBoundingClientRect() : { left: 16, bottom: 60 };
+    const margin = 12;
+    const left = Math.max(margin, Math.min(r.left, window.innerWidth - 280 - margin));
+    const top = r.bottom + 8;
+    sheet.style.left = left + 'px';
+    sheet.style.top = top + 'px';
+    sheet.style.height = '';
+    sheet.style.maxHeight = Math.max(240, window.innerHeight - top - margin) + 'px';
   } else {
     sheet.style.left = '';
     sheet.style.top = '';
@@ -3916,27 +4000,30 @@ function positionFilterSheet() {
     sheet.style.maxHeight = '';
   }
 }
-// Affiche le rail uniquement sur desktop ET sur l'onglet Recettes ; sinon le replie.
+// Héritage du rail docké : supprimé avec le design Sylva (popover partout).
 function updateFilterRail() {
-  const desktop = window.innerWidth >= 769;
-  const tabRecipes = document.getElementById('tab-recipes');
+  document.body.classList.remove('filter-rail-on');
   const overlay = document.getElementById('filter-sheet-overlay');
-  if (!tabRecipes || !overlay) return;
-  const show = desktop && tabRecipes.classList.contains('active');
-  document.body.classList.toggle('filter-rail-on', show);
-  if (show) {
-    overlay.classList.add('active');
-    positionFilterSheet();
-  } else {
-    overlay.classList.remove('active');
-    if (!desktop) positionFilterSheet(); // nettoie les styles inline pour le bottom-sheet
-  }
+  if (overlay && overlay.classList.contains('active')) positionFilterSheet();
 }
 window.addEventListener('resize', updateFilterRail);
 function closeFilterSheet() {
   document.getElementById('filter-sheet-overlay').classList.remove('active');
 }
-document.getElementById('btn-toggle-filter').onclick = openFilterSheet;
+document.getElementById('btn-toggle-filter').onclick = () => {
+  const ov = document.getElementById('filter-sheet-overlay');
+  if (ov.classList.contains('active')) closeFilterSheet(); else openFilterSheet();
+};
+// Desktop : clic hors du popover → fermeture (l'overlay est pointer-events:none)
+document.addEventListener('click', e => {
+  if (window.innerWidth < 769) return;
+  const overlay = document.getElementById('filter-sheet-overlay');
+  if (!overlay || !overlay.classList.contains('active')) return;
+  if (e.target.closest('.filter-sheet')) return;
+  if (e.target.closest('#btn-toggle-filter')) return;
+  if (e.target.closest('.autocomplete-dropdown')) return;
+  closeFilterSheet();
+});
 document.getElementById('filter-sheet-close').onclick = closeFilterSheet;
 document.getElementById('filter-apply-btn').onclick = closeFilterSheet;
 document.getElementById('filter-sheet-overlay').addEventListener('click', e => {
@@ -4235,7 +4322,7 @@ function renderShopping() {
   });
 
   if (selected.length === 0 && (state.manualShoppingItems || []).length === 0) {
-    container.innerHTML = '<div class="empty"><div class="empty-icon" data-icon="shoppingCart" aria-hidden="true"></div><div>Aucune recette sélectionnée.<br>Coche des recettes dans l\'onglet <b>Recettes</b>, ou ajoute un article ci-dessus.</div></div>';
+    container.innerHTML = '<div class="empty"><div class="empty-icon" data-icon="shoppingCart" aria-hidden="true"></div><div>Ta liste est vide.<br>Coche des recettes dans la liste, ou ajoute un article ci-dessus.</div></div>';
     injectIcons(container);
     return;
   }
@@ -5013,7 +5100,7 @@ function moveIngredientType(idx, dir) {
   [arr[idx], arr[j]] = [arr[j], arr[idx]];
   save();
   renderDataTab();
-  if (document.getElementById('tab-shopping')?.classList.contains('active')) renderShopping();
+  if (document.body.classList.contains('cart-open')) renderShopping();
 }
 
 function renderDataTab() {
@@ -6551,9 +6638,62 @@ service cloud.firestore {
 
 
 /* ========================================================================
+   APPARENCE — fond forêt + style des encadrés (Réglages, maquette Sylva)
+   Persisté en localStorage uniquement (préférence par appareil, pas synchronisée).
+   ======================================================================== */
+const APPEARANCE_KEY = 'sylva_appearance_v1';
+const APPEARANCE_DEFAULTS = { bgOpacity: 35, bgPosY: 50, bgSize: 'cover', panelOpacity: 55, panelStyle: 'glass' };
+let appearance = { ...APPEARANCE_DEFAULTS };
+try { appearance = { ...APPEARANCE_DEFAULTS, ...(JSON.parse(localStorage.getItem(APPEARANCE_KEY) || '{}')) }; } catch (e) {}
+
+function applyAppearance() {
+  const r = document.documentElement.style;
+  r.setProperty('--sylva-bg-opacity', String(appearance.bgOpacity / 100));
+  r.setProperty('--sylva-bg-pos', 'center ' + appearance.bgPosY + '%');
+  r.setProperty('--sylva-bg-size', appearance.bgSize);
+  const a = appearance.panelOpacity / 100;
+  const strong = Math.min(a + 0.17, 0.99);
+  let rgb = '255,255,255', bd, bdSoft, blurOn = true, blurAmt = ['6px', '14px', '22px'];
+  const st = appearance.panelStyle || 'glass';
+  if (st === 'net') { blurOn = false; bd = 'rgba(255,255,255,0.55)'; bdSoft = 'rgba(255,255,255,0.40)'; }
+  else if (st === 'teinte') { rgb = '223,240,229'; bd = 'rgba(47,125,85,0.30)'; bdSoft = 'rgba(47,125,85,0.18)'; }
+  else if (st === 'contour') { blurOn = false; bd = 'rgba(47,125,85,0.55)'; bdSoft = 'rgba(47,125,85,0.35)'; }
+  else if (st === 'flouPlus') { blurAmt = ['14px', '26px', '40px']; bd = 'rgba(255,255,255,0.6)'; bdSoft = 'rgba(255,255,255,0.45)'; }
+  else { bd = 'rgba(255,255,255,0.55)'; bdSoft = 'rgba(255,255,255,0.40)'; }
+  r.setProperty('--glass-fill', 'rgba(' + rgb + ',' + a.toFixed(2) + ')');
+  r.setProperty('--glass-fill-strong', 'rgba(' + rgb + ',' + strong.toFixed(2) + ')');
+  r.setProperty('--glass-border', bd);
+  r.setProperty('--glass-border-soft', bdSoft);
+  r.setProperty('--blur-sm', blurOn ? blurAmt[0] : '0px');
+  r.setProperty('--blur-md', blurOn ? blurAmt[1] : '0px');
+  r.setProperty('--blur-lg', blurOn ? blurAmt[2] : '0px');
+  try { localStorage.setItem(APPEARANCE_KEY, JSON.stringify(appearance)); } catch (e) {}
+  syncAppearanceControls();
+}
+function syncAppearanceControls() {
+  const set = (id, v) => { const el = document.getElementById(id); if (el) el.value = v; };
+  const setTxt = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+  set('bg-opacity-range', appearance.bgOpacity); setTxt('bg-opacity-val', appearance.bgOpacity + '%');
+  set('panel-opacity-range', appearance.panelOpacity); setTxt('panel-opacity-val', appearance.panelOpacity + '%');
+  set('bg-pos-range', appearance.bgPosY); setTxt('bg-pos-val', appearance.bgPosY + '%');
+  document.querySelectorAll('#panel-style-chips .setting-chip').forEach(b => b.classList.toggle('on', b.dataset.style === appearance.panelStyle));
+  document.querySelectorAll('#bg-size-chips .setting-chip').forEach(b => b.classList.toggle('on', b.dataset.size === appearance.bgSize));
+}
+(function wireAppearance() {
+  const on = (id, ev, fn) => { const el = document.getElementById(id); if (el) el.addEventListener(ev, fn); };
+  on('bg-opacity-range', 'input', e => { appearance.bgOpacity = parseInt(e.target.value, 10); applyAppearance(); });
+  on('panel-opacity-range', 'input', e => { appearance.panelOpacity = parseInt(e.target.value, 10); applyAppearance(); });
+  on('bg-pos-range', 'input', e => { appearance.bgPosY = parseInt(e.target.value, 10); applyAppearance(); });
+  document.querySelectorAll('#panel-style-chips .setting-chip').forEach(b => b.addEventListener('click', () => { appearance.panelStyle = b.dataset.style; applyAppearance(); }));
+  document.querySelectorAll('#bg-size-chips .setting-chip').forEach(b => b.addEventListener('click', () => { appearance.bgSize = b.dataset.size; applyAppearance(); }));
+  on('btn-reset-appearance', 'click', () => { appearance = { ...APPEARANCE_DEFAULTS }; applyAppearance(); });
+})();
+
+/* ========================================================================
    INITIALISATION
    ======================================================================== */
 detectGuestMode();
+applyAppearance();
 // Purge des restes de l'ancien « mode partagé » (sharedData), retiré : tout passe en perso.
 try { localStorage.removeItem(SHARED_MODE_KEY); localStorage.removeItem(SHARED_SPACE_KEY); } catch {}
 if (guestMode) document.getElementById('guest-overlay')?.classList.add('active'); // écran invité visible dès le boot
@@ -6577,10 +6717,10 @@ initFirebase();
     var bar = document.createElement('div');
     bar.id = 'sw-update-banner';
     bar.setAttribute('role', 'status');
-    bar.style.cssText = 'position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:99999;display:flex;gap:12px;align-items:center;background:#122a4d;color:#eaf2ff;border:1px solid #2a4a7d;border-radius:12px;padding:10px 14px;box-shadow:0 8px 30px rgba(0,0,0,.45);font:600 14px Inter,system-ui,sans-serif;max-width:calc(100vw - 32px)';
+    bar.style.cssText = 'position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:99999;display:flex;gap:12px;align-items:center;background:rgba(255,255,255,.92);color:#143020;border:1px solid rgba(47,125,85,.35);border-radius:14px;padding:10px 14px;box-shadow:0 12px 40px rgba(20,48,32,.2);font:600 14px Manrope,system-ui,sans-serif;max-width:calc(100vw - 32px)';
     var txt = document.createElement('span'); txt.textContent = 'Nouvelle version disponible';
     var btn = document.createElement('button'); btn.textContent = 'Recharger';
-    btn.style.cssText = 'border:0;cursor:pointer;background:#4a9eff;color:#06122a;font:700 14px Inter,system-ui,sans-serif;border-radius:9px;padding:7px 12px';
+    btn.style.cssText = 'border:0;cursor:pointer;background:#2f7d55;color:#fff;font:700 14px Manrope,system-ui,sans-serif;border-radius:999px;padding:7px 14px';
     btn.onclick = function () { btn.disabled = true; txt.textContent = 'Mise à jour…'; worker.postMessage({ type: 'SKIP_WAITING' }); };
     bar.appendChild(txt); bar.appendChild(btn); document.body.appendChild(bar);
   }

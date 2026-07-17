@@ -1,6 +1,9 @@
 # Outil de référence « Devis Photo » (design only) — gardé en local, hors repo
 index - *.html
 
+# Maquette design Sylva (bundle artifact Claude) — référence locale, hors repo
+Recette Sylva*.html
+
 # Téléchargements / sauvegardes éventuels
 *.bak
 __*

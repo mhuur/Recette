@@ -55,10 +55,11 @@ setTimeout(function () {
     c.injectIcons  = typeof injectIcons === 'function';
     c.unfilledIcon = [].slice.call(document.querySelectorAll('[data-icon]'))
                        .filter(function (el) { return !el.querySelector('svg'); }).length;
-    // body a un fond en linear-gradient (donc backgroundColor est transparent) : on
-    // teste l'image de fond + la police, deux marqueurs propres a styles.css.
+    // Theme Sylva : la photo foret est sur body::before, la police est Manrope —
+    // deux marqueurs propres a styles.css.
     var bs = getComputedStyle(document.body);
-    c.cssLoaded = (bs.backgroundImage !== 'none') && /Inter/.test(bs.fontFamily);
+    var bb = getComputedStyle(document.body, '::before');
+    c.cssLoaded = /forest-bg/.test(bb.backgroundImage) && /Manrope/.test(bs.fontFamily);
     c.appRendered  = !!document.querySelector('#recipes-container');
     c.starPicker   = typeof createStarPicker === 'function';
     c.ratingStars  = (ratingStars(10).match(/<svg/g) || []).length;
@@ -158,7 +159,7 @@ def main():
     if c.get("unfilledIcon"):
         problems.append(f"{c['unfilledIcon']} [data-icon] sans SVG")
     if not c.get("cssLoaded"):
-        problems.append("styles.css non appliquee (fond ou police Inter absents sur body)")
+        problems.append("styles.css non appliquee (photo foret ou police Manrope absentes sur body)")
     if not c.get("appRendered"):
         problems.append("l'app n'a pas rendu")
     if c.get("ratingStars") != 5:

@@ -8,7 +8,7 @@
    Le bandeau « Recharger » reste comme filet (envoie {type:'SKIP_WAITING'}).
    ⚠️ Bumper CACHE_VERSION à chaque déploiement de contenu pour éviter un cache figé. */
 
-const CACHE_VERSION = 'v22';
+const CACHE_VERSION = 'v23';
 const PRECACHE = 'precache-' + CACHE_VERSION;
 const RUNTIME = 'runtime-' + CACHE_VERSION;
 
@@ -23,6 +23,7 @@ const PRECACHE_URLS = [
   './icons/icon-512.png',
   './icons/icon.svg',
   './icons/apple-touch-icon.png',
+  './assets/forest-bg.jpg',
 ];
 
 // CDN à mettre en cache pour le boot hors-ligne (polices, xlsx, SDK Firebase).

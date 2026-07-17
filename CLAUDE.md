@@ -9,7 +9,7 @@ Guide pour Claude Code sur ce projet.
 
 ## Stack & versions
 - **Pas de build/bundler/npm.** 3 fichiers de code, chargés dans cet ordre : `styles.css` → `icons.js` → le `<script>` inline d'`index.html`.
-- Vanilla JS ; CSS dark « néon » (variables `--bg`, `--primary`…) ; polices Google Inter + Tilt Neon.
+- Vanilla JS ; CSS clair **« Sylva »** (forêt, verre dépoli) : tokens `--green-*`/`--mist-*`/`--sun-*` + **alias hérités** (`--bg`, `--primary`, `--surface`…) pointés vers Sylva — les styles inline du JS s'adaptent via ces alias. Polices Google Bricolage Grotesque (titres) + Manrope (texte) + JetBrains Mono. Fond photo `assets/forest-bg.jpg` (cache immutable : **renommer** le fichier si on change l'image). Maquette source : `Recette Sylva - autonome.html` (bundle artifact, gitignoré + ignoré au deploy).
 - CDN dans `<head>` : Firebase compat **10.12.5** (app/auth/firestore), SheetJS **xlsx 0.18.5** (import Excel).
 - Données : `localStorage` + sync temps réel Firestore.
 
@@ -18,7 +18,7 @@ Guide pour Claude Code sur ce projet.
 - `styles.css` — toute la CSS (~2 160 lignes). Thème + responsive `@media (max-width:768px)`.
 - `icons.js` — `_ICO`/`ICONS`/`injectIcons`, **script classique** (pas un module : les `const` top-level restent visibles depuis `index.html`). Chargé **avant** le script principal.
 - `tools/smoke.py` — test de fumée (cf. Commandes). Non déployé (`firebase.json` → `ignore: tools/**`).
-- `manifest.webmanifest`, `sw.js`, `icons/` — **PWA** (installable + offline). `sw.js` : stale-while-revalidate shell/CDN, **bypass total Firestore/Auth** ; bumper `CACHE_VERSION` à chaque déploiement, et **ajouter tout nouveau fichier servi à `PRECACHE_URLS`**. Icônes = `chef-hat` Lucide néon ; source vectorielle = `icons/icon.svg`, PNG régénérables par capture Chrome headless (`--screenshot --window-size=NxN` vers `C:/Temp`).
+- `manifest.webmanifest`, `sw.js`, `icons/` — **PWA** (installable + offline). `sw.js` : stale-while-revalidate shell/CDN, **bypass total Firestore/Auth** ; bumper `CACHE_VERSION` à chaque déploiement, et **ajouter tout nouveau fichier servi à `PRECACHE_URLS`**. Icônes = `chef-hat` Lucide crème sur vert forêt ; source vectorielle = `icons/icon.svg`, PNG régénérables par capture Chrome headless (`--screenshot --window-size=NxN` vers `C:/Temp`).
 - `index - <timestamp>.html` (titre « Devis Photo ») — **autre outil**, gardé en local comme **référence de design** (sidebar, menu « Signaler un bug ») ; **gitignored** (hors repo). Ne pas le confondre avec l'app.
 
 ## Commandes
@@ -35,7 +35,10 @@ Guide pour Claude Code sur ce projet.
 - **État unique** `state` : `recipes`, `ingredients`, `units`, `ingredientTypes`, `ingredientFamilies`, `mealTypes`, `filters`, `notes`, `bugs`, sélection… IDs via `uid()`.
 - **Persistance** : `save()` = localStorage + push Firestore débouncé (5 s) ; `saveLocal()` = local seul (filtres/UI).
 - **Sync** : `fbDocRef` → `users/{uid}/app/data` (perso) ou `sharedData/{espace}` (partagé) ; `onSnapshot` temps réel ; `applyCloudData()` applique le cloud.
-- **Onglets** : Recettes, Courses, Données, Réglages, **Debug**. Bascule via `switchTab(id)` ; chaque onglet a son `render*()`. (Onglet **Saison** + filtre Saison retirés ; les ingrédients gardent `seasonMonths` éditable dans la modale ingrédient, données préservées.)
+- **Navigation (refonte Sylva 2026-07)** : plus de sidebar → **topbar** (marque = retour Recettes, fil d'Ariane, bouton Courses, avatar → menu Données/Réglages/Déconnexion). **Courses = tiroir latéral** (`body.cart-open`, `openCartDrawer()` ; `switchTab('shopping')` route vers le tiroir). **Debug fusionné dans Réglages** (carte « Notes & remarques », `renderDebug()` rendu au `switchTab('settings')` ; `switchTab('debug')` → settings). Onglets restants : `tab-recipes`, `tab-data`, `tab-settings`.
+- **Recettes** : liste en **lignes** (`renderRecipes` → `.recipe-row`) + **panneau détail** à droite (`detailRecipeId`, `body.detail-open`, `renderRecipeDetail()` ; volet superposé < 1100px). Actions (Modifier/Dupliquer/Supprimer/Courses) via le ⋮ du panneau (`openRecipeMenu`). **Filtres = popover** ancré au bouton (l'ancien rail desktop docké est supprimé ; `filter-rail-on` n'est plus posé).
+- **Apparence** (Réglages) : fond forêt + style/opacité des encadrés → `localStorage sylva_appearance_v1`, `applyAppearance()` surcharge `--glass-*`, `--blur-*`, `--sylva-bg-*` (préférence par appareil, non synchronisée).
+- (Onglet **Saison** + filtre Saison retirés ; les ingrédients gardent `seasonMonths` éditable dans la modale ingrédient, données préservées.)
 - **Types de plat** : simples chaînes ; les recettes les référencent **par nom** (`r.mealTypes`) → tout renommage doit propager aux recettes + au filtre actif. `'Aucun'` est **dérivé** (réinjecté par `load()`/`migrateRecipes()`) : exclusif d'un vrai type, ni renommable ni attribuable à la main. Affectation en masse : modale `#meal-recipes-modal` (bouton `listChecks` dans Données).
 - **Ajout via Claude** : bouton « Avec Claude » (barre d'outils Recettes) → `#claude-modal`. `buildClaudePrompt()` embarque types de plat + unités existants ; ouverture de `claude.ai/new?q=` (fallback « copier le prompt » au-delà de 7500 car.). Le retour est du **JSON parsé et validé** (`extractJsonObject` + `validateClaudeRecipe`), **jamais `eval()`** : le texte vient de l'extérieur. Champs hors schéma ignorés, `origin` `javascript:` rejetée, `rating` forcé à `null`.
 - **Onglet Debug** = « Notes & Remarques » (bugs/idées à transmettre à Claude) : `state.bugs.items`, rendu par `renderDebug()`, copie presse-papier.
@@ -73,7 +76,9 @@ Guide pour Claude Code sur ce projet.
 - `authStateResolved` : flag anti-flash de l'overlay de login au boot — ne pas retirer.
 - `fbDocRef` doit être assigné **avant** `renderFirebaseUI()`.
 - `.autocomplete-dropdown` est appendé à `document.body` : le listener `click` global de fermeture doit l'ignorer.
-- **Code mort Notes** : `#notes-editor`, `initNotesTab()`, `notesUndo/Redo` subsistent mais l'onglet Notes a été **remplacé par Debug** ; ne pas s'y fier.
+- **Code mort Notes** : `#notes-editor`, `initNotesTab()`, `notesUndo/Redo` subsistent mais l'onglet Notes a été **remplacé par Debug** (lui-même fusionné dans Réglages) ; ne pas s'y fier.
+- **Headless + `--virtual-time-budget` fige les transitions CSS** (le tiroir reste hors écran, `visibility` héritée reste hidden) → pour un screenshot d'état ouvert, injecter `transition:none !important` dans la page de test. Chrome headless impose aussi une **largeur mini ~500px** et **recadre** un `--window-size` plus petit (mobile : capturer à 504px, le media ≤768 s'applique).
+- Pas de `transition: all` sur `button` : ça anime `visibility` héritée du tiroir Courses (boutons invisibles).
 
 ## Hors-périmètre (ne PAS modifier sans demander)
 - `DEFAULT_FIREBASE_CONFIG` (projet Firebase de prod).
