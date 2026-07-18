@@ -1986,51 +1986,6 @@ body.filter-rail-on .time-presets-group { gap: 12px; }
   border-radius: 999px;
   margin-left: 3px;
 }
-/* Barre des filtres actifs */
-#active-filter-bar {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  align-items: center;
-  padding: 8px 0 0;
-}
-.active-filter-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  background: var(--green-100);
-  color: var(--green-800);
-  border: 0;
-  padding: 3px 8px 3px 11px;
-  border-radius: 999px;
-  font-size: 11.5px;
-  font-weight: 600;
-  white-space: nowrap;
-  cursor: pointer;
-  transition: background var(--dur-fast), color var(--dur-fast);
-}
-.active-filter-chip:hover { background: var(--green-200); color: var(--green-900); }
-.active-filter-chip::after {
-  content: '×';
-  font-size: 14px;
-  line-height: 1;
-  color: var(--green-700);
-  transition: color var(--dur-fast);
-}
-.active-filter-chip:hover::after { color: var(--danger); }
-.active-filter-clear {
-  background: none;
-  border: 0;
-  color: var(--text-muted);
-  font: inherit;
-  font-size: 12px;
-  cursor: pointer;
-  padding: 3px 8px;
-  border-radius: 999px;
-  transition: color var(--dur-fast), background var(--dur-fast);
-}
-.active-filter-clear:hover { color: var(--danger); background: rgba(255, 255, 255, .6); }
-
 /* Panneau de filtres (bottom sheet mobile / popover-rail desktop) */
 .filter-sheet-overlay {
   position: fixed;

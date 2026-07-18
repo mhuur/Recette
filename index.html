@@ -168,7 +168,6 @@
         </div>
       </div>
       <div class="recipes-main">
-        <div id="active-filter-bar" style="display:none;"></div>
         <!-- Liste dense (2a) : en-tête de colonnes + lignes en grille -->
         <div class="recipe-list">
           <div class="recipe-list-head" aria-hidden="true">
@@ -2898,7 +2897,6 @@ function renderRecipes() {
   const filtered = recipes.length;
   document.getElementById('recipe-count').textContent = total;
   if (typeof updateFilterBadge === 'function') updateFilterBadge();
-  if (typeof updateActiveChips === 'function') updateActiveChips();
   if (typeof refreshAllFacets === 'function') refreshAllFacets(); // facettes à jour (sélections, faceting, sync cloud)
   const selBadge = document.getElementById('selected-badge');
   selBadge.textContent = state.selectedRecipeIds.length;
@@ -4136,40 +4134,6 @@ function updateFilterBadge() {
     railCount.textContent = count === 0 ? 'Aucun filtre actif'
       : count + ' filtre' + (count > 1 ? 's' : '') + ' actif' + (count > 1 ? 's' : '');
   }
-}
-
-// Render active-filter chips bar (tap to remove)
-function updateActiveChips() {
-  const bar = document.getElementById('active-filter-bar');
-  if (!bar) return;
-  bar.innerHTML = '';
-  const f = state.filters;
-  const addChip = (label, removeFn) => {
-    const chip = document.createElement('div');
-    chip.className = 'active-filter-chip';
-    chip.textContent = label;
-    chip.title = 'Retirer « ' + label + ' »';
-    chip.addEventListener('click', () => { removeFn(); saveLocal(); buildFilterBar(); renderRecipes(); });
-    bar.appendChild(chip);
-  };
-  (f.mealTypes || []).forEach(mt => addChip(mt, () => { state.filters.mealTypes = state.filters.mealTypes.filter(x => x !== mt); }));
-  (f.ratingSel || []).forEach(v => addChip(v === 'unrated' ? 'Non notées' : 'Note ≥ ' + v + '/10', () => { state.filters.ratingSel = f.ratingSel.filter(x => x !== v); }));
-  if (f.prepMax !== null && f.prepMax !== undefined) addChip('Prép. ≤ ' + f.prepMax + ' min', () => { state.filters.prepMax = null; });
-  if (f.cookMax !== null && f.cookMax !== undefined) addChip('Cuisson ≤ ' + f.cookMax + ' min', () => { state.filters.cookMax = null; });
-  (f.includeIngredients || []).forEach(id => { const n = getIngredientName(id); if (n) addChip('+ ' + n, () => { state.filters.includeIngredients = state.filters.includeIngredients.filter(x => x !== id); }); });
-  (f.excludeIngredients || []).forEach(id => { const n = getIngredientName(id); if (n) addChip('− ' + n, () => { state.filters.excludeIngredients = state.filters.excludeIngredients.filter(x => x !== id); }); });
-  (f.includeFamilies || []).forEach(id => { const n = getFamilyName(id); if (n) addChip('+ fam. ' + n, () => { state.filters.includeFamilies = state.filters.includeFamilies.filter(x => x !== id); }); });
-  (f.excludeFamilies || []).forEach(id => { const n = getFamilyName(id); if (n) addChip('− fam. ' + n, () => { state.filters.excludeFamilies = state.filters.excludeFamilies.filter(x => x !== id); }); });
-  // « Tout effacer » en fin de barre dès qu'au moins 2 filtres sont actifs
-  if (bar.children.length >= 2) {
-    const clear = document.createElement('button');
-    clear.type = 'button';
-    clear.className = 'active-filter-clear';
-    clear.textContent = 'Tout effacer';
-    clear.addEventListener('click', resetAllFilters);
-    bar.appendChild(clear);
-  }
-  bar.style.display = bar.children.length ? '' : 'none';
 }
 
 /* ========================================================================
