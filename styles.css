@@ -148,28 +148,11 @@ body {
   -webkit-tap-highlight-color: transparent;
   position: relative;
 }
-/* Photo forêt en fond, opacité/cadrage pilotés par les réglages Apparence */
-body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: -2;
-  background-image: url("assets/forest-bg.jpg");
-  background-repeat: no-repeat;
-  background-size: var(--sylva-bg-size);
-  background-position: var(--sylva-bg-pos);
-  opacity: var(--sylva-bg-opacity);
-}
-/* Voile lumineux (« jeux de lumière ») par-dessus la photo */
-body::after {
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  background:
-    radial-gradient(90% 70% at 12% -5%, rgba(244, 239, 201, .45) 0%, rgba(244, 239, 201, 0) 45%),
-    linear-gradient(165deg, rgba(236, 246, 238, .55) 0%, rgba(158, 199, 172, .40) 100%);
+/* 2a : hors du cadre, dégradé clair uniquement — la photo forêt vit DANS le
+   cadre (cf. .app-layout::before/::after). */
+body {
+  background-image: radial-gradient(120% 80% at 10% 0%, #f4f9f5 0%, #e7f0ea 60%, #dce9e0 100%);
+  background-attachment: fixed;
 }
 /* Supprime le double-tap-zoom + le délai 300 ms sur l'interactif (garde le pinch-zoom) */
 button, a, label, summary, input, select, textarea, [role="button"], .recipe-row {
@@ -499,6 +482,35 @@ body:has(#tab-recipes.active) .topbar-back { display: none; }
   border-radius: 24px;
   border: 1px solid rgba(255, 255, 255, .5);
   box-shadow: 0 18px 48px rgba(20, 48, 32, .14);
+  position: relative;
+  isolation: isolate;
+}
+/* Photo forêt, opacité/cadrage pilotés par les réglages Apparence.
+   Pseudo-éléments (et non background-image du cadre) pour garder l'opacité
+   réglable ET rester peints quand une modale masque le CONTENU du cadre.
+   Pas d'overflow:hidden sur .app-layout : ça casserait les sticky (topbar,
+   rail de filtres, détail) — le radius est porté par les pseudos eux-mêmes. */
+.app-layout::before,
+.app-layout::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 24px;
+  pointer-events: none;
+}
+.app-layout::before {
+  z-index: -2;
+  background-image: url("assets/forest-bg.jpg");
+  background-repeat: no-repeat;
+  background-size: var(--sylva-bg-size);
+  background-position: var(--sylva-bg-pos);
+  opacity: var(--sylva-bg-opacity);
+}
+.app-layout::after {
+  z-index: -1;
+  background:
+    radial-gradient(90% 70% at 12% -5%, rgba(244, 239, 201, .45) 0%, rgba(244, 239, 201, 0) 45%),
+    linear-gradient(165deg, rgba(236, 246, 238, .55) 0%, rgba(158, 199, 172, .40) 100%);
 }
 main {
   flex: 1;
@@ -816,7 +828,9 @@ body.detail-open .recipe-detail { display: block; }
 }
 .recipe-detail-meta .meta-dot { color: var(--mist-300); }
 /* Corps : ingrédients | préparation côte à côte */
-.recipe-detail-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+/* Ingrédients et préparation EMPILÉS (pleine largeur) : deux colonnes coupaient
+   les libellés dans 392px. Choix utilisateur, prioritaire sur la maquette 2a. */
+.recipe-detail-cols { display: flex; flex-direction: column; gap: 18px; }
 .recipe-section-title {
   font-family: var(--font-mono);
   font-size: 10px; font-weight: 600;
@@ -1038,7 +1052,7 @@ button.recipe-detail-rating:hover { background: rgba(183, 166, 58, .12); }
 .modal-overlay.active { display: flex; }
 /* Modale ouverte = carte seule sur le fond forêt : on masque tout le reste
    (barre, liste, panneau détail, tiroir courses) pour ne rien voir transparaître. */
-body:has(.modal-overlay.active) .app-layout,
+body:has(.modal-overlay.active) .app-layout > *,
 body:has(.modal-overlay.active) .cart-drawer,
 body:has(.modal-overlay.active) .cart-scrim { visibility: hidden; }
 .modal {
@@ -1800,6 +1814,7 @@ body.cart-open .cart-drawer { transform: translateX(0); visibility: visible; }
 .facet-more:hover { text-decoration: underline; }
 /* 2a — Type de plat en chips pilule qui s'enroulent (la recherche reste : 23
    types en vrai, contre 5 dans la maquette). Sélectionné = plein vert. */
+#filter-meal-types .facet-search { display: none; }
 #filter-meal-types .facet-list { flex-direction: row; flex-wrap: wrap; gap: 6px; max-height: 168px; }
 #filter-meal-types .facet-opt {
   background: rgba(255, 255, 255, .7);
