@@ -119,6 +119,19 @@
               <div class="filter-sheet-label"><span class="sec-ico" data-icon="star"></span>Note</div>
               <div id="filter-rating-wrapper"></div>
             </div>
+            <!-- Chaud / froid (champ recette) -->
+            <div class="filter-sheet-section">
+              <div class="filter-sheet-label">Chaud / froid</div>
+              <div class="temp-picker" id="filter-temperature">
+                <button type="button" class="temp-chip" data-temp="chaud">Chaud</button>
+                <button type="button" class="temp-chip" data-temp="froid">Froid</button>
+              </div>
+            </div>
+            <!-- Végétarien (déduit des familles d ingrédients) -->
+            <div class="filter-sheet-section">
+              <div class="filter-sheet-label">Régime</div>
+              <label class="filter-check"><input type="checkbox" id="filter-vegetarian"> Végétarien</label>
+            </div>
             <!-- Time -->
             <div class="filter-sheet-section">
               <div class="filter-sheet-label"><span class="sec-ico" data-icon="clock"></span>Temps (min)</div>
@@ -137,10 +150,6 @@
                 <div>
                   <div class="filter-sheet-label"><span class="sec-ico" data-icon="carrot"></span>Ingrédients</div>
                   <div id="filter-ingredients-wrapper"></div>
-                </div>
-                <div>
-                  <div class="filter-sheet-label"><span class="sec-ico" data-icon="layers"></span>Familles</div>
-                  <div id="filter-families-wrapper"></div>
                 </div>
                 <div class="reqex-hint"><b style="color:var(--success)">+</b> requis &nbsp;·&nbsp; <b style="color:var(--danger)">−</b> interdit &nbsp;— clique le signe pour basculer</div>
               </div>
@@ -444,6 +453,14 @@
         <div class="form-compact-item" title="Temps de cuisson (min)">
           <span class="form-compact-icon" data-icon="flame" aria-hidden="true"></span>
           <input type="number" id="recipe-cook" min="0" placeholder="min" autocomplete="off" data-form-type="other">
+        </div>
+        <!-- Chaud / froid : recliquer le chip actif le désélectionne (valeur vide) -->
+        <div class="form-compact-item temp-item" title="Plat chaud ou froid">
+          <input type="hidden" id="recipe-temperature">
+          <div class="temp-picker" id="recipe-temp-picker">
+            <button type="button" class="temp-chip" data-temp="chaud">Chaud</button>
+            <button type="button" class="temp-chip" data-temp="froid">Froid</button>
+          </div>
         </div>
       </div>
       <div class="form-group full">
@@ -789,6 +806,8 @@ let state = {
     prepMax: null,
     cookMax: null,
     mealTypes: [],
+    temperature: null,
+    vegetarianOnly: false,
     includeIngredients: [],
     excludeIngredients: [],
     includeFamilies: [],
@@ -1424,10 +1443,12 @@ function load() {
       if (!state.mealTypes.some(m => normalizeText(m) === 'aucun')) {
         state.mealTypes.unshift('Aucun');
       }
-      if (!state.filters) state.filters = { search: '', sort: 'name-asc', ratingMin: null, includeUnrated: false, prepMax: null, cookMax: null, mealTypes: [], includeIngredients: [], excludeIngredients: [], includeFamilies: [], excludeFamilies: [], selectedOnly: false };
+      if (!state.filters) state.filters = { search: '', sort: 'name-asc', ratingMin: null, includeUnrated: false, prepMax: null, cookMax: null, mealTypes: [], temperature: null, vegetarianOnly: false, includeIngredients: [], excludeIngredients: [], includeFamilies: [], excludeFamilies: [], selectedOnly: false };
       // Migration : ajouter nouveaux champs filtres s'ils manquent
-      if (!state.filters.includeFamilies) state.filters.includeFamilies = [];
-      if (!state.filters.excludeFamilies) state.filters.excludeFamilies = [];
+      // Filtre Familles retiré de l'UI : on purge d'anciens filtres persistés,
+      // sinon ils resteraient actifs sans moyen de les enlever.
+      state.filters.includeFamilies = [];
+      state.filters.excludeFamilies = [];
       if (state.filters.selectedOnly === undefined) state.filters.selectedOnly = false;
       // Migration depuis ancien selectionMode
       if (state.filters.selectionMode !== undefined) {
@@ -2788,24 +2809,12 @@ function recipeMatches(r, f, skip) {
       if (f.excludeIngredients.some(iid => ids.includes(iid))) return false;
     }
   }
-  if (!skip.families) {
-    if (f.includeFamilies && f.includeFamilies.length > 0) {
-      for (const fid of f.includeFamilies) {
-        const hasIt = (r.ingredients || []).some(i => {
-          const ing = state.ingredients.find(x => x.id === i.ingredientId);
-          return ing && (ing.familyIds || []).includes(fid);
-        });
-        if (!hasIt) return false;
-      }
-    }
-    if (f.excludeFamilies && f.excludeFamilies.length > 0) {
-      const hasExcluded = (r.ingredients || []).some(i => {
-        const ing = state.ingredients.find(x => x.id === i.ingredientId);
-        return ing && (ing.familyIds || []).some(fid => f.excludeFamilies.includes(fid));
-      });
-      if (hasExcluded) return false;
-    }
-  }
+  // Familles : filtre retiré de l'UI (remplacé par « Végétarien », qui s'appuie
+  // sur les mêmes données). Les listes restent dans state.filters mais vidées
+  // au chargement, cf. load() — sinon un filtre persisté resterait actif sans
+  // aucun moyen de le retirer.
+  if (f.temperature && (r.temperature || null) !== f.temperature) return false;
+  if (f.vegetarianOnly && !isVegetarianRecipe(r)) return false;
   if (!skip.selected && f.selectedOnly && !state.selectedRecipeIds.includes(r.id)) return false;
   return true;
 }
@@ -2823,16 +2832,19 @@ function availableIngredientIds() {
   state.recipes.forEach(r => { if (recipeMatches(r, f, { ingredients: true })) (r.ingredients || []).forEach(i => set.add(i.ingredientId)); });
   return set;
 }
-function availableFamilyIds() {
-  const f = state.filters, set = new Set();
-  state.recipes.forEach(r => {
-    if (!recipeMatches(r, f, { families: true })) return;
-    (r.ingredients || []).forEach(i => {
-      const ing = state.ingredients.find(x => x.id === i.ingredientId);
-      if (ing) (ing.familyIds || []).forEach(fid => set.add(fid));
-    });
+// Végétarien = aucun ingrédient rattaché aux familles Viande / Poisson.
+// S'appuie sur les familles d'ingrédients (onglet Données) : un ingrédient mal
+// classé ou sans famille rend la recette végétarienne par défaut.
+const NON_VEG_FAMILIES = ['viande', 'poisson'];
+function isVegetarianRecipe(r) {
+  const nonVegIds = state.ingredientFamilies
+    .filter(fam => NON_VEG_FAMILIES.includes(normalizeText(fam.name)))
+    .map(fam => fam.id);
+  if (!nonVegIds.length) return true;
+  return !(r.ingredients || []).some(i => {
+    const ing = state.ingredients.find(x => x.id === i.ingredientId);
+    return ing && (ing.familyIds || []).some(fid => nonVegIds.includes(fid));
   });
-  return set;
 }
 
 function getFilteredRecipes() {
@@ -3146,6 +3158,22 @@ let currentRecipeId = null;
 let currentIngRows = [];
 let mealTypesWrapperCtrl = null;
 
+// Chaud / froid : chip exclusif, recliquer désélectionne (valeur '' = non renseigné)
+function setRecipeTemperature(val) {
+  const input = document.getElementById('recipe-temperature');
+  if (input) input.value = val || '';
+  document.querySelectorAll('#recipe-temp-picker .temp-chip').forEach(b => {
+    b.classList.toggle('on', b.dataset.temp === val);
+    b.setAttribute('aria-pressed', String(b.dataset.temp === val));
+  });
+}
+document.querySelectorAll('#recipe-temp-picker .temp-chip').forEach(b => {
+  b.addEventListener('click', () => {
+    const cur = document.getElementById('recipe-temperature').value;
+    setRecipeTemperature(cur === b.dataset.temp ? '' : b.dataset.temp);
+  });
+});
+
 function openRecipeModal(recipe = null) {
   currentRecipeId = recipe ? recipe.id : null;
   document.getElementById('recipe-modal-title').textContent = recipe ? 'Modifier la recette' : 'Nouvelle recette';
@@ -3158,6 +3186,7 @@ function openRecipeModal(recipe = null) {
   document.getElementById('recipe-cook').value = recipe?.cookTime ?? '';
   document.getElementById('recipe-instructions').value = recipe?.instructions || '';
   document.getElementById('recipe-notes').value = recipe?.notes || '';
+  setRecipeTemperature(recipe?.temperature || '');
   updateRatingPreview();
 
   // Origin
@@ -3504,6 +3533,7 @@ document.getElementById('btn-save-recipe').onclick = () => {
     prepTime: isNaN(prepTime) ? null : prepTime,
     cookTime: isNaN(cookTime) ? null : cookTime,
     mealTypes: mealTypesWrapperCtrl ? mealTypesWrapperCtrl.getValues() : [],
+    temperature: document.getElementById('recipe-temperature').value || null,
     origin,
     ingredients,
     instructions: document.getElementById('recipe-instructions').value.trim(),
@@ -3828,6 +3858,30 @@ function buildFilterBar() {
   unratedLbl.appendChild(document.createTextNode(' Inclure les non notées'));
   ratingWrap.appendChild(unratedLbl);
 
+  // Filtre Chaud / froid (chip exclusif, recliquer = tout)
+  document.querySelectorAll('#filter-temperature .temp-chip').forEach(b => {
+    const on = state.filters.temperature === b.dataset.temp;
+    b.classList.toggle('on', on);
+    b.setAttribute('aria-pressed', String(on));
+    b.onclick = () => {
+      state.filters.temperature = on ? null : b.dataset.temp;
+      saveLocal();
+      buildFilterBar();
+      renderRecipes();
+    };
+  });
+
+  // Filtre Végétarien (calculé : aucun ingrédient de famille Viande / Poisson)
+  const vegCb = document.getElementById('filter-vegetarian');
+  if (vegCb) {
+    vegCb.checked = !!state.filters.vegetarianOnly;
+    vegCb.onchange = () => {
+      state.filters.vegetarianOnly = vegCb.checked;
+      saveLocal();
+      renderRecipes();
+    };
+  }
+
   // Filtre Temps : presets pour préparation et cuisson
   renderTimePresets('filter-prep-presets', 'prepMax');
   renderTimePresets('filter-cook-presets', 'cookMax');
@@ -3860,25 +3914,6 @@ function buildFilterBar() {
       const inc = state.filters.includeIngredients || [], exc = state.filters.excludeIngredients || [];
       if (inc.includes(id)) { state.filters.includeIngredients = inc.filter(x => x !== id); state.filters.excludeIngredients = [...exc, id]; }
       else { state.filters.excludeIngredients = exc.filter(x => x !== id); state.filters.includeIngredients = [...inc, id]; }
-    }
-  });
-  createFacetSelect(document.getElementById('filter-families-wrapper'), {
-    mode: 'reqex',
-    searchPlaceholder: 'Rechercher une famille…',
-    getOptions: () => { const av = availableFamilyIds(); return state.ingredientFamilies.filter(f => av.has(f.id)).map(f => ({ id: f.id, name: f.name })); },
-    getSelected: () => [
-      ...(state.filters.includeFamilies || []).map(id => ({ id, name: getFamilyName(id), sign: '+' })),
-      ...(state.filters.excludeFamilies || []).map(id => ({ id, name: getFamilyName(id), sign: '-' }))
-    ],
-    add: id => { state.filters.includeFamilies = [...(state.filters.includeFamilies || []), id]; },
-    remove: id => {
-      state.filters.includeFamilies = (state.filters.includeFamilies || []).filter(x => x !== id);
-      state.filters.excludeFamilies = (state.filters.excludeFamilies || []).filter(x => x !== id);
-    },
-    flip: id => {
-      const inc = state.filters.includeFamilies || [], exc = state.filters.excludeFamilies || [];
-      if (inc.includes(id)) { state.filters.includeFamilies = inc.filter(x => x !== id); state.filters.excludeFamilies = [...exc, id]; }
-      else { state.filters.excludeFamilies = exc.filter(x => x !== id); state.filters.includeFamilies = [...inc, id]; }
     }
   });
 }
@@ -4021,7 +4056,7 @@ document.addEventListener('keydown', e => {
 });
 
 function resetAllFilters() {
-  state.filters = { search: '', sort: 'name-asc', ratingMin: null, includeUnrated: false, prepMax: null, cookMax: null, mealTypes: [], includeIngredients: [], excludeIngredients: [], includeFamilies: [], excludeFamilies: [], selectedOnly: false };
+  state.filters = { search: '', sort: 'name-asc', ratingMin: null, includeUnrated: false, prepMax: null, cookMax: null, mealTypes: [], temperature: null, vegetarianOnly: false, includeIngredients: [], excludeIngredients: [], includeFamilies: [], excludeFamilies: [], selectedOnly: false };
   document.getElementById('search-input').value = '';
   setSortValue('name-asc');
   const sb = document.getElementById('btn-toggle-selection-only');
@@ -4039,12 +4074,12 @@ function updateFilterBadge() {
   let count = 0;
   if (f.ratingMin != null) count++;
   if (f.mealTypes && f.mealTypes.length) count += f.mealTypes.length;
+  if (f.temperature) count++;
+  if (f.vegetarianOnly) count++;
   if (f.prepMax !== null && f.prepMax !== undefined) count++;
   if (f.cookMax !== null && f.cookMax !== undefined) count++;
   if (f.includeIngredients && f.includeIngredients.length) count += f.includeIngredients.length;
   if (f.excludeIngredients && f.excludeIngredients.length) count += f.excludeIngredients.length;
-  if (f.includeFamilies && f.includeFamilies.length) count += f.includeFamilies.length;
-  if (f.excludeFamilies && f.excludeFamilies.length) count += f.excludeFamilies.length;
   const badge = document.getElementById('filter-count-badge');
   if (badge) {
     badge.textContent = count;
@@ -4053,8 +4088,7 @@ function updateFilterBadge() {
   const btn = document.getElementById('btn-toggle-filter');
   if (btn) btn.classList.toggle('neon-on', count > 0);
   // Compteur de filtres actifs sur la section repliable « Avancé »
-  const advCount = (f.includeIngredients || []).length + (f.excludeIngredients || []).length
-                 + (f.includeFamilies || []).length + (f.excludeFamilies || []).length;
+  const advCount = (f.includeIngredients || []).length + (f.excludeIngredients || []).length;
   const advEl = document.getElementById('filter-adv-count');
   if (advEl) { advEl.textContent = advCount; advEl.style.display = advCount ? '' : 'none'; }
   // Pied du rail docké : « N filtre(s) actif(s) »
