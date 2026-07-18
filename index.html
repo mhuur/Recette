@@ -3087,6 +3087,21 @@ function refreshRecipeDetail() {
   if (!r) { closeRecipeDetail(); return; }
   renderRecipeDetail();
 }
+// Provenance lisible d'une recette : { icon, text, url? } ou null si aucune.
+// Source unique pour le détail ET la modale d'affectation (vérifier le livre/la
+// page sans quitter la liste). Un type 'book' vide affiche « Livre » : c'est le
+// comportement historique du détail, et ça signale une provenance non renseignée.
+function recipeOriginInfo(r) {
+  const o = r && r.origin;
+  if (!o || o.type === 'none') return null;
+  if (o.type === 'book') {
+    return { icon: ICONS.bookOpen, text: (o.book || 'Livre') + (o.page ? ', p. ' + o.page : '') };
+  }
+  if (o.type === 'url' && o.url) return { icon: ICONS.link2, text: o.url, url: o.url };
+  if (o.type === 'other' && o.other) return { icon: ICONS.info, text: o.other };
+  return null;
+}
+
 function renderRecipeDetail() {
   const panel = document.getElementById('recipe-detail');
   const r = state.recipes.find(x => x.id === detailRecipeId);
@@ -3155,16 +3170,12 @@ function renderRecipeDetail() {
     // 2a : encadré vert en pied de carte (masqué si la recette n'a pas de note)
     body += '<div class="recipe-note-box"><b>Note</b> · ' + escapeHtml(r.notes.trim()) + '</div>';
   }
-  if (r.origin && r.origin.type !== 'none') {
-    let o = '';
-    if (r.origin.type === 'book') {
-      o = '<span class="tb-ico">' + ICONS.bookOpen + '</span>' + escapeHtml(r.origin.book || 'Livre') + (r.origin.page ? ', p. ' + escapeHtml(r.origin.page) : '');
-    } else if (r.origin.type === 'url' && r.origin.url) {
-      o = '<span class="tb-ico">' + ICONS.link2 + '</span><a href="' + escapeHtml(r.origin.url) + '" target="_blank" rel="noopener">' + escapeHtml(r.origin.url) + '</a>';
-    } else if (r.origin.type === 'other' && r.origin.other) {
-      o = '<span class="tb-ico">' + ICONS.info + '</span>' + escapeHtml(r.origin.other);
-    }
-    if (o) body += '<div class="recipe-origin">' + o + '</div>';
+  const org = recipeOriginInfo(r);
+  if (org) {
+    const txt = org.url
+      ? '<a href="' + escapeHtml(org.url) + '" target="_blank" rel="noopener">' + escapeHtml(org.text) + '</a>'
+      : escapeHtml(org.text);
+    body += '<div class="recipe-origin"><span class="tb-ico">' + org.icon + '</span>' + txt + '</div>';
   }
   body += '</div>';
 
@@ -5145,11 +5156,41 @@ function renderAssignList() {
       if (cb.checked) _assignDraft.add(item.id); else _assignDraft.delete(item.id);
       refreshAssignCount(); // pas de re-render : on garde la position de scroll
     };
+    const main = document.createElement('span');
+    main.className = 'meal-recipes-main';
     const name = document.createElement('span');
     name.className = 'meal-recipes-name';
     name.textContent = item.name || '(sans nom)';
+    main.appendChild(name);
+    // Provenance (livre + page, ou lien) : permet de vérifier la recette sans
+    // sortir de la modale. Absent pour les ingrédients (dialogue des familles).
+    const meta = _assignCfg.meta ? _assignCfg.meta(item) : null;
+    if (meta) {
+      const m = document.createElement('span');
+      m.className = 'meal-recipes-meta';
+      const ico = document.createElement('span');
+      ico.className = 'meta-ico';
+      ico.innerHTML = meta.icon || '';
+      m.appendChild(ico);
+      if (meta.url) {
+        const a = document.createElement('a');
+        a.href = meta.url;
+        a.target = '_blank';
+        a.rel = 'noopener';
+        a.textContent = meta.text;
+        // La ligne est un <label> : sans ça, ouvrir le lien cocherait la case.
+        a.addEventListener('click', e => e.stopPropagation());
+        m.appendChild(a);
+      } else {
+        const t = document.createElement('span');
+        t.textContent = meta.text;
+        m.appendChild(t);
+      }
+      m.title = meta.text;
+      main.appendChild(m);
+    }
     row.appendChild(cb);
-    row.appendChild(name);
+    row.appendChild(main);
     // Libellés de ce qui est DÉJÀ attribué (autres familles, autres types,
     // température en cours) : chips lisibles, pas du texte gris pâle.
     const tags = (_assignCfg.sub ? _assignCfg.sub(item) : []).filter(Boolean);
@@ -5192,6 +5233,7 @@ function openMealRecipesDialog(mealType) {
     items: () => [...state.recipes],
     isOn: r => (r.mealTypes || []).includes(mealType),
     sub: r => sortMealTypes((r.mealTypes || []).filter(x => x !== mealType)),
+    meta: recipeOriginInfo,
     apply: draft => {
       let added = 0, removed = 0;
       state.recipes.forEach(r => {
@@ -5224,6 +5266,7 @@ function openTemperatureRecipesDialog(key, label) {
     isOn: r => r.temperature === key,
     // rappelle la température actuelle quand c'est l'autre valeur
     sub: r => (r.temperature && r.temperature !== key) ? [r.temperature === 'chaud' ? 'Chaud' : 'Froid'] : [],
+    meta: recipeOriginInfo,
     apply: draft => {
       let added = 0, removed = 0;
       state.recipes.forEach(r => {
