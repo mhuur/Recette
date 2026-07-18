@@ -6694,6 +6694,72 @@ function syncAppearanceControls() {
 })();
 
 /* ========================================================================
+   BOUTON RETOUR ANDROID (PWA) — « back » dépile les couches ouvertes
+   Chaque couche visible (menu, modale, tiroir Courses, panneau détail,
+   onglet ≠ Recettes) = une entrée d'historique fictive poussée par nous.
+   Le back système en consomme une → on ferme la couche du dessus ; l'app
+   ne se ferme que depuis l'écran Recettes nu.
+   Synchro par MutationObserver : aucune fonction d'ouverture/fermeture à modifier.
+   ======================================================================== */
+// Ordre = profondeur : la DERNIÈRE ouverte de cette liste est fermée en premier.
+const BACK_LAYERS = [
+  { isOpen: () => { const t = document.querySelector('.tab.active'); return !!t && t.id !== 'tab-recipes'; },
+    close: () => switchTab('recipes') },
+  { isOpen: () => document.body.classList.contains('detail-open'), close: () => closeRecipeDetail() },
+  { isOpen: () => document.body.classList.contains('cart-open'),   close: () => closeCartDrawer() },
+  { isOpen: () => document.getElementById('filter-sheet-overlay')?.classList.contains('active') === true,
+    close: () => closeFilterSheet() },
+  { isOpen: () => !!document.querySelector('.modal-overlay.active'), close: () => closeAllModals() },
+  { isOpen: () => !!document.querySelector('.recipe-context-menu')
+                || document.getElementById('sort-popup')?.classList.contains('active') === true
+                || document.getElementById('user-avatar-wrapper')?.classList.contains('open') === true,
+    close: () => {
+      closeRecipeMenu();
+      document.getElementById('sort-popup')?.classList.remove('active');
+      document.getElementById('user-avatar-wrapper')?.classList.remove('open');
+    } },
+];
+let bgDepth = 0;      // entrées fictives présentes dans l'historique
+let bgIgnore = 0;     // popstate provoqués par nos propres history.go() → à ignorer
+let bgClosing = false; // fermeture en cours : ne pas re-synchroniser
+
+function openBackLayers() {
+  return BACK_LAYERS.filter(l => { try { return l.isOpen(); } catch { return false; } });
+}
+function syncBackGuard() {
+  if (bgClosing) return;
+  const n = openBackLayers().length;
+  if (n > bgDepth) {
+    for (let i = bgDepth; i < n; i++) history.pushState({ sylvaLayer: i + 1 }, '');
+    bgDepth = n;
+  } else if (n < bgDepth) {
+    // Couche fermée par l'UI (croix, Échap, clic extérieur) : on rend l'entrée d'historique.
+    const diff = bgDepth - n;
+    bgDepth = n;
+    bgIgnore += diff;
+    history.go(-diff);
+  }
+}
+window.addEventListener('popstate', () => {
+  if (bgIgnore > 0) { bgIgnore--; return; }
+  const open = openBackLayers();
+  if (!open.length) { bgDepth = 0; return; } // écran nu → on laisse le système quitter l'app
+  bgDepth = Math.max(0, bgDepth - 1);
+  bgClosing = true;
+  try { open[open.length - 1].close(); } catch (e) { /* couche déjà partie */ }
+  bgClosing = false;
+  syncBackGuard(); // au cas où la fermeture en aurait refermé plusieurs
+});
+function initBackGuard() {
+  if (!window.history || !history.pushState) return;
+  const obs = new MutationObserver(syncBackGuard);
+  // body : classes cart-open/detail-open + menu contextuel appendé à la volée
+  obs.observe(document.body, { attributes: true, attributeFilter: ['class'], childList: true });
+  document.querySelectorAll('.modal-overlay, #filter-sheet-overlay, #sort-popup, #user-avatar-wrapper, .tab')
+    .forEach(el => obs.observe(el, { attributes: true, attributeFilter: ['class'] }));
+}
+
+/* ========================================================================
    INITIALISATION
    ======================================================================== */
 detectGuestMode();
@@ -6707,6 +6773,7 @@ setSortValue(state.filters.sort || 'name-asc');
 buildFilterBar();
 renderRecipes();
 updateFilterRail(); // rail de filtres docké au démarrage (desktop)
+initBackGuard();    // bouton retour Android : ferme les couches avant de quitter
 updateDebugBadges();
 renderFirebaseUI(); // affiche le bouton mobile dès le démarrage
 initFirebase();
