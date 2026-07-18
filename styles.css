@@ -1851,6 +1851,9 @@ body.cart-open .cart-drawer { transform: translateX(0); visibility: visible; }
   cursor: pointer;
 }
 .filter-check input { width: 15px; height: 15px; accent-color: var(--green-600); cursor: pointer; }
+/* Plusieurs régimes : une case par ligne */
+.filter-check + .filter-check { margin-top: 6px; }
+.filter-sheet-section > .filter-check { display: flex; }
 
 /* Note minimum : boutons carrés-arrondis « 6+ 7+ 8+ 9+ » */
 .rating-steps { display: flex; flex-wrap: wrap; gap: 6px; }
