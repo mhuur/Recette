@@ -728,7 +728,9 @@ button.recipe-detail-rating:hover { background: rgba(183, 166, 58, .12); }
 .recipe-detail-cta .btn-primary { flex: 1; }
 .recipe-detail-body { padding: 20px 22px 22px; }
 .recipe-detail-body .meal-tags { margin-bottom: 18px; }
-.recipe-detail-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+/* Ingrédients et préparation empilés (pleine largeur) : évite les colonnes
+   étroites qui coupaient les libellés d'ingrédients. */
+.recipe-detail-cols { display: flex; flex-direction: column; gap: 18px; }
 .recipe-section { margin: 0; padding: 0; border: 0; }
 .recipe-section + .recipe-section { margin-top: 18px; }
 .recipe-section-title {
@@ -738,19 +740,23 @@ button.recipe-detail-rating:hover { background: rgba(183, 166, 58, .12); }
   color: var(--text-muted); margin-bottom: 10px;
 }
 .recipe-section-title svg { width: 13px; height: 13px; flex-shrink: 0; }
-/* Grille 2 colonnes : la colonne quantité (auto) s'aligne sur la plus large,
-   les noms démarrent tous au même endroit. Séparateurs pointillés par ligne. */
+/* Encadré : grille 2 colonnes, quantité (auto, alignée sur la plus large) +
+   nom, séparateurs pointillés par ligne. */
 .ingredients-list {
   list-style: none;
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
   align-items: baseline;
   column-gap: 16px;
+  background: var(--glass-fill-tint);
+  border: 1px solid var(--glass-border-soft);
+  border-radius: 14px;
+  padding: 2px 16px;
 }
 .ingredients-list li { display: contents; }
 .ingredients-list .ing-qty,
 .ingredients-list .ing-name {
-  padding: 8px 0;
+  padding: 9px 0;
   border-bottom: 1px dashed var(--border-soft);
   font-size: 13px;
   line-height: 1.4;
@@ -765,14 +771,20 @@ button.recipe-detail-rating:hover { background: rgba(183, 166, 58, .12); }
 }
 .recipe-steps li {
   font-size: 13px; line-height: 1.5; color: var(--text);
-  display: flex; gap: 8px;
+  display: flex; gap: 10px; align-items: flex-start;
   counter-increment: step;
 }
+/* Numéro d'étape en pastille ronde (maquette) */
 .recipe-steps li::before {
-  content: counter(step) ".";
-  color: var(--green-700);
-  font-weight: 700;
+  content: counter(step);
   flex-shrink: 0;
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  background: var(--green-100);
+  color: var(--green-700);
+  font-size: 11px; font-weight: 700;
+  display: inline-flex; align-items: center; justify-content: center;
+  line-height: 1;
 }
 .recipe-steps { counter-reset: step; }
 .recipe-notes-text {
