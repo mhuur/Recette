@@ -199,6 +199,11 @@
       <div id="types-list" class="data-list"></div>
     </div>
     <div class="data-section">
+      <h3><span class="tb-ico" data-icon="flame"></span>Chaud / froid</h3>
+      <p style="font-size:13px; color:var(--text-muted);">Champ de la recette, utilisé par le filtre « Chaud / froid ». Une recette est chaude <b>ou</b> froide : la cocher ici la retire de l'autre liste.</p>
+      <div id="temperature-list" class="data-list"></div>
+    </div>
+    <div class="data-section">
       <h3><span class="tb-ico" data-icon="layers"></span>Familles d'ingrédients <span id="family-count-badge" class="count-badge" style="background:var(--surface);">0</span></h3>
       <p style="font-size:13px; color:var(--text-muted);">Un ingrédient peut appartenir à plusieurs familles (ex: "Poulet" → Viande + Volaille). Sert à filtrer les recettes par famille.</p>
       <div id="families-list" class="data-list"></div>
@@ -5021,11 +5026,18 @@ function renderAssignList() {
     name.textContent = item.name || '(sans nom)';
     row.appendChild(cb);
     row.appendChild(name);
-    const sub = _assignCfg.sub ? _assignCfg.sub(item) : '';
-    if (sub) {
+    // Libellés de ce qui est DÉJÀ attribué (autres familles, autres types,
+    // température en cours) : chips lisibles, pas du texte gris pâle.
+    const tags = (_assignCfg.sub ? _assignCfg.sub(item) : []).filter(Boolean);
+    if (tags.length) {
       const o = document.createElement('span');
       o.className = 'meal-recipes-other';
-      o.textContent = sub;
+      tags.forEach(t => {
+        const chip = document.createElement('span');
+        chip.className = 'assign-chip';
+        chip.textContent = t;
+        o.appendChild(chip);
+      });
       row.appendChild(o);
     }
     list.appendChild(row);
@@ -5055,7 +5067,7 @@ function openMealRecipesDialog(mealType) {
     emptyText: 'Aucune recette ne correspond.',
     items: () => [...state.recipes],
     isOn: r => (r.mealTypes || []).includes(mealType),
-    sub: r => sortMealTypes((r.mealTypes || []).filter(x => x !== mealType)).join(', '),
+    sub: r => sortMealTypes((r.mealTypes || []).filter(x => x !== mealType)),
     apply: draft => {
       let added = 0, removed = 0;
       state.recipes.forEach(r => {
@@ -5077,6 +5089,32 @@ function openMealRecipesDialog(mealType) {
   });
 }
 
+// --- Chaud / froid : choisir les recettes (valeur exclusive) ---
+function openTemperatureRecipesDialog(key, label) {
+  openCheckAssignDialog({
+    title: 'Recettes « ' + label + ' »',
+    subject: '« ' + label + ' »',
+    searchPlaceholder: 'Rechercher une recette…',
+    emptyText: 'Aucune recette ne correspond.',
+    items: () => [...state.recipes],
+    isOn: r => r.temperature === key,
+    // rappelle la température actuelle quand c'est l'autre valeur
+    sub: r => (r.temperature && r.temperature !== key) ? [r.temperature === 'chaud' ? 'Chaud' : 'Froid'] : [],
+    apply: draft => {
+      let added = 0, removed = 0;
+      state.recipes.forEach(r => {
+        const wanted = draft.has(r.id);
+        const current = r.temperature === key;
+        if (wanted === current) return;
+        if (wanted) { r.temperature = key; added++; }   // écrase l'autre valeur : exclusif
+        else { r.temperature = null; removed++; }
+        r.updatedAt = Date.now();
+      });
+      return { added, removed };
+    }
+  });
+}
+
 // --- Familles d'ingrédients : choisir les ingrédients de la famille ---
 function openFamilyIngredientsDialog(fam) {
   openCheckAssignDialog({
@@ -5086,7 +5124,7 @@ function openFamilyIngredientsDialog(fam) {
     emptyText: 'Aucun ingrédient ne correspond.',
     items: () => [...state.ingredients],
     isOn: i => (i.familyIds || []).includes(fam.id),
-    sub: i => (i.familyIds || []).filter(x => x !== fam.id).map(getFamilyName).filter(Boolean).join(', '),
+    sub: i => (i.familyIds || []).filter(x => x !== fam.id).map(getFamilyName).filter(Boolean),
     apply: draft => {
       let added = 0, removed = 0;
       state.ingredients.forEach(i => {
@@ -5473,6 +5511,30 @@ function renderDataTab() {
   });
 
   // Familles d'ingrédients
+  // --- Chaud / froid : deux entrées fixes (champ de recette, pas une donnée éditable)
+  const tempList = document.getElementById('temperature-list');
+  if (tempList) {
+    tempList.innerHTML = '';
+    [{ key: 'chaud', label: 'Chaud' }, { key: 'froid', label: 'Froid' }].forEach(t => {
+      const n = state.recipes.filter(r => r.temperature === t.key).length;
+      const el = document.createElement('div');
+      el.className = 'data-list-item';
+      const nameSpan = document.createElement('span');
+      nameSpan.innerHTML = '<b>' + t.label + '</b> <span style="color:var(--text-dim); font-size:12px;">(' + n + ' recette' + (n > 1 ? 's' : '') + ')</span>';
+      el.appendChild(nameSpan);
+      const actions = document.createElement('span');
+      actions.className = 'data-list-item-actions';
+      const listBtn = document.createElement('button');
+      listBtn.className = 'btn btn-xs';
+      listBtn.innerHTML = ICONS.listChecks;
+      listBtn.title = 'Choisir les recettes « ' + t.label + ' »';
+      listBtn.onclick = () => openTemperatureRecipesDialog(t.key, t.label);
+      actions.appendChild(listBtn);
+      el.appendChild(actions);
+      tempList.appendChild(el);
+    });
+  }
+
   const famList = document.getElementById('families-list');
   const famBadge = document.getElementById('family-count-badge');
   if (famBadge) famBadge.textContent = state.ingredientFamilies.length;

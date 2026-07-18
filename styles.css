@@ -1935,7 +1935,14 @@ body.filter-rail-on .time-presets-group { gap: 12px; }
 .meal-recipes-row:hover { background: rgba(47, 125, 85, .07); }
 .meal-recipes-row input { width: 16px; height: 16px; accent-color: var(--green-600); cursor: pointer; flex-shrink: 0; }
 .meal-recipes-name { flex: 1; min-width: 0; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.meal-recipes-other { font-size: 11px; color: var(--text-dim); flex-shrink: 0; max-width: 40%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.meal-recipes-other { display: flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; flex-shrink: 0; max-width: 45%; }
+/* Ce qui est déjà attribué à la ligne (autre famille, autre type, température) */
+.assign-chip {
+  font-size: 11px; font-weight: 600;
+  color: var(--green-800); background: var(--green-100);
+  border-radius: 999px; padding: 2px 8px;
+  white-space: nowrap;
+}
 .meal-recipes-empty { padding: 14px; text-align: center; color: var(--text-muted); font-size: 13px; }
 
 .rating-min-label { margin-left: 10px; font-size: 13px; color: var(--text-muted); }
