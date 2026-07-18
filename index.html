@@ -4953,114 +4953,158 @@ function applyRecipeRating(v) {
 document.getElementById('rating-modal-clear').onclick = () => applyRecipeRating(null);
 
 /* ========================================================================
-   AFFECTATION EN MASSE — recettes d'un type de plat
-   Le brouillon (_mealRecipesDraft) n'est appliqué qu'à « Enregistrer » :
+   AFFECTATION EN MASSE — types de plat ↔ recettes, familles ↔ ingrédients
+   Le brouillon (_assignDraft) n'est appliqué qu'à « Enregistrer » :
    « Annuler » ou la croix le jettent sans toucher à state.
    ======================================================================== */
-let _mealRecipesType = null;   // type de plat en cours d'édition
-let _mealRecipesDraft = null;  // Set des ids de recettes cochées
-let _mealRecipesShown = 0;     // nb de lignes affichées (après recherche)
 
-function openMealRecipesDialog(mealType) {
-  _mealRecipesType = mealType;
-  _mealRecipesDraft = new Set(
-    state.recipes.filter(r => (r.mealTypes || []).includes(mealType)).map(r => r.id)
-  );
-  document.getElementById('meal-recipes-title').textContent = 'Recettes « ' + mealType + ' »';
+/* Modale générique « cocher dans une liste » (réutilisée par les types de plat
+   et les familles d'ingrédients). Config :
+     title, searchPlaceholder, emptyText
+     items()      -> objets { id, name }
+     isOn(item)   -> coché à l'ouverture
+     sub(item)    -> texte secondaire (optionnel)
+     apply(ids)   -> applique la sélection, renvoie { added, removed } */
+let _assignCfg = null;
+let _assignDraft = new Set();
+let _assignShown = 0;
+
+function openCheckAssignDialog(cfg) {
+  _assignCfg = cfg;
+  _assignDraft = new Set(cfg.items().filter(cfg.isOn).map(x => x.id));
+  document.getElementById('meal-recipes-title').textContent = cfg.title;
   const search = document.getElementById('meal-recipes-search');
   search.value = '';
+  search.placeholder = cfg.searchPlaceholder || 'Rechercher…';
   document.getElementById('meal-recipes-modal').classList.add('active');
-  renderMealRecipesList();
+  renderAssignList();
   setTimeout(() => search.focus(), 100);
 }
 
-function mealRecipesFiltered() {
+function assignFiltered() {
   const q = normalizeText(document.getElementById('meal-recipes-search').value || '');
-  return [...state.recipes]
-    .filter(r => !q || normalizeText(r.name || '').includes(q))
+  return _assignCfg.items()
+    .filter(x => !q || normalizeText(x.name || '').includes(q))
     .sort((a, b) => (a.name || '').localeCompare(b.name || '', 'fr', { sensitivity: 'base' }));
 }
 
-function refreshMealRecipesCount() {
-  const n = _mealRecipesDraft.size;
-  const total = state.recipes.length;
+function refreshAssignCount() {
+  const n = _assignDraft.size;
+  const total = _assignCfg.items().length;
   document.getElementById('meal-recipes-count').textContent =
     n + ' / ' + total + ' cochée' + (n > 1 ? 's' : '')
-    + (_mealRecipesShown !== total ? ' · ' + _mealRecipesShown + ' affichée' + (_mealRecipesShown > 1 ? 's' : '') : '');
+    + (_assignShown !== total ? ' · ' + _assignShown + ' affichée' + (_assignShown > 1 ? 's' : '') : '');
 }
 
-function renderMealRecipesList() {
+function renderAssignList() {
   const list = document.getElementById('meal-recipes-list');
-  const rows = mealRecipesFiltered();
-  _mealRecipesShown = rows.length;
-  refreshMealRecipesCount();
+  const rows = assignFiltered();
+  _assignShown = rows.length;
+  refreshAssignCount();
   if (!rows.length) {
-    list.innerHTML = '<div class="meal-recipes-empty">Aucune recette ne correspond.</div>';
+    list.innerHTML = '<div class="meal-recipes-empty">' + escapeHtml(_assignCfg.emptyText || 'Aucun résultat.') + '</div>';
     return;
   }
   list.innerHTML = '';
-  rows.forEach(r => {
+  rows.forEach(item => {
     const row = document.createElement('label');
     row.className = 'meal-recipes-row';
     const cb = document.createElement('input');
     cb.type = 'checkbox';
-    cb.checked = _mealRecipesDraft.has(r.id);
+    cb.checked = _assignDraft.has(item.id);
     cb.onchange = () => {
-      if (cb.checked) _mealRecipesDraft.add(r.id); else _mealRecipesDraft.delete(r.id);
-      refreshMealRecipesCount(); // pas de re-render : on garde la position de scroll
+      if (cb.checked) _assignDraft.add(item.id); else _assignDraft.delete(item.id);
+      refreshAssignCount(); // pas de re-render : on garde la position de scroll
     };
     const name = document.createElement('span');
     name.className = 'meal-recipes-name';
-    name.textContent = r.name || '(sans nom)';
+    name.textContent = item.name || '(sans nom)';
     row.appendChild(cb);
     row.appendChild(name);
-    const others = (r.mealTypes || []).filter(x => x !== _mealRecipesType);
-    if (others.length) {
+    const sub = _assignCfg.sub ? _assignCfg.sub(item) : '';
+    if (sub) {
       const o = document.createElement('span');
       o.className = 'meal-recipes-other';
-      o.textContent = sortMealTypes(others).join(', ');
+      o.textContent = sub;
       row.appendChild(o);
     }
     list.appendChild(row);
   });
 }
 
-// Cocher/décocher agit sur les lignes affichées (résultats de la recherche), pas sur tout le carnet.
-function mealRecipesSetAll(checked) {
-  mealRecipesFiltered().forEach(r => {
-    if (checked) _mealRecipesDraft.add(r.id); else _mealRecipesDraft.delete(r.id);
-  });
-  renderMealRecipesList();
+function assignSetAll(checked) {
+  assignFiltered().forEach(x => { if (checked) _assignDraft.add(x.id); else _assignDraft.delete(x.id); });
+  renderAssignList();
 }
 
-function saveMealRecipes() {
-  const type = _mealRecipesType;
-  let added = 0, removed = 0;
-  state.recipes.forEach(r => {
-    const wanted = _mealRecipesDraft.has(r.id);
-    const current = (r.mealTypes || []).includes(type);
-    if (wanted === current) return;
-    if (wanted) {
-      // « Aucun » et un vrai type sont exclusifs.
-      r.mealTypes = [...(r.mealTypes || []).filter(x => normalizeText(x) !== 'aucun'), type];
-      added++;
-    } else {
-      r.mealTypes = (r.mealTypes || []).filter(x => x !== type);
-      if (r.mealTypes.length === 0) r.mealTypes = ['Aucun']; // invariant de migrateRecipes()
-      removed++;
-    }
-  });
+function saveAssignDialog() {
+  const { added, removed } = _assignCfg.apply(_assignDraft);
   closeAllModals();
   if (!added && !removed) { toast('Aucun changement', 'muted'); return; }
   save();
   rerenderAll();
-  toast(added + ' ajoutée(s), ' + removed + ' retirée(s) — « ' + type + ' »', 'success');
+  toast(added + ' ajouté(s), ' + removed + ' retiré(s) — ' + _assignCfg.subject, 'success');
 }
 
-document.getElementById('meal-recipes-search').addEventListener('input', renderMealRecipesList);
-document.getElementById('meal-recipes-check-all').onclick = () => mealRecipesSetAll(true);
-document.getElementById('meal-recipes-uncheck-all').onclick = () => mealRecipesSetAll(false);
-document.getElementById('meal-recipes-save').onclick = saveMealRecipes;
+// --- Types de plat : choisir les recettes du type ---
+function openMealRecipesDialog(mealType) {
+  openCheckAssignDialog({
+    title: 'Recettes « ' + mealType + ' »',
+    subject: '« ' + mealType + ' »',
+    searchPlaceholder: 'Rechercher une recette…',
+    emptyText: 'Aucune recette ne correspond.',
+    items: () => [...state.recipes],
+    isOn: r => (r.mealTypes || []).includes(mealType),
+    sub: r => sortMealTypes((r.mealTypes || []).filter(x => x !== mealType)).join(', '),
+    apply: draft => {
+      let added = 0, removed = 0;
+      state.recipes.forEach(r => {
+        const wanted = draft.has(r.id);
+        const current = (r.mealTypes || []).includes(mealType);
+        if (wanted === current) return;
+        if (wanted) {
+          // « Aucun » et un vrai type sont exclusifs.
+          r.mealTypes = [...(r.mealTypes || []).filter(x => normalizeText(x) !== 'aucun'), mealType];
+          added++;
+        } else {
+          r.mealTypes = (r.mealTypes || []).filter(x => x !== mealType);
+          if (r.mealTypes.length === 0) r.mealTypes = ['Aucun']; // invariant de migrateRecipes()
+          removed++;
+        }
+      });
+      return { added, removed };
+    }
+  });
+}
+
+// --- Familles d'ingrédients : choisir les ingrédients de la famille ---
+function openFamilyIngredientsDialog(fam) {
+  openCheckAssignDialog({
+    title: 'Ingrédients « ' + fam.name + ' »',
+    subject: '« ' + fam.name + ' »',
+    searchPlaceholder: 'Rechercher un ingrédient…',
+    emptyText: 'Aucun ingrédient ne correspond.',
+    items: () => [...state.ingredients],
+    isOn: i => (i.familyIds || []).includes(fam.id),
+    sub: i => (i.familyIds || []).filter(x => x !== fam.id).map(getFamilyName).filter(Boolean).join(', '),
+    apply: draft => {
+      let added = 0, removed = 0;
+      state.ingredients.forEach(i => {
+        const wanted = draft.has(i.id);
+        const current = (i.familyIds || []).includes(fam.id);
+        if (wanted === current) return;
+        if (wanted) { i.familyIds = [...(i.familyIds || []), fam.id]; added++; }
+        else { i.familyIds = (i.familyIds || []).filter(x => x !== fam.id); removed++; }
+      });
+      return { added, removed };
+    }
+  });
+}
+
+document.getElementById('meal-recipes-search').addEventListener('input', renderAssignList);
+document.getElementById('meal-recipes-check-all').onclick = () => assignSetAll(true);
+document.getElementById('meal-recipes-uncheck-all').onclick = () => assignSetAll(false);
+document.getElementById('meal-recipes-save').onclick = saveAssignDialog;
 
 function openMergeUnitDialog(sourceUnit) {
   const others = state.units.filter(u => u.id !== sourceUnit.id).sort((a,b) => a.name.localeCompare(b.name, 'fr'));
@@ -5460,6 +5504,12 @@ function renderDataTab() {
 
         const actions = document.createElement('span');
         actions.className = 'data-list-item-actions';
+        // Affectation en masse : cocher/décocher les ingrédients de cette famille
+        const listBtn = document.createElement('button');
+        listBtn.className = 'btn btn-xs';
+        listBtn.innerHTML = ICONS.listChecks;
+        listBtn.title = 'Choisir les ingrédients de cette famille';
+        listBtn.onclick = (e) => { e.stopPropagation(); openFamilyIngredientsDialog(f); };
         const editBtn = document.createElement('button');
         editBtn.className = 'btn btn-xs';
         editBtn.innerHTML = ICONS.pencil;
@@ -5491,6 +5541,7 @@ function renderDataTab() {
         mergeFamBtn.innerHTML = ICONS.link2;
         mergeFamBtn.title = 'Fusionner avec une autre famille';
         mergeFamBtn.onclick = (e) => { e.stopPropagation(); openMergeFamilyDialog(f); };
+        actions.appendChild(listBtn);
         actions.appendChild(editBtn);
         actions.appendChild(mergeFamBtn);
         actions.appendChild(delBtn);
