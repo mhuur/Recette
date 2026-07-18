@@ -1781,35 +1781,8 @@ body.cart-open .cart-drawer { transform: translateX(0); visibility: visible; }
 /* 2a : eyebrows en texte seul, sans icône de section */
 .filter-sheet-label .sec-ico { display: none; }
 .filter-sheet-label .sec-ico svg { width: 14px; height: 14px; }
-/* Facette unifiée : chips sélectionnés + recherche + liste repliable */
-.facet { display: flex; flex-direction: column; gap: 7px; }
-.facet-chips { display: flex; flex-wrap: wrap; gap: 6px; }
-.facet-chip {
-  display: inline-flex; align-items: center; gap: 4px;
-  background: var(--green-100); border: 0;
-  color: var(--green-800); border-radius: 999px; padding: 3px 7px 3px 11px; font-size: 12px; font-weight: 600;
-}
-.facet-chip-x { background: none; border: 0; color: inherit; cursor: pointer; font-size: 14px; line-height: 1; padding: 0 2px; opacity: .75; }
-.facet-chip-x:hover { opacity: 1; }
-.facet-search {
-  width: 100%; box-sizing: border-box;
-  background: rgba(255, 255, 255, .8); border: 1px solid var(--border);
-  border-radius: 999px; padding: 7px 12px;
-  color: var(--text); font: inherit; font-size: 13px;
-}
-.facet-search:focus { outline: none; border-color: var(--green-500); }
-.facet-list { display: flex; flex-direction: column; gap: 1px; max-height: 232px; overflow-y: auto; }
-.facet-opt {
-  text-align: left; background: none; border: 0;
-  color: var(--text-muted); font: inherit; font-size: 13px;
-  padding: 5px 10px; border-radius: 8px; cursor: pointer;
-}
-.facet-opt:hover { background: rgba(47, 125, 85, .08); color: var(--text); }
-.facet-empty { font-size: 12px; color: var(--text-dim); padding: 4px 9px; }
-.facet-more { align-self: flex-start; background: none; border: 0; color: var(--green-700); font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; padding: 2px 4px; }
-.facet-more:hover { text-decoration: underline; }
-/* Type de plat : bouton résumé d'une ligne (hauteur constante → le reste du
-   rail ne bouge jamais) + menu flottant .filter-menu pour le choix. */
+/* Filtres Ingrédients / Type de plat : bouton résumé d'une ligne (hauteur
+   constante → le reste du rail ne bouge jamais) + menu flottant .filter-menu. */
 .filter-select {
   display: flex; align-items: center; gap: 8px; width: 100%; box-sizing: border-box;
   background: rgba(255, 255, 255, .7);
@@ -1855,6 +1828,7 @@ body.cart-open .cart-drawer { transform: translateX(0); visibility: visible; }
 }
 .filter-menu-opt:hover { background: rgba(47, 125, 85, .08); }
 .filter-menu-opt.on { color: var(--green-800); font-weight: 600; }
+.filter-menu-opt.exc { color: var(--danger); font-weight: 600; }   /* ingrédient interdit */
 .filter-menu-opt.off { color: var(--text-dim); } /* inatteignable avec les autres filtres */
 .filter-menu-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .filter-menu-box {
@@ -1863,7 +1837,15 @@ body.cart-open .cart-drawer { transform: translateX(0); visibility: visible; }
   display: flex; align-items: center; justify-content: center;
 }
 .filter-menu-opt.on .filter-menu-box { background: var(--green-600); border-color: var(--green-600); color: #fff; }
+.filter-menu-opt.exc .filter-menu-box {
+  background: var(--danger); border-color: var(--danger); color: #fff;
+  font-size: 15px; font-weight: 700; line-height: 1;
+}
 .filter-menu-box svg { width: 13px; height: 13px; }
+/* Aide du cycle requis → interdit → retiré (menu Ingrédients) */
+.filter-menu-hint { font-size: 11px; color: var(--text-dim); padding: 7px 4px 0; }
+.filter-menu-hint .req { color: var(--success); }
+.filter-menu-hint .exc { color: var(--danger); }
 .filter-menu-empty { font-size: 12px; color: var(--text-dim); padding: 8px 9px; }
 .filter-menu-foot {
   display: flex; align-items: center; justify-content: space-between; gap: 8px;
@@ -1907,35 +1889,6 @@ body.cart-open .cart-drawer { transform: translateX(0); visibility: visible; }
 /* « Non notées » : même famille de boutons, libellé plus long */
 .rating-step-wide { font-weight: 600; }
 .rating-step-wide.on { background: var(--green-100); border-color: var(--green-100); color: var(--green-800); }
-/* Compteur de filtres actifs sur la section « Avancé » */
-.adv-count {
-  display: inline-flex; align-items: center; justify-content: center;
-  min-width: 16px; height: 16px; padding: 0 4px;
-  font-size: 10px; font-weight: 700; line-height: 1;
-  color: #fff; background: var(--green-600); border-radius: 999px;
-  text-transform: none; letter-spacing: 0;
-}
-/* Chips requis(+)/interdit(−) */
-.reqex-chip {
-  display: inline-flex; align-items: center; gap: 4px;
-  border: 1px solid; border-radius: 999px;
-  padding: 2px 4px 2px 2px; font-size: 12px; font-weight: 600;
-}
-.reqex-chip.req { background: var(--success-soft); border-color: rgba(47, 158, 95, .35); color: var(--success-dark); }
-.reqex-chip.exc { background: var(--danger-soft); border-color: rgba(193, 74, 61, .35); color: var(--danger); }
-.reqex-sign {
-  width: 18px; height: 18px; flex-shrink: 0;
-  border: 0; border-radius: 50%; cursor: pointer;
-  font-size: 14px; font-weight: 700; line-height: 1;
-  display: inline-flex; align-items: center; justify-content: center;
-  color: #fff;
-}
-.reqex-chip.req .reqex-sign { background: var(--success); }
-.reqex-chip.exc .reqex-sign { background: var(--danger); }
-.reqex-name { padding: 0 2px; }
-.reqex-rm { background: none; border: 0; color: inherit; cursor: pointer; font-size: 14px; line-height: 1; padding: 0 2px; opacity: .7; }
-.reqex-rm:hover { opacity: 1; }
-.reqex-hint { font-size: 11px; color: var(--text-dim); }
 /* Filtre Temps — presets rapides */
 .time-presets-group { display: flex; flex-direction: column; gap: 9px; }
 .time-row { display: flex; align-items: center; gap: 10px; }

@@ -109,13 +109,20 @@
             </div>
           </div>
           <div class="filter-sheet-body">
+            <!-- Ingrédients : premier filtre. Bouton + menu flottant (même patron que
+                 Type de plat) : la section fait une ligne, donc hauteur constante. -->
+            <div class="filter-sheet-section">
+              <div class="filter-sheet-label"><span class="sec-ico" data-icon="carrot"></span>Ingrédients</div>
+              <button type="button" class="filter-select" id="filter-ing-btn" aria-haspopup="listbox" aria-expanded="false">
+                <span class="filter-select-value">Tous les ingrédients</span>
+                <span class="filter-select-caret" aria-hidden="true">›</span>
+              </button>
+            </div>
             <!-- Meal types -->
             <div class="filter-sheet-section">
               <div class="filter-sheet-label"><span class="sec-ico" data-icon="utensils"></span>Type de plat</div>
-              <!-- Bouton + menu flottant : hauteur d'une ligne, donc constante quel que soit
-                   le nombre de types disponibles (le nuage de chips faisait bouger tout le rail). -->
               <button type="button" class="filter-select" id="filter-meal-btn" aria-haspopup="listbox" aria-expanded="false">
-                <span class="filter-select-value" id="filter-meal-value">Tous les types</span>
+                <span class="filter-select-value">Tous les types</span>
                 <span class="filter-select-caret" aria-hidden="true">›</span>
               </button>
             </div>
@@ -150,20 +157,6 @@
                 <div class="time-row"><span class="time-row-label">Cuisson</span><div class="time-presets" id="filter-cook-presets"></div></div>
               </div>
             </div>
-            <!-- Advanced -->
-            <details class="filter-sheet-section">
-              <summary style="cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;padding:4px 0;">
-                <span class="filter-sheet-label" style="margin:0;">Avancé (ingrédients / familles) <span class="adv-count" id="filter-adv-count" style="display:none;"></span></span>
-                <span style="color:var(--text-muted);font-size:14px;">›</span>
-              </summary>
-              <div style="padding-top:14px;display:flex;flex-direction:column;gap:14px;">
-                <div>
-                  <div class="filter-sheet-label"><span class="sec-ico" data-icon="carrot"></span>Ingrédients</div>
-                  <div id="filter-ingredients-wrapper"></div>
-                </div>
-                <div class="reqex-hint"><b style="color:var(--success)">+</b> requis &nbsp;·&nbsp; <b style="color:var(--danger)">−</b> interdit &nbsp;— clique le signe pour basculer</div>
-              </div>
-            </details>
           </div>
           <div class="filter-sheet-footer">
             <button class="btn-neon" id="filter-apply-btn" type="button"><span id="filter-result-count">Voir les recettes</span></button>
@@ -768,8 +761,21 @@ service cloud.firestore {
   </div>
 </div>
 
-<!-- Menu « Type de plat » : enfant direct de body (position:fixed) pour échapper au
+<!-- Menus de filtres : enfants directs de body (position:fixed) pour échapper au
      scroll et au blur du rail de filtres, comme .autocomplete-dropdown. -->
+<div class="filter-menu" id="filter-ing-menu" role="dialog" aria-label="Ingrédients">
+  <div class="filter-menu-head">
+    <input type="text" class="filter-menu-search" id="filter-ing-search" placeholder="Rechercher un ingrédient…"
+           autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" data-form-type="other">
+    <div class="filter-menu-hint">1 clic = <b class="req">requis</b> · 2 clics = <b class="exc">interdit</b> · 3 = retiré</div>
+  </div>
+  <div class="filter-menu-list" id="filter-ing-list" role="listbox" aria-multiselectable="true"></div>
+  <div class="filter-menu-foot">
+    <button type="button" class="filter-menu-clear" id="filter-ing-clear">Tout effacer</button>
+    <button type="button" class="filter-menu-done" id="filter-ing-done">Fermer</button>
+  </div>
+</div>
+
 <div class="filter-menu" id="filter-meal-menu" role="dialog" aria-label="Type de plat">
   <div class="filter-menu-head">
     <input type="text" class="filter-menu-search" id="filter-meal-search" placeholder="Rechercher un type…"
@@ -3736,228 +3742,131 @@ if (btnNewInline) btnNewInline.onclick = () => openRecipeModal();
    BARRE DE FILTRES
    ======================================================================== */
 
-// Positionne un dropdown `position:fixed` sous (ou au-dessus si pas la place) un input,
-// clampé au viewport. Même logique que le dropdown des chips (anti hors-champ).
-// Composant de facette UNIFIÉ : chips sélectionnés + recherche + liste repliable (top N).
-// Utilisé pour Type de plat (mode 'include') et Ingrédients/Familles (mode 'reqex', +/−).
-// Tous les composants vivants s'enregistrent ici pour être rafraîchis quand un filtre change.
+// Tout composant de filtre vivant s'enregistre ici pour être rafraîchi quand un
+// filtre change (libellés + options grisées par le faceting). Rempli à chaque
+// buildFilterBar(), consommé par renderRecipes().
 const facetRefreshers = [];
 function refreshAllFacets() {
   for (const fn of facetRefreshers.slice()) { try { fn(); } catch (e) { /* DOM détaché */ } }
 }
 
-function createFacetSelect(wrapper, cfg) {
-  if (!wrapper) return;
-  wrapper.innerHTML = '';
-  const root = document.createElement('div');
-  root.className = 'facet';
-  const chipsEl = document.createElement('div');
-  chipsEl.className = 'facet-chips';
-  const search = document.createElement('input');
-  search.type = 'text';
-  search.className = 'facet-search';
-  search.placeholder = cfg.searchPlaceholder || 'Rechercher…';
-  search.autocomplete = 'off';
-  search.setAttribute('autocorrect', 'off');
-  search.setAttribute('autocapitalize', 'none');
-  search.setAttribute('spellcheck', 'false');
-  search.setAttribute('data-form-type', 'other');
-  const listEl = document.createElement('div');
-  listEl.className = 'facet-list';
-  const moreBtn = document.createElement('button');
-  moreBtn.type = 'button';
-  moreBtn.className = 'facet-more';
-  root.append(chipsEl, search, listEl, moreBtn);
-  wrapper.appendChild(root);
+/* ---- Filtres à menu flottant --------------------------------------------
+   Bouton résumé d'une ligne + menu en position:fixed. La section du rail garde
+   une hauteur CONSTANTE quoi qu'on sélectionne : un nuage de chips la faisait
+   varier (faceting, chips sélectionnés, « Voir tout ») et décalait tout le rail.
+   Deux instances : Ingrédients (3 états +/−) et Type de plat (2 états).
+   cfg = { btn, menu, search, list, clear, done, options(), stateOf(id),
+           toggle(id), clearAll(), summary() } — voir les deux appels plus bas. */
+const FILTER_MENUS = [];
+const openFilterMenu = () => FILTER_MENUS.find(m => m.isOpen()) || null;
+const anyFilterMenuOpen = () => !!openFilterMenu();
+const closeAllFilterMenus = () => FILTER_MENUS.forEach(m => m.close());
 
-  const COLLAPSED = 8;
-  let expanded = false;
-  const changed = () => { saveLocal(); renderRecipes(); }; // renderRecipes → refreshAllFacets
+function createFilterMenu(cfg) {
+  const btn = document.getElementById(cfg.btn);
+  const menu = document.getElementById(cfg.menu);
+  if (!btn || !menu) return null;
+  const valueEl = btn.querySelector('.filter-select-value');
+  const search = document.getElementById(cfg.search);
+  const list = document.getElementById(cfg.list);
+  const isOpen = () => menu.classList.contains('active');
 
-  function renderChips() {
-    chipsEl.innerHTML = '';
-    const sel = cfg.getSelected();
-    chipsEl.style.display = sel.length ? '' : 'none';
-    sel.forEach(it => {
-      if (cfg.mode === 'reqex') {
-        const chip = document.createElement('span');
-        chip.className = 'reqex-chip ' + (it.sign === '+' ? 'req' : 'exc');
-        const sign = document.createElement('button');
-        sign.type = 'button';
-        sign.className = 'reqex-sign';
-        sign.textContent = it.sign === '+' ? '+' : '−';
-        sign.title = it.sign === '+' ? 'Requis — cliquer pour interdire' : 'Interdit — cliquer pour requérir';
-        sign.onclick = () => { cfg.flip(it.id); changed(); };
-        const name = document.createElement('span');
-        name.className = 'reqex-name';
-        name.textContent = it.name;
-        const rm = document.createElement('button');
-        rm.type = 'button';
-        rm.className = 'reqex-rm';
-        rm.textContent = '×';
-        rm.onclick = () => { cfg.remove(it.id); changed(); };
-        chip.append(sign, name, rm);
-        chipsEl.appendChild(chip);
-      } else {
-        const chip = document.createElement('span');
-        chip.className = 'facet-chip';
-        const name = document.createElement('span');
-        name.textContent = it.name;
-        const rm = document.createElement('button');
-        rm.type = 'button';
-        rm.className = 'facet-chip-x';
-        rm.textContent = '×';
-        rm.onclick = () => { cfg.remove(it.id); changed(); };
-        chip.append(name, rm);
-        chipsEl.appendChild(chip);
-      }
-    });
+  function position() {
+    if (!isOpen()) return;
+    const r = btn.getBoundingClientRect();
+    const vw = window.innerWidth, vh = window.innerHeight, margin = 10;
+    const width = Math.min(Math.max(r.width, 250), vw - margin * 2);
+    let left = r.left;
+    if (left + width > vw - margin) left = vw - margin - width;
+    if (left < margin) left = margin;
+    menu.style.width = width + 'px';
+    menu.style.left = left + 'px';
+    // Sous le bouton par défaut ; bascule au-dessus si pas la place (anti hors-champ)
+    const below = vh - r.bottom - margin, above = r.top - margin;
+    if (below >= 240 || below >= above) {
+      menu.style.top = (r.bottom + 6) + 'px';
+      menu.style.maxHeight = Math.max(200, Math.min(Math.round(vh * 0.65), below)) + 'px';
+    } else {
+      menu.style.maxHeight = Math.max(200, Math.min(Math.round(vh * 0.65), above)) + 'px';
+      menu.style.top = Math.max(margin, r.top - 6 - menu.offsetHeight) + 'px';
+    }
   }
 
+  // Liste complète (jamais tronquée) : une option inatteignable avec les autres
+  // filtres est grisée, pas retirée — sinon la liste saute sous le doigt.
   function renderList() {
-    const q = normalizeText(search.value);
-    const selectedIds = new Set(cfg.getSelected().map(s => s.id));
-    let opts = cfg.getOptions().filter(o => !selectedIds.has(o.id));
-    if (q) opts = opts.filter(o => normalizeText(o.name).includes(q));
-    opts.sort((a, b) => a.name.localeCompare(b.name, 'fr'));
-    const total = opts.length;
-    const showAll = expanded || !!q;
-    const shown = showAll ? opts.slice(0, 200) : opts.slice(0, COLLAPSED);
-    listEl.innerHTML = '';
-    if (!shown.length) {
+    if (!list) return;
+    const q = normalizeText(search?.value || '');
+    list.innerHTML = '';
+    let shown = 0;
+    cfg.options().forEach(o => {
+      if (q && !normalizeText(o.name).includes(q)) return;
+      shown++;
+      const st = cfg.stateOf(o.id);            // '' | 'on' (requis) | 'exc' (interdit)
+      const dim = !st && o.dim;
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'filter-menu-opt' + (st ? ' ' + st : '') + (dim ? ' off' : '');
+      b.setAttribute('role', 'option');
+      b.setAttribute('aria-selected', String(st === 'on'));
+      if (dim) b.title = 'Aucune recette avec les autres filtres actifs';
+      const box = document.createElement('span');
+      box.className = 'filter-menu-box';
+      box.innerHTML = st === 'on' ? ICONS.check : '';
+      if (st === 'exc') box.textContent = '−';
+      const lab = document.createElement('span');
+      lab.className = 'filter-menu-name';
+      lab.textContent = o.name;
+      b.append(box, lab);
+      b.onclick = () => {
+        cfg.toggle(o.id);
+        saveLocal();
+        renderRecipes(); // → refreshAllFacets → refresh() → relance ce rendu
+      };
+      list.appendChild(b);
+    });
+    if (!shown) {
       const e = document.createElement('div');
-      e.className = 'facet-empty';
-      e.textContent = q ? 'Aucun résultat' : 'Aucune option disponible';
-      listEl.appendChild(e);
-    } else {
-      shown.forEach(o => {
-        const b = document.createElement('button');
-        b.type = 'button';
-        b.className = 'facet-opt';
-        b.textContent = o.name;
-        b.onclick = () => { cfg.add(o.id); search.value = ''; changed(); };
-        listEl.appendChild(b);
-      });
-    }
-    if (!q && total > COLLAPSED) {
-      moreBtn.style.display = '';
-      moreBtn.textContent = expanded ? 'Voir moins' : ('Voir tout (' + total + ')');
-      moreBtn.onclick = () => { expanded = !expanded; renderList(); };
-    } else {
-      moreBtn.style.display = 'none';
+      e.className = 'filter-menu-empty';
+      e.textContent = 'Aucun résultat';
+      list.appendChild(e);
     }
   }
 
-  const refresh = () => { renderChips(); renderList(); };
-  search.addEventListener('input', renderList);
-  facetRefreshers.push(refresh);
-  refresh();
-}
-
-/* ---- Type de plat : bouton résumé + menu flottant -----------------------
-   Le nuage de chips faisait varier la hauteur de la section (faceting qui
-   retire des options, ligne de chips sélectionnés, bouton « Voir tout ») :
-   tout le rail se décalait à chaque clic. Ici la section fait une ligne,
-   toujours — le contenu variable est déporté dans le menu flottant. */
-const mealMenuEl = () => document.getElementById('filter-meal-menu');
-const mealMenuOpen = () => mealMenuEl()?.classList.contains('active') === true;
-
-function positionMealMenu() {
-  const menu = mealMenuEl(), btn = document.getElementById('filter-meal-btn');
-  if (!menu || !btn || !mealMenuOpen()) return;
-  const r = btn.getBoundingClientRect();
-  const vw = window.innerWidth, vh = window.innerHeight, margin = 10;
-  const width = Math.min(Math.max(r.width, 250), vw - margin * 2);
-  let left = r.left;
-  if (left + width > vw - margin) left = vw - margin - width;
-  if (left < margin) left = margin;
-  menu.style.width = width + 'px';
-  menu.style.left = left + 'px';
-  // Sous le bouton par défaut ; bascule au-dessus si pas la place (anti hors-champ)
-  const below = vh - r.bottom - margin, above = r.top - margin;
-  if (below >= 240 || below >= above) {
-    menu.style.top = (r.bottom + 6) + 'px';
-    menu.style.maxHeight = Math.max(200, Math.min(Math.round(vh * 0.65), below)) + 'px';
-  } else {
-    menu.style.maxHeight = Math.max(200, Math.min(Math.round(vh * 0.65), above)) + 'px';
-    menu.style.top = Math.max(margin, r.top - 6 - menu.offsetHeight) + 'px';
+  // Libellé du bouton : une ligne, ellipsée — sa hauteur ne bouge jamais.
+  function refresh() {
+    const s = cfg.summary();
+    if (valueEl) valueEl.textContent = s.label;
+    btn.classList.toggle('on', s.active);
+    btn.title = s.title;
+    if (isOpen()) renderList();
   }
-}
 
-// Liste complète des types (jamais tronquée) : un type inatteignable avec les
-// autres filtres actifs est grisé, pas retiré — sinon la liste saute sous le doigt.
-function renderMealMenuList() {
-  const list = document.getElementById('filter-meal-list');
-  if (!list) return;
-  const q = normalizeText(document.getElementById('filter-meal-search')?.value || '');
-  const av = availableMealTypes();
-  const sel = state.filters.mealTypes || [];
-  list.innerHTML = '';
-  let shown = 0;
-  (state.mealTypes || []).slice().sort((a, b) => a.localeCompare(b, 'fr')).forEach(name => {
-    if (q && !normalizeText(name).includes(q)) return;
-    shown++;
-    const on = sel.includes(name);
-    const dim = !on && !av.has(name);
-    const b = document.createElement('button');
-    b.type = 'button';
-    b.className = 'filter-menu-opt' + (on ? ' on' : '') + (dim ? ' off' : '');
-    b.setAttribute('role', 'option');
-    b.setAttribute('aria-selected', String(on));
-    if (dim) b.title = 'Aucune recette avec les autres filtres actifs';
-    const box = document.createElement('span');
-    box.className = 'filter-menu-box';
-    box.innerHTML = on ? ICONS.check : '';
-    const lab = document.createElement('span');
-    lab.className = 'filter-menu-name';
-    lab.textContent = name;
-    b.append(box, lab);
-    b.onclick = () => {
-      const cur = state.filters.mealTypes || (state.filters.mealTypes = []);
-      const i = cur.indexOf(name);
-      if (i === -1) cur.push(name); else cur.splice(i, 1);
-      saveLocal();
-      renderRecipes(); // → refreshAllFacets → renderMealTypeSelect → relance ce rendu
-    };
-    list.appendChild(b);
-  });
-  if (!shown) {
-    const e = document.createElement('div');
-    e.className = 'filter-menu-empty';
-    e.textContent = 'Aucun résultat';
-    list.appendChild(e);
+  function open() {
+    FILTER_MENUS.forEach(m => { if (m.menu !== menu) m.close(); }); // un seul à la fois
+    if (search) search.value = '';
+    renderList();
+    menu.classList.add('active');
+    btn.setAttribute('aria-expanded', 'true');
+    position();
+    if (search && window.innerWidth >= 769) search.focus(); // pas de focus mobile : évite le clavier
   }
-}
+  function close() {
+    if (!isOpen()) return;
+    menu.classList.remove('active');
+    btn.setAttribute('aria-expanded', 'false');
+  }
 
-// Libellé du bouton : une ligne, ellipsée — sa hauteur ne bouge jamais.
-function renderMealTypeSelect() {
-  const val = document.getElementById('filter-meal-value');
-  const btn = document.getElementById('filter-meal-btn');
-  if (!val || !btn) return;
-  const sel = (state.filters.mealTypes || []).slice().sort((a, b) => a.localeCompare(b, 'fr'));
-  val.textContent = !sel.length ? 'Tous les types'
-    : sel.length <= 2 ? sel.join(', ')
-    : sel.length + ' types';
-  btn.classList.toggle('on', sel.length > 0);
-  btn.title = sel.length ? 'Types : ' + sel.join(', ') : 'Tous les types de plat';
-  if (mealMenuOpen()) renderMealMenuList();
-}
+  // stopPropagation coupe le listener global du back-guard → syncBackGuard à la main
+  btn.addEventListener('click', e => { e.stopPropagation(); if (isOpen()) close(); else open(); syncBackGuard(); });
+  menu.addEventListener('click', e => e.stopPropagation());
+  search?.addEventListener('input', renderList);
+  document.getElementById(cfg.clear)?.addEventListener('click', () => { cfg.clearAll(); saveLocal(); renderRecipes(); });
+  document.getElementById(cfg.done)?.addEventListener('click', () => { close(); syncBackGuard(); });
 
-function openMealMenu() {
-  const menu = mealMenuEl();
-  if (!menu) return;
-  const s = document.getElementById('filter-meal-search');
-  if (s) s.value = '';
-  renderMealMenuList();
-  menu.classList.add('active');
-  document.getElementById('filter-meal-btn')?.setAttribute('aria-expanded', 'true');
-  positionMealMenu();
-  if (s && window.innerWidth >= 769) s.focus(); // pas de focus mobile : évite le clavier
-}
-function closeMealMenu() {
-  if (!mealMenuOpen()) return;
-  mealMenuEl().classList.remove('active');
-  document.getElementById('filter-meal-btn')?.setAttribute('aria-expanded', 'false');
+  const api = { menu, isOpen, open, close, refresh, position };
+  FILTER_MENUS.push(api);
+  return api;
 }
 
 function buildFilterBar() {
@@ -4050,30 +3959,8 @@ function buildFilterBar() {
   renderTimePresets('filter-prep-presets', 'prepMax');
   renderTimePresets('filter-cook-presets', 'cookMax');
 
-  // Type de plat : bouton résumé + menu flottant (hauteur fixe dans le rail)
-  facetRefreshers.push(renderMealTypeSelect);
-  renderMealTypeSelect();
-
-  // Avancé : champs unifiés requis(+)/interdit(−) pour ingrédients et familles
-  createFacetSelect(document.getElementById('filter-ingredients-wrapper'), {
-    mode: 'reqex',
-    searchPlaceholder: 'Rechercher un ingrédient…',
-    getOptions: () => { const av = availableIngredientIds(); return state.ingredients.filter(i => av.has(i.id)).map(i => ({ id: i.id, name: i.name })); },
-    getSelected: () => [
-      ...(state.filters.includeIngredients || []).map(id => ({ id, name: getIngredientName(id), sign: '+' })),
-      ...(state.filters.excludeIngredients || []).map(id => ({ id, name: getIngredientName(id), sign: '-' }))
-    ],
-    add: id => { state.filters.includeIngredients = [...(state.filters.includeIngredients || []), id]; },
-    remove: id => {
-      state.filters.includeIngredients = (state.filters.includeIngredients || []).filter(x => x !== id);
-      state.filters.excludeIngredients = (state.filters.excludeIngredients || []).filter(x => x !== id);
-    },
-    flip: id => {
-      const inc = state.filters.includeIngredients || [], exc = state.filters.excludeIngredients || [];
-      if (inc.includes(id)) { state.filters.includeIngredients = inc.filter(x => x !== id); state.filters.excludeIngredients = [...exc, id]; }
-      else { state.filters.excludeIngredients = exc.filter(x => x !== id); state.filters.includeIngredients = [...inc, id]; }
-    }
-  });
+  // Les deux menus flottants se rafraîchissent avec les facettes (libellé + grisés)
+  FILTER_MENUS.forEach(m => { facetRefreshers.push(m.refresh); m.refresh(); });
 }
 
 document.getElementById('search-input').addEventListener('input', e => {
@@ -4105,34 +3992,88 @@ document.getElementById('sort-popup').addEventListener('click', e => {
 document.addEventListener('click', () => {
   document.getElementById('sort-popup')?.classList.remove('active');
 });
-// Menu « Type de plat » (couche flottante : stopPropagation → syncBackGuard à la main)
-document.getElementById('filter-meal-btn')?.addEventListener('click', e => {
-  e.stopPropagation();
-  if (mealMenuOpen()) closeMealMenu(); else openMealMenu();
-  syncBackGuard();
+/* Ingrédients : 3 états par clics successifs — requis (+) → interdit (−) → retiré.
+   L'ancienne facette exposait le même pouvoir via un signe cliquable sur un chip ;
+   le cycle tient dans la même case que les autres menus. */
+createFilterMenu({
+  btn: 'filter-ing-btn', menu: 'filter-ing-menu', search: 'filter-ing-search',
+  list: 'filter-ing-list', clear: 'filter-ing-clear', done: 'filter-ing-done',
+  options: () => {
+    const av = availableIngredientIds();
+    return state.ingredients.slice()
+      .sort((a, b) => a.name.localeCompare(b.name, 'fr'))
+      .map(i => ({ id: i.id, name: i.name, dim: !av.has(i.id) }));
+  },
+  stateOf: id => (state.filters.includeIngredients || []).includes(id) ? 'on'
+                : (state.filters.excludeIngredients || []).includes(id) ? 'exc' : '',
+  toggle: id => {
+    const inc = state.filters.includeIngredients || (state.filters.includeIngredients = []);
+    const exc = state.filters.excludeIngredients || (state.filters.excludeIngredients = []);
+    if (inc.includes(id)) {            // requis → interdit
+      state.filters.includeIngredients = inc.filter(x => x !== id);
+      exc.push(id);
+    } else if (exc.includes(id)) {     // interdit → retiré
+      state.filters.excludeIngredients = exc.filter(x => x !== id);
+    } else {                           // retiré → requis
+      inc.push(id);
+    }
+  },
+  clearAll: () => { state.filters.includeIngredients = []; state.filters.excludeIngredients = []; },
+  summary: () => {
+    const inc = (state.filters.includeIngredients || []).map(id => '+' + getIngredientName(id));
+    const exc = (state.filters.excludeIngredients || []).map(id => '−' + getIngredientName(id));
+    const all = [...inc, ...exc];
+    return {
+      active: all.length > 0,
+      label: !all.length ? 'Tous les ingrédients' : all.length <= 2 ? all.join(', ') : all.length + ' ingrédients',
+      title: all.length ? 'Ingrédients : ' + all.join(', ') : 'Aucun ingrédient requis ni interdit'
+    };
+  }
 });
-mealMenuEl()?.addEventListener('click', e => e.stopPropagation());
-document.getElementById('filter-meal-search')?.addEventListener('input', renderMealMenuList);
-document.getElementById('filter-meal-clear')?.addEventListener('click', () => {
-  state.filters.mealTypes = [];
-  saveLocal();
-  renderRecipes();
+
+createFilterMenu({
+  btn: 'filter-meal-btn', menu: 'filter-meal-menu', search: 'filter-meal-search',
+  list: 'filter-meal-list', clear: 'filter-meal-clear', done: 'filter-meal-done',
+  options: () => {
+    const av = availableMealTypes();
+    return (state.mealTypes || []).slice()
+      .sort((a, b) => a.localeCompare(b, 'fr'))
+      .map(name => ({ id: name, name, dim: !av.has(name) }));
+  },
+  stateOf: name => (state.filters.mealTypes || []).includes(name) ? 'on' : '',
+  toggle: name => {
+    const cur = state.filters.mealTypes || (state.filters.mealTypes = []);
+    const i = cur.indexOf(name);
+    if (i === -1) cur.push(name); else cur.splice(i, 1);
+  },
+  clearAll: () => { state.filters.mealTypes = []; },
+  summary: () => {
+    const sel = (state.filters.mealTypes || []).slice().sort((a, b) => a.localeCompare(b, 'fr'));
+    return {
+      active: sel.length > 0,
+      label: !sel.length ? 'Tous les types' : sel.length <= 2 ? sel.join(', ') : sel.length + ' types',
+      title: sel.length ? 'Types : ' + sel.join(', ') : 'Tous les types de plat'
+    };
+  }
 });
-document.getElementById('filter-meal-done')?.addEventListener('click', () => { closeMealMenu(); syncBackGuard(); });
-document.addEventListener('click', closeMealMenu);
-document.addEventListener('keydown', e => { if (e.key === 'Escape' && mealMenuOpen()) { e.stopPropagation(); closeMealMenu(); } }, true);
-window.addEventListener('resize', positionMealMenu);
+
+document.addEventListener('click', closeAllFilterMenus);
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && anyFilterMenuOpen()) { e.stopPropagation(); closeAllFilterMenus(); }
+}, true);
+window.addEventListener('resize', () => FILTER_MENUS.forEach(m => m.position()));
 // Menu ouvert = le fond ne défile pas, comme un <select> natif. Le menu est en
 // position:fixed : le laisser suivre son ancre le collait en haut de l'écran, et
 // le fermer au scroll était pire (il disparaissait sous la molette). Ici la
 // molette hors du menu est simplement inerte ; seule SA liste défile.
-function blockScrollBehindMealMenu(e) {
-  if (!mealMenuOpen()) return;
-  if (e.target instanceof Node && mealMenuEl().contains(e.target)) return;
+function blockScrollBehindFilterMenu(e) {
+  const open = openFilterMenu();
+  if (!open) return;
+  if (e.target instanceof Node && open.menu.contains(e.target)) return;
   e.preventDefault();
 }
-document.addEventListener('wheel', blockScrollBehindMealMenu, { passive: false });
-document.addEventListener('touchmove', blockScrollBehindMealMenu, { passive: false });
+document.addEventListener('wheel', blockScrollBehindFilterMenu, { passive: false });
+document.addEventListener('touchmove', blockScrollBehindFilterMenu, { passive: false });
 // Filtre Temps : presets ≤15 / ≤30 / ≤45 / ≤60 (rendus dans buildFilterBar)
 const TIME_PRESETS = [15, 30, 45, 60];
 function renderTimePresets(containerId, stateKey) {
@@ -4225,7 +4166,7 @@ document.addEventListener('click', e => {
   if (e.target.closest('.filter-sheet')) return;
   if (e.target.closest('#btn-toggle-filter')) return;
   if (e.target.closest('.autocomplete-dropdown')) return;
-  if (e.target.closest('#filter-meal-menu')) return; // enfant de body, mais « dedans » pour l'utilisateur
+  if (e.target.closest('.filter-menu')) return; // enfant de body, mais « dedans » pour l'utilisateur
   closeFilterSheet();
 });
 document.getElementById('filter-sheet-close').onclick = closeFilterSheet;
@@ -4275,10 +4216,6 @@ function updateFilterBadge() {
   }
   const btn = document.getElementById('btn-toggle-filter');
   if (btn) btn.classList.toggle('neon-on', count > 0);
-  // Compteur de filtres actifs sur la section repliable « Avancé »
-  const advCount = (f.includeIngredients || []).length + (f.excludeIngredients || []).length;
-  const advEl = document.getElementById('filter-adv-count');
-  if (advEl) { advEl.textContent = advCount; advEl.style.display = advCount ? '' : 'none'; }
   // Pied du rail docké : « N filtre(s) actif(s) »
   const railCount = document.getElementById('filter-active-count');
   if (railCount) {
@@ -6994,11 +6931,11 @@ const BACK_LAYERS = [
   { isOpen: () => !!document.querySelector('.modal-overlay.active'), close: () => closeAllModals() },
   { isOpen: () => document.getElementById('sort-popup')?.classList.contains('active') === true
                 || document.getElementById('user-avatar-wrapper')?.classList.contains('open') === true
-                || document.getElementById('filter-meal-menu')?.classList.contains('active') === true,
+                || anyFilterMenuOpen(),
     close: () => {
       document.getElementById('sort-popup')?.classList.remove('active');
       document.getElementById('user-avatar-wrapper')?.classList.remove('open');
-      closeMealMenu();
+      closeAllFilterMenus();
     } },
 ];
 let bgDepth = 0;      // entrées fictives présentes dans l'historique
@@ -7041,7 +6978,7 @@ function initBackGuard() {
   const obs = new MutationObserver(syncBackGuard);
   // body : classes cart-open/detail-open + menu contextuel appendé à la volée
   obs.observe(document.body, { attributes: true, attributeFilter: ['class'], childList: true });
-  document.querySelectorAll('.modal-overlay, #filter-sheet-overlay, #sort-popup, #filter-meal-menu, #user-avatar-wrapper, .tab')
+  document.querySelectorAll('.modal-overlay, #filter-sheet-overlay, #sort-popup, .filter-menu, #user-avatar-wrapper, .tab')
     .forEach(el => obs.observe(el, { attributes: true, attributeFilter: ['class'] }));
 }
 
