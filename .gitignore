@@ -8,6 +8,13 @@ Recette Sylva*.html
 *.bak
 __*
 
+# Sauvegardes exportées depuis l'app (Réglages ▸ Sauvegarde .json) : elles
+# contiennent TOUT le carnet. Jamais dans le dépôt — il est sur GitHub.
+*backup*.json
+carnet*.json
+data/carnet*.json
+data/*.json
+
 # Firebase Hosting — cache de déploiement local
 .firebase/
 
