@@ -1400,7 +1400,7 @@ body.cart-open .cart-drawer { transform: translateX(0); visibility: visible; }
     /* borné par les marges du cadre (.app-layout : 20px, centré, max 1800) */
     --frame-x: max(20px, calc((100vw - 1800px) / 2));
     top: 20px; bottom: 20px; left: var(--frame-x); right: var(--frame-x);
-    width: min(940px, calc(100vw - 2 * var(--frame-x)));
+    width: min(880px, calc(100vw - 2 * var(--frame-x)));
     margin-inline: auto; /* left+right+width sur-contraints → marges auto = centrage */
     border: 1px solid var(--glass-border);
     border-radius: 24px;
@@ -1412,7 +1412,9 @@ body.cart-open .cart-drawer { transform: translateX(0); visibility: visible; }
   body.cart-open .cart-drawer { transform: translateY(0); opacity: 1; }
   .cart-drawer-body {
     display: grid;
-    grid-template-columns: 320px minmax(0, 1fr);
+    /* outils plus large que la liste : les noms de recettes sont longs, les
+       lignes d'ingrédients courtes — l'inverse gaspillait à droite et coupait à gauche */
+    grid-template-columns: 400px minmax(0, 1fr);
     gap: 18px;
     align-items: start;
     padding: 18px 22px 22px;
@@ -1443,7 +1445,9 @@ body.cart-open .cart-drawer { transform: translateX(0); visibility: visible; }
 /* Portions par recette (steppers) */
 .serving-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 7px 0; border-bottom: 1px dashed var(--border-soft); }
 .serving-row:last-child { border-bottom: none; }
-.serving-name { font-size: 13.5px; font-weight: 600; color: var(--text); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* Le nom passe à la ligne plutôt que d'être coupé : « Courgettes grillées à la
+   ricotta » ne tenait jamais sur une ligne, quelle que soit la largeur. */
+.serving-name { font-size: 13.5px; font-weight: 600; color: var(--text); min-width: 0; overflow-wrap: anywhere; }
 .serving-stepper { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
 .serving-btn {
   width: 26px; height: 26px;
