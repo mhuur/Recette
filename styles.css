@@ -495,8 +495,16 @@ body:has(#tab-recipes.active) .topbar-back { display: none; }
 .app-layout::before,
 .app-layout::after {
   content: "";
-  position: absolute;
-  inset: 0;
+  /* fixed, PAS absolute : le cadre fait la hauteur du contenu (des milliers de
+     px avec 382 recettes) et background-size:cover zoomait l'image pour la couvrir.
+     Calé sur le viewport, le cadrage reste celui d'un écran. Géométrie alignée
+     sur les marges du cadre (cf. .app-layout ci-dessus). */
+  position: fixed;
+  top: 20px;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(calc(100% - 40px), 1800px);
   border-radius: 24px;
   pointer-events: none;
 }
@@ -2425,6 +2433,12 @@ select.bug-tab-select option{background:#fff;color:var(--text);font-weight:500;t
     margin: 8px auto;
     width: calc(100% - 16px);
     padding: 10px;
+    border-radius: 18px;
+  }
+  .app-layout::before,
+  .app-layout::after {
+    top: 8px; bottom: 8px;
+    width: calc(100% - 16px);
     border-radius: 18px;
   }
 
