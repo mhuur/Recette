@@ -214,6 +214,10 @@ h1, h2 {
 /* ===================================================================
    BARRE SUPÉRIEURE (topbar)
    =================================================================== */
+/* Barre supérieure allégée : plus de bandeau ni de titre « Mes recettes ».
+   Elle ne porte que des pastilles autoportantes (retour / Courses / avatar),
+   posées directement sur le fond forêt. Reste sticky pour rester atteignable
+   au scroll ; ce sont les pastilles, pas la barre, qui portent le verre. */
 .topbar {
   position: sticky;
   top: 0;
@@ -221,50 +225,37 @@ h1, h2 {
   display: flex;
   align-items: center;
   gap: 14px;
-  padding: calc(10px + env(safe-area-inset-top)) 24px 10px;
+  padding: calc(8px + env(safe-area-inset-top)) 24px 8px;
+  background: none;
+  border-bottom: 0;
+  box-shadow: none;
+  pointer-events: none; /* le vide de la barre ne doit pas bloquer le contenu dessous */
+}
+.topbar > * { pointer-events: auto; }
+/* Retour aux recettes : masqué sur l'écran principal (tab-btn.active) */
+.topbar-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   background: var(--glass-fill);
   backdrop-filter: blur(var(--blur-md));
   -webkit-backdrop-filter: blur(var(--blur-md));
-  border-bottom: 1px solid var(--glass-border-soft);
-  box-shadow: var(--shadow-glass-sm);
-}
-.topbar-brand {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  background: none;
-  border: 0;
-  padding: 0;
+  border: 1px solid var(--glass-border);
+  border-radius: 999px;
+  padding: 8px 16px 8px 12px;
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--green-800);
   cursor: pointer;
   flex-shrink: 0;
-}
-.topbar-brand .tb-ico { color: var(--green-700); }
-.topbar-brand .tb-ico svg { width: 22px; height: 22px; }
-.topbar-brand-label {
-  font-family: var(--font-display);
-  font-size: 19px;
-  font-weight: 700;
-  letter-spacing: var(--ls-tight);
-  color: var(--text-strong);
   white-space: nowrap;
 }
-.topbar-crumb {
-  display: none;
-  align-items: center;
-  gap: 8px;
-  color: var(--text-dim);
-  min-width: 0;
-}
-.topbar-crumb.visible { display: inline-flex; }
-.topbar-crumb .tb-ico svg { width: 14px; height: 14px; }
-.topbar-crumb-label {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--text);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
+/* Source de vérité = l'onglet réellement affiché (et non .active du bouton, que
+   switchTab ne pose qu'au premier changement d'onglet : au boot le bouton
+   serait visible et vide). */
+body:has(#tab-recipes.active) .topbar-back { display: none; }
+.topbar-back .tb-ico svg { width: 16px; height: 16px; }
 .topbar-actions {
   margin-left: auto;
   display: flex;
@@ -276,7 +267,11 @@ h1, h2 {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  background: rgba(255, 255, 255, .5);
+  /* la barre n'a plus de fond : la pastille porte son propre verre pour rester
+     lisible au-dessus des lignes de recettes qui défilent dessous */
+  background: rgba(255, 255, 255, .62);
+  -webkit-backdrop-filter: blur(var(--blur-md));
+  backdrop-filter: blur(var(--blur-md));
   border: 1px solid var(--glass-border);
   border-radius: 999px;
   padding: 8px 16px 8px 14px;
@@ -312,7 +307,9 @@ h1, h2 {
 .sidebar-user-trigger {
   width: 42px; height: 42px;
   padding: 0;
-  background: rgba(255, 255, 255, .35);
+  background: rgba(255, 255, 255, .62);
+  -webkit-backdrop-filter: blur(var(--blur-md));
+  backdrop-filter: blur(var(--blur-md));
   border: 1px solid var(--glass-border-soft);
   border-radius: 50%;
   display: inline-flex;
@@ -2152,9 +2149,8 @@ select.bug-tab-select option{background:#fff;color:var(--text);font-weight:500;t
 @media (max-width: 768px) {
   .app-layout { min-height: 100dvh; }
 
-  .topbar { padding: calc(8px + env(safe-area-inset-top)) 12px 8px; gap: 10px; }
-  .topbar-brand-label { font-size: 17px; }
-  .topbar-crumb { display: none !important; } /* pas de fil d'Ariane sur mobile */
+  .topbar { padding: calc(6px + env(safe-area-inset-top)) 12px 6px; gap: 10px; }
+  .topbar-back { padding: 7px 14px 7px 10px; font-size: 13px; }
   .topbar-cart-btn { padding: 8px 12px; }
   .sidebar-user-trigger { width: 38px; height: 38px; }
   .sidebar-user-avatar { width: 30px; height: 30px; }

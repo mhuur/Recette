@@ -32,11 +32,11 @@
 <div class="app-layout" data-appbar="Recettes">
 <!-- Barre supérieure (maquette Sylva : plus de sidebar) -->
 <header class="topbar">
-  <button class="topbar-brand tab-btn" data-tab="recipes" type="button" title="Recettes">
-    <span class="tb-ico" data-icon="chefHat" aria-hidden="true"></span>
-    <span class="topbar-brand-label">Mes recettes</span>
+  <!-- Retour aux recettes : masqué en CSS tant que l'onglet Recettes est affiché -->
+  <button class="topbar-back tab-btn" data-tab="recipes" type="button" title="Retour aux recettes">
+    <span class="tb-ico" data-icon="arrowLeft" aria-hidden="true"></span>
+    <span class="topbar-back-label" id="topbar-back-label"></span>
   </button>
-  <span class="topbar-crumb" id="topbar-crumb"><span class="tb-ico" data-icon="chevronRight" aria-hidden="true"></span><span class="topbar-crumb-label" id="topbar-crumb-label"></span></span>
   <div class="topbar-actions">
     <button class="btn btn-primary" id="mobile-login-btn"><span class="tb-ico" data-icon="key"></span>Connexion</button>
     <button class="topbar-cart-btn" id="topbar-cart-btn" type="button" title="Liste de courses">
@@ -2065,13 +2065,9 @@ function switchTab(tabId) {
   const _t = { recipes: 'Recettes', data: 'Données', settings: 'Réglages' };
   const _al = document.querySelector('.app-layout');
   if (_al) _al.dataset.appbar = _t[tabId] || 'Mes Recettes';
-  const crumb = document.getElementById('topbar-crumb');
-  const crumbLabel = document.getElementById('topbar-crumb-label');
-  if (crumb && crumbLabel) {
-    const showCrumb = tabId !== 'recipes';
-    crumb.classList.toggle('visible', showCrumb);
-    crumbLabel.textContent = showCrumb ? (_t[tabId] || '') : '';
-  }
+  // Bouton retour : porte le nom de l'onglet courant (masqué en CSS sur Recettes).
+  const backLabel = document.getElementById('topbar-back-label');
+  if (backLabel) backLabel.textContent = tabId !== 'recipes' ? (_t[tabId] || '') : '';
 }
 
 document.querySelectorAll('.tab-btn').forEach(btn => {
