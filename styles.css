@@ -1833,6 +1833,38 @@ body.cart-open .cart-drawer { transform: translateX(0); visibility: visible; }
     animation: none;
   }
 }
+/* Grand écran (≥1280px) : le panneau devient une COLONNE PERMANENTE à gauche
+   (filtres | liste | détail). En dessous il redevient popover / bottom-sheet.
+   Largeur mini pour tenir les 3 colonnes : 280 + 480 + 400 + gaps + padding. */
+@media (min-width: 1280px) {
+  /* .active inclus : sinon un popover resté ouvert avant l'agrandissement de la
+     fenêtre garderait display:flex (spécificité supérieure) et casserait le rail. */
+  .filter-sheet-overlay,
+  .filter-sheet-overlay.active {
+    display: block;           /* plus besoin de .active : le rail est permanent */
+    position: sticky;
+    inset: auto;              /* annule le inset:0 du mode overlay */
+    top: calc(76px + env(safe-area-inset-top));
+    flex: 0 0 280px;
+    background: none;
+    pointer-events: auto;
+    z-index: 1;               /* reste sous la topbar et les modales */
+  }
+  .filter-sheet {
+    position: static;         /* neutralise le positionnement JS du popover */
+    width: 100%;
+    max-width: none;
+    max-height: calc(100dvh - 120px);
+    animation: none;
+  }
+  /* Un rail permanent n'a ni croix ni bouton « Voir N recettes » ni déclencheur */
+  .filter-sheet-close,
+  .filter-sheet-footer,
+  #btn-toggle-filter { display: none; }
+  /* Le tiroir Courses masque le reste de l'UI : le rail en fait partie */
+  body.cart-open .filter-sheet-overlay { visibility: hidden; }
+}
+
 .filter-sheet-header {
   display: flex;
   align-items: center;

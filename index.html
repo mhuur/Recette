@@ -71,6 +71,59 @@
   <!-- Onglet Recettes -->
   <section id="tab-recipes" class="tab active">
     <div class="recipes-layout">
+      <!-- Panneau de filtres : rail docké en colonne gauche ≥1280px, sinon popover / bottom-sheet -->
+      <div class="filter-sheet-overlay" id="filter-sheet-overlay">
+        <div class="filter-sheet">
+          <div class="filter-sheet-header">
+            <span class="filter-sheet-title">Filtres</span>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <button class="btn btn-ghost btn-sm" id="btn-reset-filters">Tout effacer</button>
+              <button class="filter-sheet-close" id="filter-sheet-close" title="Fermer"><span class="tb-ico" data-icon="x"></span></button>
+            </div>
+          </div>
+          <div class="filter-sheet-body">
+            <!-- Meal types -->
+            <div class="filter-sheet-section">
+              <div class="filter-sheet-label"><span class="sec-ico" data-icon="utensils"></span>Type de plat</div>
+              <div id="filter-meal-types"></div>
+            </div>
+            <!-- Rating -->
+            <div class="filter-sheet-section">
+              <div class="filter-sheet-label"><span class="sec-ico" data-icon="star"></span>Note</div>
+              <div id="filter-rating-wrapper"></div>
+            </div>
+            <!-- Time -->
+            <div class="filter-sheet-section">
+              <div class="filter-sheet-label"><span class="sec-ico" data-icon="clock"></span>Temps (min)</div>
+              <div class="time-presets-group">
+                <div class="time-row"><span class="time-row-label">Préparation</span><div class="time-presets" id="filter-prep-presets"></div></div>
+                <div class="time-row"><span class="time-row-label">Cuisson</span><div class="time-presets" id="filter-cook-presets"></div></div>
+              </div>
+            </div>
+            <!-- Advanced -->
+            <details class="filter-sheet-section">
+              <summary style="cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;padding:4px 0;">
+                <span class="filter-sheet-label" style="margin:0;">Avancé (ingrédients / familles) <span class="adv-count" id="filter-adv-count" style="display:none;"></span></span>
+                <span style="color:var(--text-muted);font-size:14px;">›</span>
+              </summary>
+              <div style="padding-top:14px;display:flex;flex-direction:column;gap:14px;">
+                <div>
+                  <div class="filter-sheet-label"><span class="sec-ico" data-icon="carrot"></span>Ingrédients</div>
+                  <div id="filter-ingredients-wrapper"></div>
+                </div>
+                <div>
+                  <div class="filter-sheet-label"><span class="sec-ico" data-icon="layers"></span>Familles</div>
+                  <div id="filter-families-wrapper"></div>
+                </div>
+                <div class="reqex-hint"><b style="color:var(--success)">+</b> requis &nbsp;·&nbsp; <b style="color:var(--danger)">−</b> interdit &nbsp;— clique le signe pour basculer</div>
+              </div>
+            </details>
+          </div>
+          <div class="filter-sheet-footer">
+            <button class="btn-neon" id="filter-apply-btn" type="button"><span id="filter-result-count">Voir les recettes</span></button>
+          </div>
+        </div>
+      </div>
       <div class="recipes-main">
         <div class="toolbar">
           <div class="toolbar-row">
@@ -668,60 +721,6 @@ service cloud.firestore {
     <div class="modal-footer">
       <button class="btn" id="confirm-modal-cancel">Annuler</button>
       <button class="btn btn-danger" id="confirm-modal-ok">Supprimer</button>
-    </div>
-  </div>
-</div>
-
-<!-- Filter bottom sheet -->
-<div class="filter-sheet-overlay" id="filter-sheet-overlay">
-  <div class="filter-sheet">
-    <div class="filter-sheet-header">
-      <span class="filter-sheet-title">Filtres</span>
-      <div style="display:flex;gap:8px;align-items:center;">
-        <button class="btn btn-ghost btn-sm" id="btn-reset-filters">Tout effacer</button>
-        <button class="filter-sheet-close" id="filter-sheet-close" title="Fermer"><span class="tb-ico" data-icon="x"></span></button>
-      </div>
-    </div>
-    <div class="filter-sheet-body">
-      <!-- Meal types -->
-      <div class="filter-sheet-section">
-        <div class="filter-sheet-label"><span class="sec-ico" data-icon="utensils"></span>Type de plat</div>
-        <div id="filter-meal-types"></div>
-      </div>
-      <!-- Rating -->
-      <div class="filter-sheet-section">
-        <div class="filter-sheet-label"><span class="sec-ico" data-icon="star"></span>Note</div>
-        <div id="filter-rating-wrapper"></div>
-      </div>
-      <!-- Time -->
-      <div class="filter-sheet-section">
-        <div class="filter-sheet-label"><span class="sec-ico" data-icon="clock"></span>Temps (min)</div>
-        <div class="time-presets-group">
-          <div class="time-row"><span class="time-row-label">Préparation</span><div class="time-presets" id="filter-prep-presets"></div></div>
-          <div class="time-row"><span class="time-row-label">Cuisson</span><div class="time-presets" id="filter-cook-presets"></div></div>
-        </div>
-      </div>
-      <!-- Advanced -->
-      <details class="filter-sheet-section">
-        <summary style="cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:space-between;padding:4px 0;">
-          <span class="filter-sheet-label" style="margin:0;">Avancé (ingrédients / familles) <span class="adv-count" id="filter-adv-count" style="display:none;"></span></span>
-          <span style="color:var(--text-muted);font-size:14px;">›</span>
-        </summary>
-        <div style="padding-top:14px;display:flex;flex-direction:column;gap:14px;">
-          <div>
-            <div class="filter-sheet-label"><span class="sec-ico" data-icon="carrot"></span>Ingrédients</div>
-            <div id="filter-ingredients-wrapper"></div>
-          </div>
-          <div>
-            <div class="filter-sheet-label"><span class="sec-ico" data-icon="layers"></span>Familles</div>
-            <div id="filter-families-wrapper"></div>
-          </div>
-          <div class="reqex-hint"><b style="color:var(--success)">+</b> requis &nbsp;·&nbsp; <b style="color:var(--danger)">−</b> interdit &nbsp;— clique le signe pour basculer</div>
-        </div>
-      </details>
-    </div>
-    <div class="filter-sheet-footer">
-      <button class="btn-neon" id="filter-apply-btn" type="button"><span id="filter-result-count">Voir les recettes</span></button>
     </div>
   </div>
 </div>
@@ -3982,10 +3981,15 @@ function openFilterSheet() {
 }
 // Desktop (≥769px) : popover ancré sous le bouton « Filtres » (maquette Sylva).
 // Mobile : on retire les styles inline pour laisser le bottom-sheet CSS s'appliquer.
+// ≥1280px : le panneau est une colonne permanente (CSS), pas un popover.
+function isFilterRailDocked() { return window.innerWidth >= 1280; }
 function positionFilterSheet() {
   const sheet = document.querySelector('.filter-sheet');
   if (!sheet) return;
-  if (window.innerWidth >= 769) {
+  if (isFilterRailDocked()) {
+    // Rail docké : purger les styles inline du popover, sinon ils écrasent la colonne.
+    sheet.style.left = ''; sheet.style.top = ''; sheet.style.height = ''; sheet.style.maxHeight = '';
+  } else if (window.innerWidth >= 769) {
     const btn = document.getElementById('btn-toggle-filter');
     const r = btn ? btn.getBoundingClientRect() : { left: 16, bottom: 60 };
     const margin = 12;
@@ -4002,14 +4006,22 @@ function positionFilterSheet() {
     sheet.style.maxHeight = '';
   }
 }
-// Héritage du rail docké : supprimé avec le design Sylva (popover partout).
+// Rail docké (≥1280px) vs popover : `filter-rail-on` sert aux règles qui doivent
+// laisser le panneau tranquille (Échap, clic extérieur, bouton retour).
 function updateFilterRail() {
-  document.body.classList.remove('filter-rail-on');
+  const docked = isFilterRailDocked();
+  document.body.classList.toggle('filter-rail-on', docked);
   const overlay = document.getElementById('filter-sheet-overlay');
+  if (docked) {
+    overlay?.classList.remove('active'); // reste d'un popover ouvert avant l'agrandissement
+    positionFilterSheet();               // contenu déjà construit par buildFilterBar()
+    return;
+  }
   if (overlay && overlay.classList.contains('active')) positionFilterSheet();
 }
 window.addEventListener('resize', updateFilterRail);
 function closeFilterSheet() {
+  if (isFilterRailDocked()) return; // rail permanent : rien à fermer
   document.getElementById('filter-sheet-overlay').classList.remove('active');
 }
 document.getElementById('btn-toggle-filter').onclick = () => {
@@ -4018,7 +4030,7 @@ document.getElementById('btn-toggle-filter').onclick = () => {
 };
 // Desktop : clic hors du popover → fermeture (l'overlay est pointer-events:none)
 document.addEventListener('click', e => {
-  if (window.innerWidth < 769) return;
+  if (window.innerWidth < 769 || isFilterRailDocked()) return;
   const overlay = document.getElementById('filter-sheet-overlay');
   if (!overlay || !overlay.classList.contains('active')) return;
   if (e.target.closest('.filter-sheet')) return;
@@ -6705,7 +6717,8 @@ const BACK_LAYERS = [
     close: () => switchTab('recipes') },
   { isOpen: () => document.body.classList.contains('detail-open'), close: () => closeRecipeDetail() },
   { isOpen: () => document.body.classList.contains('cart-open'),   close: () => closeCartDrawer() },
-  { isOpen: () => document.getElementById('filter-sheet-overlay')?.classList.contains('active') === true,
+  { isOpen: () => !isFilterRailDocked()
+                && document.getElementById('filter-sheet-overlay')?.classList.contains('active') === true,
     close: () => closeFilterSheet() },
   { isOpen: () => !!document.querySelector('.modal-overlay.active'), close: () => closeAllModals() },
   { isOpen: () => !!document.querySelector('.recipe-context-menu')
