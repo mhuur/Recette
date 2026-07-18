@@ -614,6 +614,11 @@ label {
 .recipe-row-rating:hover { background: rgba(183, 166, 58, .12); }
 .recipe-row-rating .rating-stars svg { width: 13px; height: 13px; }
 .recipe-row-rating .rating-unrated-label { font-size: 12px; color: var(--text-dim); font-weight: 500; }
+/* Variante compacte (mobile) : masquée par défaut, activée par la media query */
+.recipe-row-rating .rating-full { display: inline-flex; align-items: center; gap: 1px; }
+.recipe-row-rating .rating-compact { display: none; align-items: center; gap: 3px; }
+.recipe-row-rating .rating-num { font-size: 12.5px; font-weight: 700; color: var(--text-muted); }
+.recipe-row-rating .rating-empty { color: var(--text-dim); }
 .recipe-row-meta {
   display: inline-flex;
   align-items: center;
@@ -2129,6 +2134,10 @@ select.bug-tab-select option{background:#fff;color:var(--text);font-weight:500;t
   .recipe-row-meta.time, .recipe-row-tags { display: none; }
   .recipe-row-meta.servings { width: auto; }
   .recipe-row input[type="checkbox"] { width: 19px; height: 19px; }
+  /* Note compacte : 1 étoile + note (ou 1 étoile vide = non noté) */
+  .recipe-row-rating { width: auto; }
+  .recipe-row-rating .rating-full { display: none; }
+  .recipe-row-rating .rating-compact { display: inline-flex; }
 
   .toolbar-row { gap: 8px; }
 

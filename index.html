@@ -2912,9 +2912,15 @@ function renderRecipes() {
     const rating = document.createElement(canRate ? 'button' : 'span');
     rating.className = 'recipe-row-rating';
     if (canRate) { rating.type = 'button'; rating.title = rated ? 'Modifier la note' : 'Noter cette recette'; }
-    rating.innerHTML = rated
+    // Deux variantes : desktop = 5 étoiles ; mobile (compact) = 1 étoile + note,
+    // ou 1 étoile vide = non noté. Bascule en CSS (media query), pas de re-render.
+    const fullView = rated
       ? '<span class="rating-stars">' + ratingStars(r.rating) + '</span>'
       : '<span class="rating-unrated-label">' + (canRate ? 'Noter' : 'Non notée') + '</span>';
+    const compactView = rated
+      ? '<span class="rating-stars">' + ICONS.starFull + '</span><b class="rating-num">' + r.rating + '</b>'
+      : '<span class="rating-stars rating-empty">' + ICONS.star + '</span>';
+    rating.innerHTML = '<span class="rating-full">' + fullView + '</span><span class="rating-compact">' + compactView + '</span>';
     if (canRate) rating.onclick = e => { e.stopPropagation(); openRatingDialog(r); };
     row.appendChild(rating);
 
