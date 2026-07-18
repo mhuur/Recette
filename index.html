@@ -3131,6 +3131,8 @@ function openRecipeMenu(r, anchorEl) {
   document.addEventListener('keydown', recipeMenuKeyHandler, true);
   window.addEventListener('scroll', closeRecipeMenu, true);
   setTimeout(() => document.addEventListener('click', recipeMenuOutsideHandler), 0);
+  // Le clic du ⋮ fait stopPropagation : on arme le bouton retour ici, dans le geste.
+  if (typeof syncBackGuard === 'function') syncBackGuard();
 }
 
 function duplicateRecipe(r) {
@@ -6752,6 +6754,10 @@ window.addEventListener('popstate', () => {
 });
 function initBackGuard() {
   if (!window.history || !history.pushState) return;
+  // Chrome Android ignore au « retour » les entrées d'historique poussées hors geste
+  // utilisateur. On synchronise donc d'abord en fin de propagation du clic (même tâche
+  // que le geste) ; le MutationObserver ne sert plus que de filet (Échap, stopPropagation…).
+  document.addEventListener('click', syncBackGuard, false);
   const obs = new MutationObserver(syncBackGuard);
   // body : classes cart-open/detail-open + menu contextuel appendé à la volée
   obs.observe(document.body, { attributes: true, attributeFilter: ['class'], childList: true });
