@@ -1844,7 +1844,9 @@ body.cart-open .cart-drawer { transform: translateX(0); visibility: visible; }
   color: var(--text); font: inherit; font-size: 13px;
 }
 .filter-menu-search:focus { outline: none; border-color: var(--green-500); }
-.filter-menu-list { flex: 1; min-height: 0; overflow-y: auto; padding: 0 8px 4px; display: flex; flex-direction: column; gap: 1px; }
+/* overscroll-behavior : au bout de la liste, la molette ne doit pas enchaîner sur
+   le rail — ce défilement fermerait le menu (voir le listener scroll). */
+.filter-menu-list { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 0 8px 4px; display: flex; flex-direction: column; gap: 1px; }
 .filter-menu-opt {
   display: flex; align-items: center; gap: 9px; width: 100%; box-sizing: border-box;
   background: none; border: 0; border-radius: 9px;

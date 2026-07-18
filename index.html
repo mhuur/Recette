@@ -4119,8 +4119,13 @@ document.getElementById('filter-meal-done')?.addEventListener('click', () => { c
 document.addEventListener('click', closeMealMenu);
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && mealMenuOpen()) { e.stopPropagation(); closeMealMenu(); } }, true);
 window.addEventListener('resize', positionMealMenu);
-// Le menu est en position:fixed : le rail qui défile sous lui doit le repositionner.
-document.addEventListener('scroll', positionMealMenu, { capture: true, passive: true });
+// Le menu est en position:fixed : le faire suivre un bouton qui défile hors champ
+// le laissait collé en haut de l'écran. On le ferme — sauf si c'est SA liste qui défile.
+document.addEventListener('scroll', e => {
+  if (!mealMenuOpen()) return;
+  if (e.target instanceof Node && mealMenuEl().contains(e.target)) return;
+  closeMealMenu();
+}, { capture: true, passive: true });
 // Filtre Temps : presets ≤15 / ≤30 / ≤45 / ≤60 (rendus dans buildFilterBar)
 const TIME_PRESETS = [15, 30, 45, 60];
 function renderTimePresets(containerId, stateKey) {
