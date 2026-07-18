@@ -4119,13 +4119,17 @@ document.getElementById('filter-meal-done')?.addEventListener('click', () => { c
 document.addEventListener('click', closeMealMenu);
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && mealMenuOpen()) { e.stopPropagation(); closeMealMenu(); } }, true);
 window.addEventListener('resize', positionMealMenu);
-// Le menu est en position:fixed : le faire suivre un bouton qui défile hors champ
-// le laissait collé en haut de l'écran. On le ferme — sauf si c'est SA liste qui défile.
-document.addEventListener('scroll', e => {
+// Menu ouvert = le fond ne défile pas, comme un <select> natif. Le menu est en
+// position:fixed : le laisser suivre son ancre le collait en haut de l'écran, et
+// le fermer au scroll était pire (il disparaissait sous la molette). Ici la
+// molette hors du menu est simplement inerte ; seule SA liste défile.
+function blockScrollBehindMealMenu(e) {
   if (!mealMenuOpen()) return;
   if (e.target instanceof Node && mealMenuEl().contains(e.target)) return;
-  closeMealMenu();
-}, { capture: true, passive: true });
+  e.preventDefault();
+}
+document.addEventListener('wheel', blockScrollBehindMealMenu, { passive: false });
+document.addEventListener('touchmove', blockScrollBehindMealMenu, { passive: false });
 // Filtre Temps : presets ≤15 / ≤30 / ≤45 / ≤60 (rendus dans buildFilterBar)
 const TIME_PRESETS = [15, 30, 45, 60];
 function renderTimePresets(containerId, stateKey) {
