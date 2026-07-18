@@ -8,7 +8,7 @@
    Le bandeau « Recharger » reste comme filet (envoie {type:'SKIP_WAITING'}).
    ⚠️ Bumper CACHE_VERSION à chaque déploiement de contenu pour éviter un cache figé. */
 
-const CACHE_VERSION = 'v25';
+const CACHE_VERSION = 'v26';
 const PRECACHE = 'precache-' + CACHE_VERSION;
 const RUNTIME = 'runtime-' + CACHE_VERSION;
 

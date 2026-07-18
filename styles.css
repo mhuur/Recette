@@ -738,23 +738,25 @@ button.recipe-detail-rating:hover { background: rgba(183, 166, 58, .12); }
   color: var(--text-muted); margin-bottom: 10px;
 }
 .recipe-section-title svg { width: 13px; height: 13px; flex-shrink: 0; }
+/* Grille 2 colonnes : la colonne quantité (auto) s'aligne sur la plus large,
+   les noms démarrent tous au même endroit. Séparateurs pointillés par ligne. */
 .ingredients-list {
   list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: 9px;
-}
-.ingredients-list li {
-  padding: 0;
-  color: var(--text);
-  display: flex;
-  gap: 8px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
   align-items: baseline;
-  border-bottom: none;
-  font-size: 13px;
-  line-height: 1.35;
+  column-gap: 16px;
 }
-.ingredients-list .ing-qty { min-width: 0; flex-shrink: 0; }
+.ingredients-list li { display: contents; }
+.ingredients-list .ing-qty,
+.ingredients-list .ing-name {
+  padding: 8px 0;
+  border-bottom: 1px dashed var(--border-soft);
+  font-size: 13px;
+  line-height: 1.4;
+}
+.ingredients-list li:last-child .ing-qty,
+.ingredients-list li:last-child .ing-name { border-bottom: none; }
 .ing-qty { color: var(--green-700); font-weight: 700; white-space: nowrap; }
 .ing-name { color: var(--text); }
 .recipe-steps {

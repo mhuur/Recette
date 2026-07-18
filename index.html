@@ -3022,7 +3022,8 @@ function renderRecipeDetail() {
     body += '<div class="recipe-section"><div class="recipe-section-title"><span>Ingrédients</span></div><ul class="ingredients-list">'
       + r.ingredients.map(i => {
           const qty = i.quantity ? i.quantity + (i.unitId ? ' ' + getUnitName(i.unitId) : '') : '';
-          return '<li>' + (qty ? '<span class="ing-qty">' + escapeHtml(qty) + '</span>' : '') + '<span class="ing-name">' + escapeHtml(getIngredientName(i.ingredientId)) + '</span></li>';
+          // La colonne quantité est toujours rendue (même vide) pour aligner les noms.
+          return '<li><span class="ing-qty">' + escapeHtml(qty) + '</span><span class="ing-name">' + escapeHtml(getIngredientName(i.ingredientId)) + '</span></li>';
         }).join('')
       + '</ul></div>';
   }
