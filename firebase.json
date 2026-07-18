@@ -16,6 +16,7 @@
       "CLAUDE.md",
       "README.md",
       "tools/**",
+      "data/**",
       "*.bak",
       "__*",
       "index - *.html",

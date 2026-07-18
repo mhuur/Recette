@@ -151,6 +151,12 @@
                 <button type="button" class="chip-toggle" data-diet="pescatarian">Pescarien</button>
               </div>
             </div>
+            <!-- Saison : un mois exclusif. Une recette passe si TOUS ses ingrédients
+                 datés sont de saison ce mois-là (les autres sont ignorés). -->
+            <div class="filter-sheet-section">
+              <div class="filter-sheet-label"><span class="sec-ico" data-icon="calendar"></span>Saison</div>
+              <div class="chip-row" id="filter-season"></div>
+            </div>
             <!-- Time -->
             <div class="filter-sheet-section">
               <div class="filter-sheet-label"><span class="sec-ico" data-icon="clock"></span>Temps (min)</div>
@@ -197,6 +203,12 @@
   <section id="tab-data" class="tab">
     <div class="data-section">
       <h3><span class="tb-ico" data-icon="carrot"></span>Ingrédients <span id="ing-count-badge" class="count-badge" style="background:var(--surface);">0</span></h3>
+      <!-- Remplissage des saisons depuis le calendrier de référence : action manuelle
+           (elle écrit dans les données synchronisées) et précédée d'un aperçu. -->
+      <div class="data-actions">
+        <button class="btn btn-sm" id="btn-apply-seasons"><span class="tb-ico" data-icon="calendar"></span>Attribuer les saisons</button>
+        <span class="data-actions-hint">D'après le calendrier Greenpeace (<code>data/saisons.md</code>) — aperçu avant application.</span>
+      </div>
       <div id="ingredients-list" class="data-list"></div>
     </div>
     <div class="data-section">
@@ -823,6 +835,108 @@ const DEFAULT_FAMILIES = ['Végétal', 'Viande', 'Poisson', 'Œufs', 'Produits l
 
 const MONTHS_FR = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
 
+/* Calendrier de saison — source : greenpeace.fr/guetteur/calendrier (France
+   métropolitaine), relevé le 2026-07-18. SOURCE DE VÉRITÉ : `py tools/seasons_doc.py`
+   régénère data/saisons.md à partir de cette table, ne pas éditer le .md à la main.
+   Céréales et légumineuses volontairement exclues : elles se conservent, les dater
+   restreindrait des recettes sans raison. Mois = 1-12, comme `seasonMonths`. */
+const ALL_YEAR = [1,2,3,4,5,6,7,8,9,10,11,12];
+const SEASON_REFERENCE = {
+  legume: {
+    'Ail': ALL_YEAR,
+    'Artichaut': [4,5,6,7,8,9],
+    'Asperge': [3,4,5,6,7],
+    'Aubergine': [5,6,7,8,9,10],
+    'Betterave': ALL_YEAR,
+    'Blette': [3,4,5,6,7,8,9,10],
+    'Brocoli': [6,7,8,9,10,11],
+    'Cardon': [11],
+    'Carotte': ALL_YEAR,
+    'Céleri-branche': [1,7,8,9,10,11,12],
+    'Céleri-rave': [1,2,3,10,11,12],
+    'Chou': [1,3,8,9,10,11,12],
+    'Chou blanc': [1,2,3,8,9,10,11,12],
+    'Chou de Bruxelles': [1,2,3,9,10,11,12],
+    'Chou frisé': [1,2,3,9,10,11,12],
+    'Chou rouge': [1,2,3,8,9,10,11,12],
+    'Chou romanesco': [6,7,8,9],
+    'Chou-fleur': [3,4,5,9,10,11],
+    'Citrouille': [11],
+    'Concombre': [4,5,6,7,8,9,10],
+    'Courge': [1,8,9,10,11,12],
+    'Courgette': [5,6,7,8,9,10],
+    'Crosne': [1,2,3,11,12],
+    'Échalote': [10,11,12],
+    'Endive': [1,2,3,4,10,11,12],
+    'Épinard': ALL_YEAR,
+    'Fenouil': [6,7,8,9,10,11],
+    'Frisée': [1,2,3,4,8,10,11,12],
+    'Haricot vert': [6,7,8,9,10],
+    'Laitue': [4,5,6,7,8,9,10],
+    'Mâche': [1,2,11,12],
+    'Navet': [1,2,3,4,5,10,11,12],
+    'Oignon': ALL_YEAR,
+    'Panais': [1,2,3,9,10,11,12],
+    'Patate douce': [9,10],
+    'Petit pois': [4,5,6,7],
+    'Poireau': [1,2,3,4,9,10,11,12],
+    'Poivron': [6,7,8,9],
+    'Pomme de terre': [1,2,3,4,5,6,7,8,10,11,12], // primeur + conservation
+    'Pomme de terre de conservation': [1,2,3,10,11,12],
+    'Pomme de terre primeur': [4,5,6,7,8],
+    'Potiron': [9,10,11,12],
+    'Radis': [2,3,4,5,6,7,8,9,10,11,12],
+    'Rutabaga': [10,11,12],
+    'Salsifi': [1,2,3,10,11,12],
+    'Topinambour': [1,2,3,11,12]
+  },
+  fruit: {
+    'Abricot': [6,7,8],
+    'Amande fraîche': [7,8],
+    'Amande sèche': ALL_YEAR,
+    'Baie de goji': [8,9,10],
+    'Brugnon': [6,7,8],
+    'Cassis': [6,7,8],
+    'Cerise': [5,6,7],
+    'Châtaigne': [10,11,12],
+    'Citron': [1,2,3,6,10,11,12],
+    'Clémentine': [1,2,11,12],
+    'Coing': [9,10,11],
+    'Figue': [7,8,9,10],
+    'Fraise': [5,6,7,8],
+    'Framboise': [6,7,8,10],
+    'Groseille': [6,7,8],
+    'Kaki': [1,11,12],
+    'Kiwi': [1,2,3,11,12],
+    'Mandarine': [1,2,11,12],
+    'Melon': [6,7,8,9],
+    'Mirabelle': [8,9],
+    'Mûre': [8,9],
+    'Myrtille': [7,8,9,10],
+    'Nectarine': [7,8],
+    'Noisette': [8,9,10],
+    'Noix': [9,10],
+    'Orange': [1,2,3,11,12],
+    'Pamplemousse': [1,2,3,4,5,6],
+    'Pastèque': [6,7,8,9],
+    'Pêche': [6,7,8,9],
+    'Physalis': [1,2,10,11,12],
+    'Poire': [1,2,3,4,7,8,9,10,11,12],
+    'Pomme': [1,2,3,4,6,7,8,9,10,11,12],
+    'Prune': [6,7,8,9],
+    'Pruneau': [8,9],
+    'Raisin': [8,9,10],
+    'Rhubarbe': [5,6,7],
+    'Tomate': [5,6,7,8,9,10]
+  }
+};
+// Table plate { nom → mois }, l'ordre n'a pas d'importance (le matching trie par longueur)
+const SEASON_BY_NAME = Object.assign({}, SEASON_REFERENCE.legume, SEASON_REFERENCE.fruit);
+/* Pièges du rapprochement par préfixe : « Noix de coco » n'est pas la noix de
+   septembre, « Noix de Saint-Jacques » encore moins. Ces mots annulent la
+   correspondance plutôt que de dater à tort un ingrédient. */
+const SEASON_VETO = ['coco', 'muscade', 'cajou', 'pecan', 'saint jacques', 'pignon', 'sirop', 'confiture', 'jus de'];
+
 const DEFAULT_MEAL_TYPES = [
   'Aucun', 'Entrée', 'Plat principal', 'Dessert', 'Accompagnement', 'Apéritif',
   'Petit-déjeuner', 'Goûter', 'Sauce', 'Boisson', 'Salade', 'Soupe',
@@ -866,6 +980,7 @@ let state = {
     includeIngredients: [],
     excludeIngredients: [],
     ingredientsMode: 'any', // 'any' = au moins un des requis · 'all' = tous
+    seasonMonth: null,      // 1-12 : n'affiche que les recettes de saison ce mois-là
     includeFamilies: [],
     excludeFamilies: [],
     selectedOnly: false
@@ -1499,7 +1614,7 @@ function load() {
       if (!state.mealTypes.some(m => normalizeText(m) === 'aucun')) {
         state.mealTypes.unshift('Aucun');
       }
-      if (!state.filters) state.filters = { search: '', sort: 'name-asc', ratingSel: [], prepMax: null, cookMax: null, mealTypes: [], temperatures: [], vegetarianOnly: false, pescatarianOnly: false, includeIngredients: [], excludeIngredients: [], ingredientsMode: 'any', includeFamilies: [], excludeFamilies: [], selectedOnly: false };
+      if (!state.filters) state.filters = { search: '', sort: 'name-asc', ratingSel: [], prepMax: null, cookMax: null, mealTypes: [], temperatures: [], vegetarianOnly: false, pescatarianOnly: false, includeIngredients: [], excludeIngredients: [], ingredientsMode: 'any', seasonMonth: null, includeFamilies: [], excludeFamilies: [], selectedOnly: false };
       // Migration : ajouter nouveaux champs filtres s'ils manquent
       // Filtre Familles retiré de l'UI : on purge d'anciens filtres persistés,
       // sinon ils resteraient actifs sans moyen de les enlever.
@@ -2892,6 +3007,9 @@ function recipeMatches(r, f, skip) {
   if ((f.temperatures || []).length && !f.temperatures.includes(r.temperature || null)) return false;
   if (f.vegetarianOnly && !isVegetarianRecipe(r)) return false;
   if (f.pescatarianOnly && !isPescatarianRecipe(r)) return false;
+  if (!skip.season && f.seasonMonth) {
+    if (!isRecipeInSeason(r, f.seasonMonth)) return false;
+  }
   if (!skip.selected && f.selectedOnly && !state.selectedRecipeIds.includes(r.id)) return false;
   return true;
 }
@@ -2925,6 +3043,18 @@ function recipeHasFamilies(r, names) {
     return ing && (ing.familyIds || []).some(fid => ids.includes(fid));
   });
 }
+/* De saison = AUCUN ingrédient daté hors saison ce mois-là. Un ingrédient sans
+   `seasonMonths` (épices, farine, viande…) est ignoré — comme pour les régimes,
+   la justesse dépend de ce qui a été daté. Une recette sans aucun ingrédient
+   daté ne passe donc pas le filtre : elle n'a rien de saisonnier à prouver. */
+function isRecipeInSeason(r, month) {
+  const dated = (r.ingredients || [])
+    .map(i => state.ingredients.find(x => x.id === i.ingredientId))
+    .filter(ing => ing && (ing.seasonMonths || []).length);
+  if (!dated.length) return false;
+  return dated.every(ing => ing.seasonMonths.includes(month));
+}
+
 function isVegetarianRecipe(r) {
   return !recipeHasFamilies(r, MEAT_FAMILIES) && !recipeHasFamilies(r, FISH_FAMILIES);
 }
@@ -3998,6 +4128,30 @@ function buildFilterBar() {
     };
   });
 
+  // Filtre Saison : 12 mois, exclusif (recliquer = tous). Le mois courant est repéré.
+  const seasonWrap = document.getElementById('filter-season');
+  if (seasonWrap) {
+    seasonWrap.innerHTML = '';
+    const moisCourant = new Date().getMonth() + 1;
+    MONTHS_FR.forEach((name, idx) => {
+      const m = idx + 1;
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'chip-toggle chip-sm' + (state.filters.seasonMonth === m ? ' on' : '')
+                  + (m === moisCourant ? ' chip-now' : '');
+      b.textContent = name.slice(0, 3);
+      b.title = name + (m === moisCourant ? ' (mois en cours)' : '');
+      b.setAttribute('aria-pressed', String(state.filters.seasonMonth === m));
+      b.onclick = () => {
+        state.filters.seasonMonth = state.filters.seasonMonth === m ? null : m;
+        saveLocal();
+        buildFilterBar();
+        renderRecipes();
+      };
+      seasonWrap.appendChild(b);
+    });
+  }
+
   // Filtre Temps : presets pour préparation et cuisson
   renderTimePresets('filter-prep-presets', 'prepMax');
   renderTimePresets('filter-cook-presets', 'cookMax');
@@ -4278,7 +4432,7 @@ document.addEventListener('keydown', e => {
 });
 
 function resetAllFilters() {
-  state.filters = { search: '', sort: 'name-asc', ratingSel: [], prepMax: null, cookMax: null, mealTypes: [], temperatures: [], vegetarianOnly: false, pescatarianOnly: false, includeIngredients: [], excludeIngredients: [], ingredientsMode: 'any', includeFamilies: [], excludeFamilies: [], selectedOnly: false };
+  state.filters = { search: '', sort: 'name-asc', ratingSel: [], prepMax: null, cookMax: null, mealTypes: [], temperatures: [], vegetarianOnly: false, pescatarianOnly: false, includeIngredients: [], excludeIngredients: [], ingredientsMode: 'any', seasonMonth: null, includeFamilies: [], excludeFamilies: [], selectedOnly: false };
   document.getElementById('search-input').value = '';
   setSortValue('name-asc');
   const sb = document.getElementById('btn-toggle-selection-only');
@@ -4287,6 +4441,7 @@ function resetAllFilters() {
   buildFilterBar();
   renderRecipes();
 }
+document.getElementById('btn-apply-seasons')?.addEventListener('click', applySeasonsFromReference);
 document.getElementById('btn-reset-filters').onclick = resetAllFilters;
 document.getElementById('btn-reset-filters-rail').onclick = resetAllFilters; // pied du rail docké
 
@@ -4299,6 +4454,7 @@ function updateFilterBadge() {
   count += (f.temperatures || []).length;
   if (f.vegetarianOnly) count++;
   if (f.pescatarianOnly) count++;
+  if (f.seasonMonth) count++;
   if (f.prepMax !== null && f.prepMax !== undefined) count++;
   if (f.cookMax !== null && f.cookMax !== undefined) count++;
   if (f.includeIngredients && f.includeIngredients.length) count += f.includeIngredients.length;
@@ -5418,6 +5574,68 @@ function moveIngredientType(idx, dir) {
   save();
   renderDataTab();
   if (document.body.classList.contains('cart-open')) renderShopping();
+}
+
+/* ---- Attribution des saisons depuis le calendrier de référence -----------
+   Rapprochement par PRÉFIXE sur des noms normalisés et singularisés : « Tomates
+   cerises » → Tomate, « Pommes de terre » → Pomme de terre (et non Pomme, la
+   référence la plus longue gagne). Écrit dans des données synchronisées, donc
+   déclenché à la main et précédé d'un aperçu. */
+function seasonKey(s) {
+  return normalizeText(s || '')
+    .replace(/[^a-z0-9\s-]/g, ' ')
+    .split(/[\s-]+/).filter(Boolean)
+    // pluriels français en -s ET en -x (choux, poireaux). Sur-couper est sans
+    // risque : la même transformation est appliquée aux deux côtés du test.
+    .map(w => (w.length > 3 && /[sx]$/.test(w)) ? w.slice(0, -1) : w)
+    .join(' ');
+}
+function findSeasonMatch(name) {
+  const k = seasonKey(name);
+  if (!k) return null;
+  if (SEASON_VETO.some(v => k.includes(v))) return null;
+  let best = null, bestLen = 0;
+  for (const ref of Object.keys(SEASON_BY_NAME)) {
+    const rk = seasonKey(ref);
+    if ((k === rk || k.startsWith(rk + ' ')) && rk.length > bestLen) { best = ref; bestLen = rk.length; }
+  }
+  return best;
+}
+// Ce qui serait modifié, sans rien écrire — sert à l'aperçu ET à l'application.
+function planSeasonAssignment() {
+  const plan = [];
+  state.ingredients.forEach(ing => {
+    const ref = findSeasonMatch(ing.name);
+    if (!ref) return;
+    const months = SEASON_BY_NAME[ref];
+    const cur = ing.seasonMonths || [];
+    const same = cur.length === months.length && months.every(m => cur.includes(m));
+    if (!same) plan.push({ ing, ref, months, had: cur.length > 0 });
+  });
+  return plan;
+}
+function applySeasonsFromReference() {
+  const plan = planSeasonAssignment();
+  const matched = state.ingredients.filter(i => findSeasonMatch(i.name)).length;
+  if (!plan.length) {
+    toast(matched ? 'Saisons déjà à jour (' + matched + ' ingrédients reconnus)' : 'Aucun ingrédient reconnu', 'muted');
+    return;
+  }
+  const ecrases = plan.filter(p => p.had).length;
+  const apercu = plan.slice(0, 8).map(p => '• ' + p.ing.name + ' → ' + p.ref).join('\n');
+  showConfirm(
+    'Attribuer les saisons ?',
+    plan.length + ' ingrédient(s) sur ' + state.ingredients.length + ' vont être datés'
+      + (ecrases ? ', dont ' + ecrases + ' dont la saison actuelle sera remplacée' : '') + '.\n\n'
+      + apercu + (plan.length > 8 ? '\n… et ' + (plan.length - 8) + ' autres' : ''),
+    'Attribuer',
+    () => {
+      plan.forEach(p => { p.ing.seasonMonths = [...p.months]; });
+      save();
+      rerenderAll();
+      toast(plan.length + ' ingrédient(s) datés', 'success');
+    }
+  );
 }
 
 function renderDataTab() {

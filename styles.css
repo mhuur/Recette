@@ -1905,6 +1905,12 @@ body.cart-open .cart-drawer { transform: translateX(0); visibility: visible; }
   font-size: 15px; font-weight: 700; line-height: 1;
 }
 .filter-menu-box svg { width: 13px; height: 13px; }
+/* Mois en cours dans le filtre Saison : repère discret, pas une sélection */
+.chip-toggle.chip-now:not(.on) { border-color: var(--green-300, var(--green-500)); color: var(--green-700); }
+/* Actions d'une section de Données (ex. attribuer les saisons) */
+.data-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
+.data-actions-hint { font-size: 11.5px; color: var(--text-muted); }
+.data-actions-hint code { font-family: var(--font-mono); font-size: 11px; }
 /* Basculeur ET/OU des ingrédients requis */
 .filter-menu-mode { display: flex; align-items: center; gap: 6px; padding: 9px 4px 0; }
 .filter-menu-mode-label { font-size: 11px; color: var(--text-muted); }
