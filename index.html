@@ -972,13 +972,20 @@ Object.keys(SEASON_ALIASES).forEach(alias => {
    matchait jamais « saint jacque ». D'où le passage par seasonKey() ci-dessous. */
 const SEASON_VETO = ['coco', 'muscade', 'cajou', 'pecan', 'saint jacques', 'petoncles',
                      'pignons', 'sirop', 'confiture', 'jus de', 'zeste', 'frits', 'frites',
-                     'wasabi', 'sourires', 'chips', 'seches', 'sechees', 'surgeles'];
+                     'wasabi', 'sourires', 'chips', 'surgeles',
+                     // formes séchées : « Raisins secs », « Abricots secs » se gardent des mois
+                     'secs', 'seches', 'sechees', 'deshydrates', 'lyophilises'];
+/* Produits de garde présents dans le calendrier mais achetés toute l'année :
+   les dater exclurait des recettes 10 mois sur 12 pour un fruit à coque de
+   placard. Même raisonnement que l'exclusion des céréales et légumineuses. */
+const SEASON_PANTRY = ['Noix', 'Noisette', 'Pruneau', 'Baie de goji', 'Amande sèche'];
 /* Le type déclaré de l'ingrédient est une donnée plus fiable que son nom : un
    « Poisson » ou une « Charcuterie » ne reçoit pas de saison de fruit/légume.
    Sans type, on laisse passer (le veto et le préfixe font le tri). */
 function seasonTypeAllows(ing) {
   const t = normalizeText(getTypeName(ing.typeId) || '');
   if (!t || t === 'autres' || t === 'autre') return true;
+  if (/\bsecs?\b/.test(t)) return false; // « Fruits secs » contient « fruit » : à écarter
   return t.includes('fruit') || t.includes('legume');
 }
 
@@ -5648,10 +5655,13 @@ function seasonKey(s) {
 function findSeasonMatch(name) {
   const k = seasonKey(name);
   if (!k) return null;
-  // seasonKey sur le veto AUSSI : les deux côtés doivent être singularisés
-  if (SEASON_VETO.some(v => k.includes(seasonKey(v)))) return null;
+  // Veto par MOT ENTIER, des deux côtés singularisés : « secs » → clé « sec »,
+  // qu'une comparaison par sous-chaîne ratait (et qui matchait « sèche » à tort).
+  const mots = ' ' + k + ' ';
+  if (SEASON_VETO.some(v => mots.includes(' ' + seasonKey(v) + ' '))) return null;
   let best = null, bestLen = 0;
   for (const ref of Object.keys(SEASON_BY_NAME)) {
+    if (SEASON_PANTRY.includes(ref)) continue; // produits de garde : jamais datés
     const rk = seasonKey(ref);
     if ((k === rk || k.startsWith(rk + ' ')) && rk.length > bestLen) { best = ref; bestLen = rk.length; }
   }
