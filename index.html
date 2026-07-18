@@ -208,6 +208,8 @@
       <div class="data-actions">
         <button class="btn btn-sm" id="btn-apply-seasons"><span class="tb-ico" data-icon="calendar"></span>Attribuer les saisons</button>
         <button class="btn btn-sm" id="btn-copy-unmatched"><span class="tb-ico" data-icon="copy"></span>Copier les non reconnus</button>
+        <button class="btn btn-sm" id="btn-import-seasons"><span class="tb-ico" data-icon="uploadCloud"></span>Importer des saisons (.json)</button>
+        <input type="file" id="import-seasons-file" accept="application/json,.json" style="display:none;">
         <span class="data-actions-hint">D'après le calendrier Greenpeace (<code>data/saisons.md</code>) — aperçu avant application.</span>
       </div>
       <div id="ingredients-list" class="data-list"></div>
@@ -3045,15 +3047,15 @@ function recipeHasFamilies(r, names) {
   });
 }
 /* De saison = AUCUN ingrédient daté hors saison ce mois-là. Un ingrédient sans
-   `seasonMonths` (épices, farine, viande…) est ignoré — comme pour les régimes,
-   la justesse dépend de ce qui a été daté. Une recette sans aucun ingrédient
-   daté ne passe donc pas le filtre : elle n'a rien de saisonnier à prouver. */
+   `seasonMonths` (épices, farine, pâtes…) est ignoré. Une recette dont rien
+   n'est daté passe donc le filtre — « pâtes au sel » se cuisine toute l'année
+   (choix utilisateur : le filtre écarte l'hors-saison, il n'exige pas du
+   saisonnier). `[].every()` vaut true : c'est ce qui porte ce comportement. */
 function isRecipeInSeason(r, month) {
-  const dated = (r.ingredients || [])
+  return (r.ingredients || [])
     .map(i => state.ingredients.find(x => x.id === i.ingredientId))
-    .filter(ing => ing && (ing.seasonMonths || []).length);
-  if (!dated.length) return false;
-  return dated.every(ing => ing.seasonMonths.includes(month));
+    .filter(ing => ing && (ing.seasonMonths || []).length)
+    .every(ing => ing.seasonMonths.includes(month));
 }
 
 function isVegetarianRecipe(r) {
@@ -4444,6 +4446,15 @@ function resetAllFilters() {
 }
 document.getElementById('btn-apply-seasons')?.addEventListener('click', applySeasonsFromReference);
 document.getElementById('btn-copy-unmatched')?.addEventListener('click', copyUnmatchedIngredients);
+document.getElementById('btn-import-seasons')?.addEventListener('click', () => document.getElementById('import-seasons-file').click());
+document.getElementById('import-seasons-file')?.addEventListener('change', e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => importSeasonsFromJson(ev.target.result);
+  reader.readAsText(file);
+  e.target.value = ''; // rejouer le même fichier reste possible
+});
 document.getElementById('btn-reset-filters').onclick = resetAllFilters;
 document.getElementById('btn-reset-filters-rail').onclick = resetAllFilters; // pied du rail docké
 
@@ -5662,6 +5673,66 @@ function copyUnmatchedIngredients() {
   } else {
     prompt('Copie manuelle (Ctrl+C) :', txt);
   }
+}
+
+/* ---- Import de saisons corrigées ----------------------------------------
+   Aller-retour export → correction → réimport. Volontairement SÉPARÉ de
+   « Importer un JSON » (Réglages), qui remplace tout le carnet : ici on ne
+   touche QUE `seasonMonths`, donc une recette ajoutée entre-temps survit.
+   Deux formats acceptés : une sauvegarde complète (on ne lit que .ingredients)
+   ou une simple table { "Tomates": [5,6,7], … }. */
+function parseMonthList(v) {
+  if (!Array.isArray(v)) return null;
+  const mois = [...new Set(v.map(Number).filter(n => Number.isInteger(n) && n >= 1 && n <= 12))];
+  return mois.sort((a, b) => a - b);
+}
+function importSeasonsFromJson(raw) {
+  let data;
+  try { data = JSON.parse(raw); } catch { toast('Fichier JSON illisible', 'error'); return; }
+  const parId = new Map(), parNom = new Map();
+  if (data && Array.isArray(data.ingredients)) {
+    data.ingredients.forEach(i => {
+      const mois = parseMonthList(i && i.seasonMonths);
+      if (!mois) return;
+      if (i.id) parId.set(i.id, mois);
+      if (i.name) parNom.set(seasonKey(i.name), mois);
+    });
+  } else if (data && typeof data === 'object') {
+    Object.keys(data).forEach(k => {
+      const mois = parseMonthList(data[k]);
+      if (mois) parNom.set(seasonKey(k), mois);
+    });
+  }
+  if (!parId.size && !parNom.size) { toast('Aucune saison exploitable dans ce fichier', 'error'); return; }
+
+  const plan = [];
+  let inconnus = 0;
+  state.ingredients.forEach(ing => {
+    const mois = parId.get(ing.id) || parNom.get(seasonKey(ing.name));
+    if (!mois) { inconnus++; return; }
+    const cur = ing.seasonMonths || [];
+    const identique = cur.length === mois.length && mois.every(m => cur.includes(m));
+    if (!identique) plan.push({ ing, mois });
+  });
+  if (!plan.length) { toast('Saisons déjà conformes au fichier', 'muted'); return; }
+
+  const apercu = plan.slice(0, 8)
+    .map(p => '• ' + p.ing.name + ' → ' + (p.mois.length === 12 ? 'toute l\'année'
+              : p.mois.map(m => MONTHS_FR[m - 1].slice(0, 3)).join(', ') || 'aucun mois'))
+    .join('\n');
+  showConfirm(
+    'Importer ces saisons ?',
+    plan.length + ' ingrédient(s) modifié(s)' + (inconnus ? ', ' + inconnus + ' absent(s) du fichier et laissé(s) tels quels' : '')
+      + '.\nRien d\'autre n\'est touché : recettes, unités et types sont préservés.\n\n'
+      + apercu + (plan.length > 8 ? '\n… et ' + (plan.length - 8) + ' autres' : ''),
+    'Importer',
+    () => {
+      plan.forEach(p => { p.ing.seasonMonths = [...p.mois]; });
+      save();
+      rerenderAll();
+      toast(plan.length + ' saison(s) importée(s)', 'success');
+    }
+  );
 }
 
 function renderDataTab() {
