@@ -1808,25 +1808,71 @@ body.cart-open .cart-drawer { transform: translateX(0); visibility: visible; }
 .facet-empty { font-size: 12px; color: var(--text-dim); padding: 4px 9px; }
 .facet-more { align-self: flex-start; background: none; border: 0; color: var(--green-700); font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; padding: 2px 4px; }
 .facet-more:hover { text-decoration: underline; }
-/* 2a — Type de plat en chips pilule qui s'enroulent (la recherche reste : 23
-   types en vrai, contre 5 dans la maquette). Sélectionné = plein vert. */
-#filter-meal-types .facet-search { display: none; }
-#filter-meal-types .facet-list { flex-direction: row; flex-wrap: wrap; gap: 6px; max-height: 168px; }
-#filter-meal-types .facet-opt {
+/* Type de plat : bouton résumé d'une ligne (hauteur constante → le reste du
+   rail ne bouge jamais) + menu flottant .filter-menu pour le choix. */
+.filter-select {
+  display: flex; align-items: center; gap: 8px; width: 100%; box-sizing: border-box;
   background: rgba(255, 255, 255, .7);
   border: 1px solid var(--mist-200);
   border-radius: 999px;
-  padding: 4px 11px;
-  font-size: 12px; font-weight: 600;
-  color: var(--mist-700);
-  white-space: nowrap;
+  padding: 7px 12px;
+  color: var(--mist-700); font: inherit; font-size: 12.5px; font-weight: 600;
+  cursor: pointer; text-align: left;
+  transition: border-color var(--dur-fast), background var(--dur-fast), color var(--dur-fast);
 }
-#filter-meal-types .facet-opt:hover { border-color: var(--mist-300); background: rgba(255, 255, 255, .9); color: var(--text-strong); }
-#filter-meal-types .facet-chip {
-  background: var(--green-600); color: #fff;
-  padding: 4px 7px 4px 11px;
-  font-size: 12px; font-weight: 600;
+.filter-select:hover { border-color: var(--mist-300); background: rgba(255, 255, 255, .9); color: var(--text-strong); }
+.filter-select.on { background: var(--green-600); border-color: var(--green-600); color: #fff; }
+.filter-select-value { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.filter-select-caret { flex: none; opacity: .7; transform: rotate(90deg); font-size: 14px; line-height: 1; }
+.filter-select[aria-expanded="true"] .filter-select-caret { transform: rotate(-90deg); }
+
+/* Menu flottant : masque ce qu'il recouvre → --menu-fill, jamais --glass-fill. */
+.filter-menu {
+  position: fixed; z-index: 1400; display: none;
+  flex-direction: column; overflow: hidden;
+  background: var(--menu-fill);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  box-shadow: 0 18px 44px rgba(24, 46, 34, .22);
 }
+.filter-menu.active { display: flex; }
+.filter-menu-head { padding: 10px 10px 8px; }
+.filter-menu-search {
+  width: 100%; box-sizing: border-box;
+  background: rgba(255, 255, 255, .8); border: 1px solid var(--border);
+  border-radius: 999px; padding: 7px 12px;
+  color: var(--text); font: inherit; font-size: 13px;
+}
+.filter-menu-search:focus { outline: none; border-color: var(--green-500); }
+.filter-menu-list { flex: 1; min-height: 0; overflow-y: auto; padding: 0 8px 4px; display: flex; flex-direction: column; gap: 1px; }
+.filter-menu-opt {
+  display: flex; align-items: center; gap: 9px; width: 100%; box-sizing: border-box;
+  background: none; border: 0; border-radius: 9px;
+  padding: 7px 9px; cursor: pointer; text-align: left;
+  color: var(--text); font: inherit; font-size: 13px;
+}
+.filter-menu-opt:hover { background: rgba(47, 125, 85, .08); }
+.filter-menu-opt.on { color: var(--green-800); font-weight: 600; }
+.filter-menu-opt.off { color: var(--text-dim); } /* inatteignable avec les autres filtres */
+.filter-menu-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.filter-menu-box {
+  flex: none; width: 18px; height: 18px; border-radius: 6px;
+  border: 1px solid var(--mist-300); background: rgba(255, 255, 255, .7);
+  display: flex; align-items: center; justify-content: center;
+}
+.filter-menu-opt.on .filter-menu-box { background: var(--green-600); border-color: var(--green-600); color: #fff; }
+.filter-menu-box svg { width: 13px; height: 13px; }
+.filter-menu-empty { font-size: 12px; color: var(--text-dim); padding: 8px 9px; }
+.filter-menu-foot {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  padding: 8px 12px; border-top: 1px solid var(--mist-200);
+}
+.filter-menu-foot button { background: none; border: 0; font: inherit; font-size: 12px; cursor: pointer; padding: 4px 8px; border-radius: 999px; }
+.filter-menu-clear { color: var(--text-muted); }
+.filter-menu-clear:hover { color: var(--danger); }
+.filter-menu-done { color: var(--green-700); font-weight: 600; }
+.filter-menu-done:hover { background: rgba(47, 125, 85, .1); }
+
 /* Chaud / froid : chips exclusifs (panneau de filtres ET modale recette) */
 .temp-picker { display: flex; flex-wrap: wrap; gap: 6px; }
 .temp-chip {
