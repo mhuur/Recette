@@ -61,6 +61,14 @@
   --blur-md: 16px;
   --blur-lg: 28px;
 
+  /* Voile opaque derrière les cartes en surimpression (modales, tiroir, détail).
+     Dégradé forêt coloré : la carte translucide laisse voir un fond propre,
+     jamais le texte de l'app dessous. Non touché par les réglages d'Apparence. */
+  --scrim-veil:
+    radial-gradient(90% 70% at 12% -5%, rgba(244, 239, 201, .9) 0%, rgba(244, 239, 201, 0) 45%),
+    radial-gradient(80% 90% at 88% 8%, rgba(143, 208, 168, .5) 0%, rgba(143, 208, 168, 0) 50%),
+    linear-gradient(165deg, #e2efe6 0%, #c6e2d0 45%, #a4cdb2 100%);
+
   /* Texte */
   --text-strong: var(--green-950);
 
@@ -654,9 +662,7 @@ label {
 .detail-scrim {
   display: none;
   position: fixed; inset: 0;
-  background: rgba(20, 48, 32, .20);
-  backdrop-filter: blur(2px);
-  -webkit-backdrop-filter: blur(2px);
+  background: var(--scrim-veil);
   z-index: 140;
 }
 .recipe-detail {
@@ -887,9 +893,7 @@ button.recipe-detail-rating:hover { background: rgba(183, 166, 58, .12); }
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(20, 48, 32, 0.28);
-  backdrop-filter: blur(3px);
-  -webkit-backdrop-filter: blur(3px);
+  background: var(--scrim-veil);
   display: none;
   align-items: flex-start;
   justify-content: center;
@@ -1169,9 +1173,7 @@ button.recipe-detail-rating:hover { background: rgba(183, 166, 58, .12); }
   display: none;
   position: fixed;
   inset: 0;
-  background: rgba(20, 48, 32, .25);
-  backdrop-filter: blur(2px);
-  -webkit-backdrop-filter: blur(2px);
+  background: var(--scrim-veil);
   z-index: 240;
 }
 body.cart-open .cart-scrim { display: block; }
@@ -1781,7 +1783,7 @@ body.cart-open .cart-drawer { transform: translateX(0); visibility: visible; }
 .filter-sheet-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(20, 48, 32, 0.25);
+  background: var(--scrim-veil); /* opaque : pas de texte sous la feuille (desktop = transparent, cf. media) */
   z-index: 280; /* sous les modales (.modal-overlay = 300) */
   display: none;
   align-items: flex-end;
