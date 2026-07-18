@@ -151,12 +151,6 @@
                 <button type="button" class="chip-toggle" data-diet="pescatarian">Pescarien</button>
               </div>
             </div>
-            <!-- Saison : un mois exclusif. Une recette passe si TOUS ses ingrédients
-                 datés sont de saison ce mois-là (les autres sont ignorés). -->
-            <div class="filter-sheet-section">
-              <div class="filter-sheet-label"><span class="sec-ico" data-icon="calendar"></span>Saison</div>
-              <div class="chip-row" id="filter-season"></div>
-            </div>
             <!-- Time -->
             <div class="filter-sheet-section">
               <div class="filter-sheet-label"><span class="sec-ico" data-icon="clock"></span>Temps (min)</div>
@@ -203,15 +197,6 @@
   <section id="tab-data" class="tab">
     <div class="data-section">
       <h3><span class="tb-ico" data-icon="carrot"></span>Ingrédients <span id="ing-count-badge" class="count-badge" style="background:var(--surface);">0</span></h3>
-      <!-- Remplissage des saisons depuis le calendrier de référence : action manuelle
-           (elle écrit dans les données synchronisées) et précédée d'un aperçu. -->
-      <div class="data-actions">
-        <button class="btn btn-sm" id="btn-apply-seasons"><span class="tb-ico" data-icon="calendar"></span>Attribuer les saisons</button>
-        <button class="btn btn-sm" id="btn-copy-unmatched"><span class="tb-ico" data-icon="copy"></span>Copier les non reconnus</button>
-        <button class="btn btn-sm" id="btn-import-seasons"><span class="tb-ico" data-icon="uploadCloud"></span>Importer des saisons (.json)</button>
-        <input type="file" id="import-seasons-file" accept="application/json,.json" style="display:none;">
-        <span class="data-actions-hint">D'après le calendrier Greenpeace (<code>data/saisons.md</code>) — aperçu avant application.</span>
-      </div>
       <div id="ingredients-list" class="data-list"></div>
     </div>
     <div class="data-section">
@@ -838,157 +823,6 @@ const DEFAULT_FAMILIES = ['Végétal', 'Viande', 'Poisson', 'Œufs', 'Produits l
 
 const MONTHS_FR = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
 
-/* Calendrier de saison — source : greenpeace.fr/guetteur/calendrier (France
-   métropolitaine), relevé le 2026-07-18. SOURCE DE VÉRITÉ : `py tools/seasons_doc.py`
-   régénère data/saisons.md à partir de cette table, ne pas éditer le .md à la main.
-   Céréales et légumineuses volontairement exclues : elles se conservent, les dater
-   restreindrait des recettes sans raison. Mois = 1-12, comme `seasonMonths`. */
-const ALL_YEAR = [1,2,3,4,5,6,7,8,9,10,11,12];
-const SEASON_REFERENCE = {
-  legume: {
-    'Ail': ALL_YEAR,
-    'Artichaut': [4,5,6,7,8,9],
-    'Asperge': [3,4,5,6,7],
-    'Aubergine': [5,6,7,8,9,10],
-    'Betterave': ALL_YEAR,
-    'Blette': [3,4,5,6,7,8,9,10],
-    'Brocoli': [6,7,8,9,10,11],
-    'Cardon': [11],
-    'Carotte': ALL_YEAR,
-    'Céleri-branche': [1,7,8,9,10,11,12],
-    'Céleri-rave': [1,2,3,10,11,12],
-    'Chou': [1,3,8,9,10,11,12],
-    'Chou blanc': [1,2,3,8,9,10,11,12],
-    'Chou de Bruxelles': [1,2,3,9,10,11,12],
-    'Chou frisé': [1,2,3,9,10,11,12],
-    'Chou rouge': [1,2,3,8,9,10,11,12],
-    'Chou romanesco': [6,7,8,9],
-    'Chou-fleur': [3,4,5,9,10,11],
-    'Citrouille': [11],
-    'Concombre': [4,5,6,7,8,9,10],
-    'Courge': [1,8,9,10,11,12],
-    'Courgette': [5,6,7,8,9,10],
-    'Crosne': [1,2,3,11,12],
-    'Échalote': [10,11,12],
-    'Endive': [1,2,3,4,10,11,12],
-    'Épinard': ALL_YEAR,
-    'Fenouil': [6,7,8,9,10,11],
-    'Frisée': [1,2,3,4,8,10,11,12],
-    'Haricot vert': [6,7,8,9,10],
-    'Laitue': [4,5,6,7,8,9,10],
-    'Mâche': [1,2,11,12],
-    'Navet': [1,2,3,4,5,10,11,12],
-    'Oignon': ALL_YEAR,
-    'Panais': [1,2,3,9,10,11,12],
-    'Patate douce': [9,10],
-    'Petit pois': [4,5,6,7],
-    'Poireau': [1,2,3,4,9,10,11,12],
-    'Poivron': [6,7,8,9],
-    'Pomme de terre': [1,2,3,4,5,6,7,8,10,11,12], // primeur + conservation
-    'Pomme de terre de conservation': [1,2,3,10,11,12],
-    'Pomme de terre primeur': [4,5,6,7,8],
-    'Potiron': [9,10,11,12],
-    'Radis': [2,3,4,5,6,7,8,9,10,11,12],
-    'Rutabaga': [10,11,12],
-    'Salsifi': [1,2,3,10,11,12],
-    'Topinambour': [1,2,3,11,12]
-  },
-  fruit: {
-    'Abricot': [6,7,8],
-    'Amande fraîche': [7,8],
-    'Amande sèche': ALL_YEAR,
-    'Baie de goji': [8,9,10],
-    'Brugnon': [6,7,8],
-    'Cassis': [6,7,8],
-    'Cerise': [5,6,7],
-    'Châtaigne': [10,11,12],
-    'Citron': [1,2,3,6,10,11,12],
-    'Clémentine': [1,2,11,12],
-    'Coing': [9,10,11],
-    'Figue': [7,8,9,10],
-    'Fraise': [5,6,7,8],
-    'Framboise': [6,7,8,10],
-    'Groseille': [6,7,8],
-    'Kaki': [1,11,12],
-    'Kiwi': [1,2,3,11,12],
-    'Mandarine': [1,2,11,12],
-    'Melon': [6,7,8,9],
-    'Mirabelle': [8,9],
-    'Mûre': [8,9],
-    'Myrtille': [7,8,9,10],
-    'Nectarine': [7,8],
-    'Noisette': [8,9,10],
-    'Noix': [9,10],
-    'Orange': [1,2,3,11,12],
-    'Pamplemousse': [1,2,3,4,5,6],
-    'Pastèque': [6,7,8,9],
-    'Pêche': [6,7,8,9],
-    'Physalis': [1,2,10,11,12],
-    'Poire': [1,2,3,4,7,8,9,10,11,12],
-    'Pomme': [1,2,3,4,6,7,8,9,10,11,12],
-    'Prune': [6,7,8,9],
-    'Pruneau': [8,9],
-    'Raisin': [8,9,10],
-    'Rhubarbe': [5,6,7],
-    'Tomate': [5,6,7,8,9,10]
-  },
-  /* Compléments hors Greenpeace : produits réellement saisonniers présents dans
-     le carnet mais absents du calendrier source. Volontairement PAS de
-     champignons de Paris, d'herbes ni d'exotiques (avocat, ananas, mangue,
-     gingembre) : disponibles toute l'année, les dater exclurait des recettes à
-     tort — et le filtre ignorant ce qui n'est pas daté, ne rien mettre est juste. */
-  complement: {
-    'Cèpe': [9,10,11],
-    'Champignon sauvage': [9,10,11],
-    'Cresson': [3,4,5,10,11],
-    'Fève': [4,5,6,7],
-    'Grenade': [10,11,12],
-    'Maïs': [7,8,9,10],
-    'Morille': [3,4,5],
-    'Pois gourmand': [4,5,6,7],
-    'Pourpier': [6,7,8,9],
-    'Roquette': [4,5,6,7,8,9,10]
-  }
-};
-/* Synonymes du carnet → produit du calendrier. Le rapprochement par préfixe ne
-   peut pas deviner que « Butternut » est une courge ou « Sucrine » une laitue. */
-const SEASON_ALIASES = {
-  'Salade': 'Laitue', 'Mesclun': 'Laitue', 'Sucrine': 'Laitue',
-  'Butternut': 'Courge', 'Potimarron': 'Courge',
-  'Céleri': 'Céleri-branche', 'Céleri boule': 'Céleri-rave',
-  'Pousses d\'épinards': 'Épinard', 'Feuilles d\'épinards': 'Épinard',
-  'Cébette': 'Oignon', 'Ciboule': 'Oignon'
-};
-// Table plate { nom → mois }, l'ordre n'a pas d'importance (le matching trie par longueur)
-const SEASON_BY_NAME = Object.assign({}, SEASON_REFERENCE.legume, SEASON_REFERENCE.fruit, SEASON_REFERENCE.complement);
-Object.keys(SEASON_ALIASES).forEach(alias => {
-  const cible = SEASON_BY_NAME[SEASON_ALIASES[alias]];
-  if (cible) SEASON_BY_NAME[alias] = cible;
-});
-/* Pièges du rapprochement par préfixe : « Noix de coco » n'est pas la noix de
-   septembre, « Pommes sourires » sont des frites. Ces mots annulent la
-   correspondance plutôt que de dater à tort un ingrédient.
-   ⚠ Ils sont comparés à une clé SINGULARISÉE : écrire « saint jacques » ici ne
-   matchait jamais « saint jacque ». D'où le passage par seasonKey() ci-dessous. */
-const SEASON_VETO = ['coco', 'muscade', 'cajou', 'pecan', 'saint jacques', 'petoncles',
-                     'pignons', 'sirop', 'confiture', 'jus de', 'zeste', 'frits', 'frites',
-                     'wasabi', 'sourires', 'chips', 'surgeles',
-                     // formes séchées : « Raisins secs », « Abricots secs » se gardent des mois
-                     'secs', 'seches', 'sechees', 'deshydrates', 'lyophilises'];
-/* Produits de garde présents dans le calendrier mais achetés toute l'année :
-   les dater exclurait des recettes 10 mois sur 12 pour un fruit à coque de
-   placard. Même raisonnement que l'exclusion des céréales et légumineuses. */
-const SEASON_PANTRY = ['Noix', 'Noisette', 'Pruneau', 'Baie de goji', 'Amande sèche'];
-/* Le type déclaré de l'ingrédient est une donnée plus fiable que son nom : un
-   « Poisson » ou une « Charcuterie » ne reçoit pas de saison de fruit/légume.
-   Sans type, on laisse passer (le veto et le préfixe font le tri). */
-function seasonTypeAllows(ing) {
-  const t = normalizeText(getTypeName(ing.typeId) || '');
-  if (!t || t === 'autres' || t === 'autre') return true;
-  if (/\bsecs?\b/.test(t)) return false; // « Fruits secs » contient « fruit » : à écarter
-  return t.includes('fruit') || t.includes('legume');
-}
-
 const DEFAULT_MEAL_TYPES = [
   'Aucun', 'Entrée', 'Plat principal', 'Dessert', 'Accompagnement', 'Apéritif',
   'Petit-déjeuner', 'Goûter', 'Sauce', 'Boisson', 'Salade', 'Soupe',
@@ -1032,7 +866,6 @@ let state = {
     includeIngredients: [],
     excludeIngredients: [],
     ingredientsMode: 'any', // 'any' = au moins un des requis · 'all' = tous
-    seasonMonth: null,      // 1-12 : n'affiche que les recettes de saison ce mois-là
     includeFamilies: [],
     excludeFamilies: [],
     selectedOnly: false
@@ -1666,7 +1499,7 @@ function load() {
       if (!state.mealTypes.some(m => normalizeText(m) === 'aucun')) {
         state.mealTypes.unshift('Aucun');
       }
-      if (!state.filters) state.filters = { search: '', sort: 'name-asc', ratingSel: [], prepMax: null, cookMax: null, mealTypes: [], temperatures: [], vegetarianOnly: false, pescatarianOnly: false, includeIngredients: [], excludeIngredients: [], ingredientsMode: 'any', seasonMonth: null, includeFamilies: [], excludeFamilies: [], selectedOnly: false };
+      if (!state.filters) state.filters = { search: '', sort: 'name-asc', ratingSel: [], prepMax: null, cookMax: null, mealTypes: [], temperatures: [], vegetarianOnly: false, pescatarianOnly: false, includeIngredients: [], excludeIngredients: [], ingredientsMode: 'any', includeFamilies: [], excludeFamilies: [], selectedOnly: false };
       // Migration : ajouter nouveaux champs filtres s'ils manquent
       // Filtre Familles retiré de l'UI : on purge d'anciens filtres persistés,
       // sinon ils resteraient actifs sans moyen de les enlever.
@@ -3059,9 +2892,6 @@ function recipeMatches(r, f, skip) {
   if ((f.temperatures || []).length && !f.temperatures.includes(r.temperature || null)) return false;
   if (f.vegetarianOnly && !isVegetarianRecipe(r)) return false;
   if (f.pescatarianOnly && !isPescatarianRecipe(r)) return false;
-  if (!skip.season && f.seasonMonth) {
-    if (!isRecipeInSeason(r, f.seasonMonth)) return false;
-  }
   if (!skip.selected && f.selectedOnly && !state.selectedRecipeIds.includes(r.id)) return false;
   return true;
 }
@@ -3095,18 +2925,6 @@ function recipeHasFamilies(r, names) {
     return ing && (ing.familyIds || []).some(fid => ids.includes(fid));
   });
 }
-/* De saison = AUCUN ingrédient daté hors saison ce mois-là. Un ingrédient sans
-   `seasonMonths` (épices, farine, pâtes…) est ignoré. Une recette dont rien
-   n'est daté passe donc le filtre — « pâtes au sel » se cuisine toute l'année
-   (choix utilisateur : le filtre écarte l'hors-saison, il n'exige pas du
-   saisonnier). `[].every()` vaut true : c'est ce qui porte ce comportement. */
-function isRecipeInSeason(r, month) {
-  return (r.ingredients || [])
-    .map(i => state.ingredients.find(x => x.id === i.ingredientId))
-    .filter(ing => ing && (ing.seasonMonths || []).length)
-    .every(ing => ing.seasonMonths.includes(month));
-}
-
 function isVegetarianRecipe(r) {
   return !recipeHasFamilies(r, MEAT_FAMILIES) && !recipeHasFamilies(r, FISH_FAMILIES);
 }
@@ -4180,30 +3998,6 @@ function buildFilterBar() {
     };
   });
 
-  // Filtre Saison : 12 mois, exclusif (recliquer = tous). Le mois courant est repéré.
-  const seasonWrap = document.getElementById('filter-season');
-  if (seasonWrap) {
-    seasonWrap.innerHTML = '';
-    const moisCourant = new Date().getMonth() + 1;
-    MONTHS_FR.forEach((name, idx) => {
-      const m = idx + 1;
-      const b = document.createElement('button');
-      b.type = 'button';
-      b.className = 'chip-toggle chip-sm' + (state.filters.seasonMonth === m ? ' on' : '')
-                  + (m === moisCourant ? ' chip-now' : '');
-      b.textContent = name.slice(0, 3);
-      b.title = name + (m === moisCourant ? ' (mois en cours)' : '');
-      b.setAttribute('aria-pressed', String(state.filters.seasonMonth === m));
-      b.onclick = () => {
-        state.filters.seasonMonth = state.filters.seasonMonth === m ? null : m;
-        saveLocal();
-        buildFilterBar();
-        renderRecipes();
-      };
-      seasonWrap.appendChild(b);
-    });
-  }
-
   // Filtre Temps : presets pour préparation et cuisson
   renderTimePresets('filter-prep-presets', 'prepMax');
   renderTimePresets('filter-cook-presets', 'cookMax');
@@ -4484,7 +4278,7 @@ document.addEventListener('keydown', e => {
 });
 
 function resetAllFilters() {
-  state.filters = { search: '', sort: 'name-asc', ratingSel: [], prepMax: null, cookMax: null, mealTypes: [], temperatures: [], vegetarianOnly: false, pescatarianOnly: false, includeIngredients: [], excludeIngredients: [], ingredientsMode: 'any', seasonMonth: null, includeFamilies: [], excludeFamilies: [], selectedOnly: false };
+  state.filters = { search: '', sort: 'name-asc', ratingSel: [], prepMax: null, cookMax: null, mealTypes: [], temperatures: [], vegetarianOnly: false, pescatarianOnly: false, includeIngredients: [], excludeIngredients: [], ingredientsMode: 'any', includeFamilies: [], excludeFamilies: [], selectedOnly: false };
   document.getElementById('search-input').value = '';
   setSortValue('name-asc');
   const sb = document.getElementById('btn-toggle-selection-only');
@@ -4493,17 +4287,6 @@ function resetAllFilters() {
   buildFilterBar();
   renderRecipes();
 }
-document.getElementById('btn-apply-seasons')?.addEventListener('click', applySeasonsFromReference);
-document.getElementById('btn-copy-unmatched')?.addEventListener('click', copyUnmatchedIngredients);
-document.getElementById('btn-import-seasons')?.addEventListener('click', () => document.getElementById('import-seasons-file').click());
-document.getElementById('import-seasons-file')?.addEventListener('change', e => {
-  const file = e.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = ev => importSeasonsFromJson(ev.target.result);
-  reader.readAsText(file);
-  e.target.value = ''; // rejouer le même fichier reste possible
-});
 document.getElementById('btn-reset-filters').onclick = resetAllFilters;
 document.getElementById('btn-reset-filters-rail').onclick = resetAllFilters; // pied du rail docké
 
@@ -4516,7 +4299,6 @@ function updateFilterBadge() {
   count += (f.temperatures || []).length;
   if (f.vegetarianOnly) count++;
   if (f.pescatarianOnly) count++;
-  if (f.seasonMonth) count++;
   if (f.prepMax !== null && f.prepMax !== undefined) count++;
   if (f.cookMax !== null && f.cookMax !== undefined) count++;
   if (f.includeIngredients && f.includeIngredients.length) count += f.includeIngredients.length;
@@ -5636,157 +5418,6 @@ function moveIngredientType(idx, dir) {
   save();
   renderDataTab();
   if (document.body.classList.contains('cart-open')) renderShopping();
-}
-
-/* ---- Attribution des saisons depuis le calendrier de référence -----------
-   Rapprochement par PRÉFIXE sur des noms normalisés et singularisés : « Tomates
-   cerises » → Tomate, « Pommes de terre » → Pomme de terre (et non Pomme, la
-   référence la plus longue gagne). Écrit dans des données synchronisées, donc
-   déclenché à la main et précédé d'un aperçu. */
-function seasonKey(s) {
-  return normalizeText(s || '')
-    .replace(/[^a-z0-9\s-]/g, ' ')
-    .split(/[\s-]+/).filter(Boolean)
-    // pluriels français en -s ET en -x (choux, poireaux). Sur-couper est sans
-    // risque : la même transformation est appliquée aux deux côtés du test.
-    .map(w => (w.length > 3 && /[sx]$/.test(w)) ? w.slice(0, -1) : w)
-    .join(' ');
-}
-function findSeasonMatch(name) {
-  const k = seasonKey(name);
-  if (!k) return null;
-  // Veto par MOT ENTIER, des deux côtés singularisés : « secs » → clé « sec »,
-  // qu'une comparaison par sous-chaîne ratait (et qui matchait « sèche » à tort).
-  const mots = ' ' + k + ' ';
-  if (SEASON_VETO.some(v => mots.includes(' ' + seasonKey(v) + ' '))) return null;
-  let best = null, bestLen = 0;
-  for (const ref of Object.keys(SEASON_BY_NAME)) {
-    if (SEASON_PANTRY.includes(ref)) continue; // produits de garde : jamais datés
-    const rk = seasonKey(ref);
-    if ((k === rk || k.startsWith(rk + ' ')) && rk.length > bestLen) { best = ref; bestLen = rk.length; }
-  }
-  return best;
-}
-// Ce qui serait modifié, sans rien écrire — sert à l'aperçu ET à l'application.
-function planSeasonAssignment() {
-  const plan = [];
-  state.ingredients.forEach(ing => {
-    if (!seasonTypeAllows(ing)) return; // « Noix de Saint-Jacques » est un poisson
-    const ref = findSeasonMatch(ing.name);
-    if (!ref) return;
-    const months = SEASON_BY_NAME[ref];
-    const cur = ing.seasonMonths || [];
-    const same = cur.length === months.length && months.every(m => cur.includes(m));
-    if (!same) plan.push({ ing, ref, months, had: cur.length > 0 });
-  });
-  return plan;
-}
-function applySeasonsFromReference() {
-  const plan = planSeasonAssignment();
-  const matched = state.ingredients.filter(i => findSeasonMatch(i.name)).length;
-  if (!plan.length) {
-    toast(matched ? 'Saisons déjà à jour (' + matched + ' ingrédients reconnus)' : 'Aucun ingrédient reconnu', 'muted');
-    return;
-  }
-  const ecrases = plan.filter(p => p.had).length;
-  const apercu = plan.slice(0, 8).map(p => '• ' + p.ing.name + ' → ' + p.ref).join('\n');
-  showConfirm(
-    'Attribuer les saisons ?',
-    plan.length + ' ingrédient(s) sur ' + state.ingredients.length + ' vont être datés'
-      + (ecrases ? ', dont ' + ecrases + ' dont la saison actuelle sera remplacée' : '') + '.\n\n'
-      + apercu + (plan.length > 8 ? '\n… et ' + (plan.length - 8) + ' autres' : ''),
-    'Attribuer',
-    () => {
-      plan.forEach(p => { p.ing.seasonMonths = [...p.months]; });
-      save();
-      rerenderAll();
-      toast(plan.length + ' ingrédient(s) datés', 'success');
-    }
-  );
-}
-
-/* Liste des ingrédients que le calendrier ne reconnaît pas, dans le presse-papier.
-   Sert à étendre SEASON_REFERENCE sans avoir à sortir tout le carnet du poste :
-   seuls des noms d'ingrédients quittent l'app, pas les recettes. */
-function copyUnmatchedIngredients() {
-  const inconnus = state.ingredients
-    .filter(i => !findSeasonMatch(i.name))
-    .map(i => i.name)
-    .sort((a, b) => a.localeCompare(b, 'fr'));
-  const reconnus = state.ingredients.length - inconnus.length;
-  if (!inconnus.length) {
-    toast('Tous les ingrédients sont reconnus (' + reconnus + ')', 'success');
-    return;
-  }
-  const txt = '# Ingrédients non reconnus par le calendrier de saison\n'
-            + '# ' + reconnus + ' reconnus sur ' + state.ingredients.length + '\n'
-            + inconnus.join('\n');
-  const ok = () => toast(inconnus.length + ' nom(s) copié(s)', 'success');
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(txt).then(ok).catch(() => prompt('Copie manuelle (Ctrl+C) :', txt));
-  } else {
-    prompt('Copie manuelle (Ctrl+C) :', txt);
-  }
-}
-
-/* ---- Import de saisons corrigées ----------------------------------------
-   Aller-retour export → correction → réimport. Volontairement SÉPARÉ de
-   « Importer un JSON » (Réglages), qui remplace tout le carnet : ici on ne
-   touche QUE `seasonMonths`, donc une recette ajoutée entre-temps survit.
-   Deux formats acceptés : une sauvegarde complète (on ne lit que .ingredients)
-   ou une simple table { "Tomates": [5,6,7], … }. */
-function parseMonthList(v) {
-  if (!Array.isArray(v)) return null;
-  const mois = [...new Set(v.map(Number).filter(n => Number.isInteger(n) && n >= 1 && n <= 12))];
-  return mois.sort((a, b) => a - b);
-}
-function importSeasonsFromJson(raw) {
-  let data;
-  try { data = JSON.parse(raw); } catch { toast('Fichier JSON illisible', 'error'); return; }
-  const parId = new Map(), parNom = new Map();
-  if (data && Array.isArray(data.ingredients)) {
-    data.ingredients.forEach(i => {
-      const mois = parseMonthList(i && i.seasonMonths);
-      if (!mois) return;
-      if (i.id) parId.set(i.id, mois);
-      if (i.name) parNom.set(seasonKey(i.name), mois);
-    });
-  } else if (data && typeof data === 'object') {
-    Object.keys(data).forEach(k => {
-      const mois = parseMonthList(data[k]);
-      if (mois) parNom.set(seasonKey(k), mois);
-    });
-  }
-  if (!parId.size && !parNom.size) { toast('Aucune saison exploitable dans ce fichier', 'error'); return; }
-
-  const plan = [];
-  let inconnus = 0;
-  state.ingredients.forEach(ing => {
-    const mois = parId.get(ing.id) || parNom.get(seasonKey(ing.name));
-    if (!mois) { inconnus++; return; }
-    const cur = ing.seasonMonths || [];
-    const identique = cur.length === mois.length && mois.every(m => cur.includes(m));
-    if (!identique) plan.push({ ing, mois });
-  });
-  if (!plan.length) { toast('Saisons déjà conformes au fichier', 'muted'); return; }
-
-  const apercu = plan.slice(0, 8)
-    .map(p => '• ' + p.ing.name + ' → ' + (p.mois.length === 12 ? 'toute l\'année'
-              : p.mois.map(m => MONTHS_FR[m - 1].slice(0, 3)).join(', ') || 'aucun mois'))
-    .join('\n');
-  showConfirm(
-    'Importer ces saisons ?',
-    plan.length + ' ingrédient(s) modifié(s)' + (inconnus ? ', ' + inconnus + ' absent(s) du fichier et laissé(s) tels quels' : '')
-      + '.\nRien d\'autre n\'est touché : recettes, unités et types sont préservés.\n\n'
-      + apercu + (plan.length > 8 ? '\n… et ' + (plan.length - 8) + ' autres' : ''),
-    'Importer',
-    () => {
-      plan.forEach(p => { p.ing.seasonMonths = [...p.mois]; });
-      save();
-      rerenderAll();
-      toast(plan.length + ' saison(s) importée(s)', 'success');
-    }
-  );
 }
 
 function renderDataTab() {

@@ -2,7 +2,9 @@
 
 Source : <https://www.greenpeace.fr/guetteur/calendrier/> (France métropolitaine), relevé le 2026-07-18.
 
-**Fichier généré — ne pas éditer à la main.** La source de vérité est la table `SEASON_REFERENCE` dans `index.html` ; ce document est reconstruit par `py tools/seasons_doc.py`.
+**Document autonome, conservé pour plus tard.** Le mode saison a été retiré de l'app le 2026-07-18 (trop de cas particuliers à traiter : conserves, fruits secs, produits de garde). Ce fichier garde le travail de collecte. La table `SEASON_REFERENCE`, les règles de rapprochement (veto par mot entier, garde-fou par type d'ingrédient, alias, produits de garde) et le générateur `tools/seasons_doc.py` sont récupérables dans l'historique git, au commit `1af9fd0`.
+
+Les ingrédients conservent leur champ `seasonMonths`, éditable dans leur modale : les saisons déjà saisies ne sont pas perdues.
 
 Céréales et légumineuses (blé, riz, lentille, quinoa…) figurent sur le site mais sont volontairement exclues : elles se conservent toute l'année, les dater restreindrait des recettes sans raison.
 
