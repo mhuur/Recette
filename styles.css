@@ -1392,15 +1392,16 @@ body.cart-open .cart-drawer { transform: translateX(0); visibility: visible; }
 .cart-side { display: flex; flex-direction: column; gap: 14px; }
 .cart-main { min-width: 0; }
 
-/* Desktop : le panneau occupe tout le cadre. Ouvert, il masque déjà le reste de
-   l'UI (body.cart-open) — rester à 440px laissait les deux tiers gauche vides.
-   Outils à gauche (collants), rayons en colonnes au centre. */
+/* Desktop : panneau centré, large mais pas plein cadre. Ouvert, il masque déjà
+   le reste de l'UI (body.cart-open) — 440px laissaient l'écran quasi vide, la
+   pleine largeur était l'excès inverse. Outils à gauche, liste sur UNE colonne. */
 @media (min-width: 1100px) {
   .cart-drawer {
-    /* mêmes marges que .app-layout (20px, centré, max 1800) pour rester dans le cadre */
+    /* borné par les marges du cadre (.app-layout : 20px, centré, max 1800) */
     --frame-x: max(20px, calc((100vw - 1800px) / 2));
     top: 20px; bottom: 20px; left: var(--frame-x); right: var(--frame-x);
-    width: auto;
+    width: min(940px, calc(100vw - 2 * var(--frame-x)));
+    margin-inline: auto; /* left+right+width sur-contraints → marges auto = centrage */
     border: 1px solid var(--glass-border);
     border-radius: 24px;
     /* plus un tiroir qui glisse du bord : une carte qui apparaît */
@@ -1411,18 +1412,12 @@ body.cart-open .cart-drawer { transform: translateX(0); visibility: visible; }
   body.cart-open .cart-drawer { transform: translateY(0); opacity: 1; }
   .cart-drawer-body {
     display: grid;
-    grid-template-columns: 340px minmax(0, 1fr);
+    grid-template-columns: 320px minmax(0, 1fr);
     gap: 18px;
     align-items: start;
     padding: 18px 22px 22px;
   }
   .cart-side { position: sticky; top: 0; }
-  #shopping-container { columns: 2; column-gap: 16px; }
-  /* un rayon ne doit jamais être coupé en deux colonnes */
-  .shopping-group, .checked-toggle { break-inside: avoid; }
-}
-@media (min-width: 1600px) {
-  #shopping-container { columns: 3; }
 }
 
 /* Carte « recettes sélectionnées » dans le tiroir */
