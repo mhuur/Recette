@@ -932,10 +932,22 @@ button.recipe-detail-rating:hover { background: rgba(183, 166, 58, .12); }
 .recipe-section-title svg { width: 13px; height: 13px; flex-shrink: 0; }
 /* Encadré : grille 2 colonnes, quantité (auto, alignée sur la plus large) +
    nom, séparateurs pointillés par ligne. */
-/* 2a : liste simple « quantité en gras + nom », sans encadré ni séparateurs */
-.ingredients-list { list-style: none; margin: 0; padding: 0; }
-.ingredients-list li { padding: 3px 0; font-size: 13px; line-height: 1.35; }
-.ing-qty { color: var(--green-700); font-weight: 700; white-space: nowrap; margin-right: 4px; }
+/* 2a : « quantité en gras + nom », sans encadré ni séparateurs. Grille à 2
+   colonnes (et non un simple flux) pour que les noms restent alignés entre eux
+   même quand l'ingrédient n'a pas de quantité — la cellule reste alors vide. */
+.ingredients-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  column-gap: 8px;
+  align-items: baseline;
+}
+.ingredients-list li { display: contents; }
+.ingredients-list .ing-qty,
+.ingredients-list .ing-name { padding: 3px 0; font-size: 13px; line-height: 1.35; }
+.ing-qty { color: var(--green-700); font-weight: 700; white-space: nowrap; }
 .ing-name { color: var(--mist-800); }
 .recipe-steps {
   margin: 0; padding: 0; list-style: none;
