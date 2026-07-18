@@ -211,10 +211,12 @@ h1, h2 {
   gap: 14px;
   padding: 11px 16px;
   margin-bottom: 16px;
-  background: rgba(255, 255, 255, .74);
-  -webkit-backdrop-filter: blur(16px);
-  backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, .65);
+  /* Surfaces pilotées par Réglages > Apparence (opacité, style, flou) :
+     ne PAS remettre de rgba() en dur, sinon les réglages n'ont plus d'effet. */
+  background: var(--glass-fill);
+  -webkit-backdrop-filter: blur(var(--blur-md));
+  backdrop-filter: blur(var(--blur-md));
+  border: 1px solid var(--glass-border);
   border-radius: 18px;
   box-shadow: 0 8px 24px rgba(20, 48, 32, .12);
 }
@@ -321,7 +323,7 @@ body:has(#tab-recipes.active) .topbar-back { display: none; }
   gap: 8px;
   /* la barre n'a plus de fond : la pastille porte son propre verre pour rester
      lisible au-dessus des lignes de recettes qui défilent dessous */
-  background: rgba(255, 255, 255, .62);
+  background: var(--glass-fill);
   -webkit-backdrop-filter: blur(var(--blur-md));
   backdrop-filter: blur(var(--blur-md));
   border: 1px solid var(--glass-border);
@@ -359,7 +361,7 @@ body:has(#tab-recipes.active) .topbar-back { display: none; }
 .sidebar-user-trigger {
   width: 42px; height: 42px;
   padding: 0;
-  background: rgba(255, 255, 255, .62);
+  background: var(--glass-fill);
   -webkit-backdrop-filter: blur(var(--blur-md));
   backdrop-filter: blur(var(--blur-md));
   border: 1px solid var(--glass-border-soft);
@@ -480,7 +482,7 @@ body:has(#tab-recipes.active) .topbar-back { display: none; }
   width: calc(100% - 40px);
   max-width: 1800px;
   border-radius: 24px;
-  border: 1px solid rgba(255, 255, 255, .5);
+  border: 1px solid var(--glass-border-soft);
   box-shadow: 0 18px 48px rgba(20, 48, 32, .14);
   position: relative;
   isolation: isolate;
@@ -665,10 +667,10 @@ label {
 
 /* Liste dense (2a) : grille de colonnes alignées, en-tête en eyebrow mono */
 .recipe-list {
-  background: rgba(255, 255, 255, .78);
-  -webkit-backdrop-filter: blur(16px);
-  backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, .65);
+  background: var(--glass-fill-strong);
+  -webkit-backdrop-filter: blur(var(--blur-md));
+  backdrop-filter: blur(var(--blur-md));
+  border: 1px solid var(--glass-border);
   border-radius: 18px;
   box-shadow: 0 12px 40px rgba(20, 48, 32, .16), inset 0 1px 0 rgba(255, 255, 255, .55);
   overflow: hidden;
@@ -790,10 +792,10 @@ label {
   max-height: calc(100vh - 120px);
   overflow-y: auto;
   /* Surface 2a : la plus opaque des trois (profondeur maximale) */
-  background: rgba(255, 255, 255, .82);
-  -webkit-backdrop-filter: blur(20px);
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, .7);
+  background: var(--glass-fill-strong);
+  -webkit-backdrop-filter: blur(var(--blur-lg));
+  backdrop-filter: blur(var(--blur-lg));
+  border: 1px solid var(--glass-border);
   border-radius: 20px;
   box-shadow: 0 12px 40px rgba(20, 48, 32, .18), inset 0 1px 0 rgba(255, 255, 255, .55);
   padding: 22px;
@@ -2125,10 +2127,10 @@ body.filter-rail-on .time-presets-group { gap: 12px; }
     max-height: calc(100dvh - 120px);
     animation: none;
     /* Surface 2a : verre clair, radius 20, padding 18 */
-    background: rgba(255, 255, 255, .76);
-    -webkit-backdrop-filter: blur(16px);
-    backdrop-filter: blur(16px);
-    border: 1px solid rgba(255, 255, 255, .65);
+    background: var(--glass-fill);
+    -webkit-backdrop-filter: blur(var(--blur-md));
+    backdrop-filter: blur(var(--blur-md));
+    border: 1px solid var(--glass-border);
     border-radius: 20px;
     box-shadow: 0 12px 40px rgba(20, 48, 32, .14);
     padding: 18px;
