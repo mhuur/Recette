@@ -809,6 +809,7 @@ let state = {
     sort: 'name-asc',
     ratingMin: null,
     includeUnrated: false,
+    unratedOnly: false,
     prepMax: null,
     cookMax: null,
     mealTypes: [],
@@ -1450,7 +1451,7 @@ function load() {
       if (!state.mealTypes.some(m => normalizeText(m) === 'aucun')) {
         state.mealTypes.unshift('Aucun');
       }
-      if (!state.filters) state.filters = { search: '', sort: 'name-asc', ratingMin: null, includeUnrated: false, prepMax: null, cookMax: null, mealTypes: [], temperature: null, vegetarianOnly: false, pescatarianOnly: false, includeIngredients: [], excludeIngredients: [], includeFamilies: [], excludeFamilies: [], selectedOnly: false };
+      if (!state.filters) state.filters = { search: '', sort: 'name-asc', ratingMin: null, includeUnrated: false, prepMax: null, cookMax: null, mealTypes: [], temperature: null, vegetarianOnly: false, pescatarianOnly: false, unratedOnly: false, includeIngredients: [], excludeIngredients: [], includeFamilies: [], excludeFamilies: [], selectedOnly: false };
       // Migration : ajouter nouveaux champs filtres s'ils manquent
       // Filtre Familles retiré de l'UI : on purge d'anciens filtres persistés,
       // sinon ils resteraient actifs sans moyen de les enlever.
@@ -2787,11 +2788,15 @@ function recipeMatches(r, f, skip) {
       if (!inName && !inIng && !inMeal) return false;
     }
   }
-  if (!skip.rating && f.ratingMin != null) {
+  if (!skip.rating) {
     const rating = r.rating;
     const isUnrated = rating == null || rating === '';
-    if (isUnrated) { if (!f.includeUnrated) return false; }
-    else if (Number(rating) < f.ratingMin) return false;
+    if (f.unratedOnly) {
+      if (!isUnrated) return false;           // « Non notées » : exclusif du seuil
+    } else if (f.ratingMin != null) {
+      if (isUnrated) { if (!f.includeUnrated) return false; }
+      else if (Number(rating) < f.ratingMin) return false;
+    }
   }
   if (!skip.prep && f.prepMax != null && f.prepMax !== '' && !isNaN(f.prepMax)) {
     // Durée inconnue → ne qualifie pas pour « ≤ X min » (sinon les recettes sans temps passent tout)
@@ -3845,6 +3850,21 @@ function buildFilterBar() {
   // 2a : seuils « 6+ 7+ 8+ 9+ » (boutons carrés-arrondis) au lieu du rail d'étoiles
   const seuilRow = document.createElement('div');
   seuilRow.className = 'rating-steps';
+  // « Non notées » : exclusif des seuils (les deux ensemble ne renverraient rien)
+  const unratedBtn = document.createElement('button');
+  unratedBtn.type = 'button';
+  unratedBtn.className = 'rating-step rating-step-wide' + (state.filters.unratedOnly ? ' on' : '');
+  unratedBtn.textContent = 'Non notées';
+  unratedBtn.title = 'Afficher uniquement les recettes sans note';
+  unratedBtn.setAttribute('aria-pressed', String(!!state.filters.unratedOnly));
+  unratedBtn.onclick = () => {
+    state.filters.unratedOnly = !state.filters.unratedOnly;
+    if (state.filters.unratedOnly) { state.filters.ratingMin = null; state.filters.includeUnrated = false; }
+    saveLocal();
+    buildFilterBar();
+    renderRecipes();
+  };
+  seuilRow.appendChild(unratedBtn);
   [6, 7, 8, 9].forEach(val => {
     const b = document.createElement('button');
     b.type = 'button';
@@ -3855,6 +3875,7 @@ function buildFilterBar() {
     b.onclick = () => {
       state.filters.ratingMin = (state.filters.ratingMin === val) ? null : val;
       if (state.filters.ratingMin == null) state.filters.includeUnrated = false;
+      state.filters.unratedOnly = false; // exclusif de « Non notées »
       saveLocal();
       buildFilterBar();
       renderRecipes();
@@ -3868,7 +3889,7 @@ function buildFilterBar() {
   const cb = document.createElement('input');
   cb.type = 'checkbox';
   cb.checked = !!state.filters.includeUnrated;
-  cb.disabled = min == null;
+  cb.disabled = min == null || !!state.filters.unratedOnly;
   cb.onchange = () => { state.filters.includeUnrated = cb.checked; saveLocal(); renderRecipes(); };
   unratedLbl.appendChild(cb);
   unratedLbl.appendChild(document.createTextNode(' Inclure les non notées'));
@@ -4082,7 +4103,7 @@ document.addEventListener('keydown', e => {
 });
 
 function resetAllFilters() {
-  state.filters = { search: '', sort: 'name-asc', ratingMin: null, includeUnrated: false, prepMax: null, cookMax: null, mealTypes: [], temperature: null, vegetarianOnly: false, pescatarianOnly: false, includeIngredients: [], excludeIngredients: [], includeFamilies: [], excludeFamilies: [], selectedOnly: false };
+  state.filters = { search: '', sort: 'name-asc', ratingMin: null, includeUnrated: false, prepMax: null, cookMax: null, mealTypes: [], temperature: null, vegetarianOnly: false, pescatarianOnly: false, unratedOnly: false, includeIngredients: [], excludeIngredients: [], includeFamilies: [], excludeFamilies: [], selectedOnly: false };
   document.getElementById('search-input').value = '';
   setSortValue('name-asc');
   const sb = document.getElementById('btn-toggle-selection-only');
@@ -4099,6 +4120,7 @@ function updateFilterBadge() {
   const f = state.filters;
   let count = 0;
   if (f.ratingMin != null) count++;
+  if (f.unratedOnly) count++;
   if (f.mealTypes && f.mealTypes.length) count += f.mealTypes.length;
   if (f.temperature) count++;
   if (f.vegetarianOnly) count++;

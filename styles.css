@@ -1868,6 +1868,9 @@ body.cart-open .cart-drawer { transform: translateX(0); visibility: visible; }
 }
 .rating-step:hover { border-color: var(--mist-300); }
 .rating-step.on { background: #faf6e0; border-color: #eee6a4; color: var(--sun-600); }
+/* « Non notées » : même famille de boutons, libellé plus long */
+.rating-step-wide { font-weight: 600; }
+.rating-step-wide.on { background: var(--green-100); border-color: var(--green-100); color: var(--green-800); }
 /* Compteur de filtres actifs sur la section « Avancé » */
 .adv-count {
   display: inline-flex; align-items: center; justify-content: center;
