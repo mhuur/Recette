@@ -1876,8 +1876,8 @@ body.cart-open .cart-drawer { transform: translateX(0); visibility: visible; }
 .filter-menu-done:hover { background: rgba(47, 125, 85, .1); }
 
 /* Chaud / froid : chips exclusifs (panneau de filtres ET modale recette) */
-.temp-picker { display: flex; flex-wrap: wrap; gap: 6px; }
-.temp-chip {
+.temp-picker, .chip-row { display: flex; flex-wrap: wrap; gap: 6px; }
+.temp-chip, .chip-toggle {
   background: rgba(255, 255, 255, .7);
   border: 1px solid var(--mist-200);
   border-radius: 999px;
@@ -1887,22 +1887,10 @@ body.cart-open .cart-drawer { transform: translateX(0); visibility: visible; }
   white-space: nowrap;
   cursor: pointer;
 }
-.temp-chip:hover { border-color: var(--mist-300); color: var(--text-strong); }
-.temp-chip.on { background: var(--green-600); border-color: var(--green-600); color: #fff; }
+.temp-chip:hover, .chip-toggle:hover { border-color: var(--mist-300); color: var(--text-strong); }
+.temp-chip.on, .chip-toggle.on { background: var(--green-600); border-color: var(--green-600); color: #fff; }
 /* La modale a ses propres champs compacts : le picker s'y insère comme un input */
 .form-compact-item.temp-item { gap: 6px; }
-/* Case à cocher de filtre (Végétarien) */
-.filter-check {
-  display: inline-flex; align-items: center; gap: 8px;
-  text-transform: none; letter-spacing: normal; font-family: var(--font-sans);
-  font-size: 13px; font-weight: 600; color: var(--mist-700);
-  cursor: pointer;
-}
-.filter-check input { width: 15px; height: 15px; accent-color: var(--green-600); cursor: pointer; }
-/* Plusieurs régimes : une case par ligne */
-.filter-check + .filter-check { margin-top: 6px; }
-.filter-sheet-section > .filter-check { display: flex; }
-
 /* Note minimum : boutons carrés-arrondis « 6+ 7+ 8+ 9+ » */
 .rating-steps { display: flex; flex-wrap: wrap; gap: 6px; }
 .rating-step {

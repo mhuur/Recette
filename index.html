@@ -135,8 +135,12 @@
             <!-- Végétarien (déduit des familles d ingrédients) -->
             <div class="filter-sheet-section">
               <div class="filter-sheet-label">Régime</div>
-              <label class="filter-check"><input type="checkbox" id="filter-vegetarian"> Végétarien</label>
-              <label class="filter-check"><input type="checkbox" id="filter-pescatarian"> Pescarien</label>
+              <!-- Bulles comme les autres filtres. Exclusives : végétarien ⊂ pescarien,
+                   donc les deux ensemble équivalaient déjà à Végétarien seul. -->
+              <div class="chip-row" id="filter-diet">
+                <button type="button" class="chip-toggle" data-diet="vegetarian">Végétarien</button>
+                <button type="button" class="chip-toggle" data-diet="pescatarian">Pescarien</button>
+              </div>
             </div>
             <!-- Time -->
             <div class="filter-sheet-section">
@@ -4022,26 +4026,25 @@ function buildFilterBar() {
     };
   });
 
-  // Filtre Végétarien (calculé : aucun ingrédient de famille Viande / Poisson)
-  const vegCb = document.getElementById('filter-vegetarian');
-  if (vegCb) {
-    vegCb.checked = !!state.filters.vegetarianOnly;
-    vegCb.onchange = () => {
-      state.filters.vegetarianOnly = vegCb.checked;
+  // Filtre Régime (calculé depuis les familles d'ingrédients) : bulles exclusives —
+  // végétarien ⊂ pescarien, cocher les deux revenait à Végétarien seul.
+  // État persisté avant l'exclusivité : les deux cochés = Végétarien (le plus strict).
+  if (state.filters.vegetarianOnly && state.filters.pescatarianOnly) state.filters.pescatarianOnly = false;
+  document.querySelectorAll('#filter-diet .chip-toggle').forEach(b => {
+    const key = b.dataset.diet === 'vegetarian' ? 'vegetarianOnly' : 'pescatarianOnly';
+    const other = b.dataset.diet === 'vegetarian' ? 'pescatarianOnly' : 'vegetarianOnly';
+    const on = !!state.filters[key];
+    b.classList.toggle('on', on);
+    b.setAttribute('aria-pressed', String(on));
+    b.onclick = () => {
+      const next = !state.filters[key];
+      state.filters[key] = next;
+      if (next) state.filters[other] = false;
       saveLocal();
+      buildFilterBar();
       renderRecipes();
     };
-  }
-
-  const pescCb = document.getElementById('filter-pescatarian');
-  if (pescCb) {
-    pescCb.checked = !!state.filters.pescatarianOnly;
-    pescCb.onchange = () => {
-      state.filters.pescatarianOnly = pescCb.checked;
-      saveLocal();
-      renderRecipes();
-    };
-  }
+  });
 
   // Filtre Temps : presets pour préparation et cuisson
   renderTimePresets('filter-prep-presets', 'prepMax');
