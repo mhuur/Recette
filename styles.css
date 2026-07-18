@@ -2157,6 +2157,39 @@ body.filter-rail-on .time-presets-group { gap: 12px; }
   .filter-sheet-header #btn-reset-filters,
   #btn-toggle-filter { display: none; }
 
+  /* --- Colonnes figées, seules les LIGNES de recettes défilent ---
+     La page ne scrolle plus : le cadre occupe la fenêtre, chaque colonne gère
+     son propre débordement. L'en-tête de colonnes reste hors de la zone
+     scrollable de la liste. Les autres onglets gardent le scroll de main. */
+  html, body { overflow: hidden; }
+  .app-layout { height: calc(100vh - 40px); min-height: 0; }
+  main { overflow-y: auto; min-height: 0; }
+  body:has(#tab-recipes.active) main { overflow: hidden; }
+  main > .tab { min-height: 0; }
+  #tab-recipes.active { display: flex; flex-direction: column; min-height: 0; }
+  .recipes-layout { flex: 1; min-height: 0; }
+  /* Rail de filtres : pleine hauteur, défilement interne */
+  .filter-sheet-overlay,
+  .filter-sheet-overlay.active { position: static; height: 100%; }
+  .filter-sheet { max-height: 100%; height: 100%; }
+  /* Liste : en-tête fixe + lignes scrollables */
+  .recipe-list {
+    align-self: stretch;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+  .recipe-list-head { flex-shrink: 0; }
+  #recipes-container { flex: 1; min-height: 0; overflow-y: auto; }
+  /* Détail : pleine hauteur, défilement interne */
+  .recipe-detail {
+    position: static;
+    align-self: stretch;
+    height: 100%;
+    max-height: none;
+  }
+
   /* Détail permanent en colonne de droite (2a) : ni croix ni scrim */
   .recipe-detail { width: 392px; display: block; }
   #detail-close-btn { display: none; }
