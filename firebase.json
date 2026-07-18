@@ -17,6 +17,7 @@
       "README.md",
       "tools/**",
       "data/**",
+      "*.json",
       "*.bak",
       "__*",
       "index - *.html",
