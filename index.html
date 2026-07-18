@@ -2977,7 +2977,6 @@ function renderRecipeDetail() {
   if (!panel || !r) return;
   const rated = r.rating != null && r.rating !== '';
   const canRate = canRateRecipes();
-  const inList = state.selectedRecipeIds.includes(r.id);
 
   let head = '<div class="recipe-detail-head">';
   head += '<div class="recipe-detail-topbtns">'
@@ -3001,8 +3000,7 @@ function renderRecipeDetail() {
   if (r.cookTime) chips += '<span class="recipe-detail-chip">' + ICONS.flame + ' Cuisson ' + formatTime(r.cookTime) + '</span>';
   if (chips) head += '<div class="recipe-detail-chips">' + chips + '</div>';
   head += '<div class="recipe-detail-cta">'
-    + '<button class="btn btn-sm btn-primary" id="detail-shop-btn" type="button"><span class="tb-ico">' + ICONS.shoppingCart + '</span>' + (inList ? 'Retirer des courses' : 'Ajouter aux courses') + '</button>'
-    + '<button class="btn btn-sm" id="detail-edit-btn" type="button"><span class="tb-ico">' + ICONS.pencil + '</span>Modifier</button>'
+    + '<button class="btn btn-sm btn-primary" id="detail-edit-btn" type="button"><span class="tb-ico">' + ICONS.pencil + '</span>Modifier</button>'
     + '</div>';
   head += '</div>';
 
@@ -3051,7 +3049,6 @@ function renderRecipeDetail() {
 
   panel.querySelector('#detail-close-btn').onclick = closeRecipeDetail;
   panel.querySelector('#detail-menu-btn').onclick = (e) => { e.stopPropagation(); openRecipeMenu(r, e.currentTarget); };
-  panel.querySelector('#detail-shop-btn').onclick = () => toggleRecipeSelection(r);
   panel.querySelector('#detail-edit-btn').onclick = () => openRecipeModal(r);
   const rateBtn = panel.querySelector('[data-rate]');
   if (rateBtn) rateBtn.onclick = () => openRatingDialog(r);
