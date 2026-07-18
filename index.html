@@ -37,12 +37,39 @@
     <span class="tb-ico" data-icon="arrowLeft" aria-hidden="true"></span>
     <span class="topbar-back-label" id="topbar-back-label"></span>
   </button>
+  <!-- Marque + compteur (direction 2a) : visible sur l'onglet Recettes -->
+  <span class="cmd-brand cmd-recipes-only">
+    <span class="cmd-brand-mark" data-icon="chefHat" aria-hidden="true"></span>
+    <span class="cmd-brand-name">Recettes</span>
+    <span class="cmd-brand-count" id="recipe-count-display">0</span>
+  </span>
+  <!-- Recherche : élément extensible de la barre de commande -->
+  <div class="cmd-search cmd-recipes-only">
+    <span class="search-ico" data-icon="search" aria-hidden="true"></span>
+    <input type="text" id="search-input" placeholder="Rechercher une recette, un ingrédient…" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" data-form-type="other">
+  </div>
+  <button class="cmd-btn cmd-recipes-only" id="btn-toggle-filter" type="button" title="Filtres"><span class="tb-ico" data-icon="filter"></span><span class="cmd-btn-label">Filtres</span><span class="filter-count-badge" id="filter-count-badge" style="display:none;">0</span></button>
+  <div class="cmd-sort cmd-recipes-only">
+    <button class="cmd-btn" id="sort-btn" type="button" title="Trier"><span class="tb-ico" data-icon="arrowUpDown"></span><span class="cmd-btn-label" id="sort-label">Trier</span></button>
+    <div class="sort-popup" id="sort-popup">
+      <div class="sort-option active-sort" data-sort="name-asc">Nom A → Z</div>
+      <div class="sort-option" data-sort="name-desc">Nom Z → A</div>
+      <div class="sort-option" data-sort="rating-desc">Note ↓</div>
+      <div class="sort-option" data-sort="rating-asc">Note ↑</div>
+      <div class="sort-option" data-sort="time-asc">Temps ↑</div>
+      <div class="sort-option" data-sort="time-desc">Temps ↓</div>
+    </div>
+  </div>
+  <button class="cmd-btn cmd-icon-only cmd-recipes-only" id="btn-toggle-selection-only" type="button" title="Afficher uniquement la sélection" aria-pressed="false"><span class="tb-ico" data-icon="check"></span></button>
+  <span class="cmd-sep cmd-recipes-only" aria-hidden="true"></span>
   <div class="topbar-actions">
     <button class="btn btn-primary" id="mobile-login-btn"><span class="tb-ico" data-icon="key"></span>Connexion</button>
     <button class="topbar-cart-btn" id="topbar-cart-btn" type="button" title="Liste de courses">
-      <span class="tb-ico" data-icon="shoppingCart" aria-hidden="true"></span><span class="topbar-cart-label">Courses</span>
+      <span class="tb-ico" data-icon="shoppingCart" aria-hidden="true"></span><span class="topbar-cart-label">Panier</span>
       <span class="count-badge hide-if-zero" id="selected-badge" data-value="0">0</span>
     </button>
+    <button class="cmd-btn cmd-recipes-only" id="btn-claude-import" type="button" title="Créer une recette à partir d'un lien, d'un texte ou d'une photo, avec Claude"><span class="tb-ico" data-icon="sparkles"></span><span class="cmd-btn-label">Claude</span></button>
+    <button class="cmd-add cmd-recipes-only" id="btn-new-recipe-inline" type="button"><span class="tb-ico" data-icon="plus"></span><span class="cmd-btn-label">Ajouter</span></button>
     <div class="sidebar-user" id="sidebar-user">
       <div class="user-avatar-wrapper" id="user-avatar-wrapper">
         <button class="sidebar-user-trigger" id="sidebar-user-trigger" type="button" aria-label="Mon compte">
@@ -75,7 +102,7 @@
       <div class="filter-sheet-overlay" id="filter-sheet-overlay">
         <div class="filter-sheet">
           <div class="filter-sheet-header">
-            <span class="filter-sheet-title">Filtres</span>
+            <span class="filter-sheet-title"><span class="filter-sheet-title-ico" data-icon="filter" aria-hidden="true"></span>Filtres</span>
             <div style="display:flex;gap:8px;align-items:center;">
               <button class="btn btn-ghost btn-sm" id="btn-reset-filters">Tout effacer</button>
               <button class="filter-sheet-close" id="filter-sheet-close" title="Fermer"><span class="tb-ico" data-icon="x"></span></button>
@@ -122,38 +149,23 @@
           <div class="filter-sheet-footer">
             <button class="btn-neon" id="filter-apply-btn" type="button"><span id="filter-result-count">Voir les recettes</span></button>
           </div>
+          <!-- Pied du rail docké (2a) : remplace la croix et le CTA du popover -->
+          <div class="filter-rail-foot">
+            <span id="filter-active-count">Aucun filtre actif</span>
+            <span aria-hidden="true">·</span>
+            <button type="button" id="btn-reset-filters-rail">Tout effacer</button>
+          </div>
         </div>
       </div>
       <div class="recipes-main">
-        <div class="toolbar">
-          <div class="toolbar-row">
-            <div class="search-wrap" style="flex:1; min-width:200px;">
-              <span class="search-ico" data-icon="search" aria-hidden="true"></span>
-              <input type="text" id="search-input" placeholder="Rechercher une recette…" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" data-form-type="other">
-            </div>
-            <button class="btn btn-sm tb-toggle" id="btn-toggle-filter" title="Filtres"><span class="tb-ico" data-icon="filter"></span>Filtres<span class="filter-count-badge" id="filter-count-badge" style="display:none;">0</span></button>
-            <div style="position:relative;">
-              <button class="btn btn-sm tb-toggle" id="sort-btn" title="Trier"><span class="tb-ico" data-icon="arrowUpDown"></span><span id="sort-label">A→Z</span></button>
-              <div class="sort-popup" id="sort-popup">
-                <div class="sort-option active-sort" data-sort="name-asc">Nom A → Z</div>
-                <div class="sort-option" data-sort="name-desc">Nom Z → A</div>
-                <div class="sort-option" data-sort="rating-desc">Note ↓</div>
-                <div class="sort-option" data-sort="rating-asc">Note ↑</div>
-                <div class="sort-option" data-sort="time-asc">Temps ↑</div>
-                <div class="sort-option" data-sort="time-desc">Temps ↓</div>
-              </div>
-            </div>
-            <button class="btn btn-sm tb-toggle" id="btn-toggle-selection-only" title="Afficher uniquement la sélection" aria-pressed="false"><span class="tb-ico" data-icon="check"></span></button>
-            <span id="recipe-count-display" style="font-size:12px; color:var(--text-muted); white-space:nowrap; flex-shrink:0;">0 / 0</span>
-            <div class="toolbar-add-group" style="margin-left:auto;">
-              <button class="btn btn-sm" id="btn-claude-import" title="Créer une recette à partir d'un lien, d'un texte ou d'une photo, avec Claude"><span class="tb-ico" data-icon="sparkles"></span>Claude</button>
-              <button class="btn-neon btn-sm" id="btn-new-recipe-inline"><span class="tb-ico" data-icon="plus"></span>Ajouter</button>
-            </div>
+        <div id="active-filter-bar" style="display:none;"></div>
+        <!-- Liste dense (2a) : en-tête de colonnes + lignes en grille -->
+        <div class="recipe-list">
+          <div class="recipe-list-head" aria-hidden="true">
+            <span></span><span>Recette</span><span>Note</span><span>Pers.</span><span>Temps</span>
           </div>
-          <div id="active-filter-bar" style="display:none;"></div>
+          <div id="recipes-container"></div>
         </div>
-
-        <div id="recipes-container" class="recipe-list"></div>
       </div>
 
       <!-- Panneau détail (maquette Sylva : colonne fixe à droite, volet superposé < 1100px) -->
@@ -2947,7 +2959,27 @@ function renderRecipes() {
   });
 
   // Le panneau détail reflète l'état courant (recette modifiée / supprimée / filtrée)
+  ensureDetailSelection(recipes);
   refreshRecipeDetail();
+}
+
+// Direction 2a : sur grand écran la carte de détail est PERMANENTE — si rien
+// n'est sélectionné (ou si la sélection sort du filtre), on affiche la première
+// recette de la liste filtrée. Sous le seuil, le détail reste un volet au clic.
+function isDetailPermanent() { return window.innerWidth >= 1280; }
+function ensureDetailSelection(list) {
+  if (!isDetailPermanent()) return;
+  const panel = document.getElementById('recipe-detail');
+  const stillThere = detailRecipeId && list.some(r => r.id === detailRecipeId);
+  if (!stillThere) detailRecipeId = list.length ? list[0].id : null;
+  if (!detailRecipeId) {
+    if (panel) panel.innerHTML = '<div class="recipe-detail-empty">Aucune recette à afficher</div>';
+    document.body.classList.remove('detail-open');
+    return;
+  }
+  document.body.classList.add('detail-open');
+  renderRecipeDetail();
+  document.querySelectorAll('.recipe-row').forEach(el => el.classList.toggle('open', el.dataset.id === detailRecipeId));
 }
 
 /* ========================================================================
@@ -2962,6 +2994,7 @@ function openRecipeDetail(id) {
   document.querySelectorAll('.recipe-row').forEach(el => el.classList.toggle('open', el.dataset.id === id));
 }
 function closeRecipeDetail() {
+  if (isDetailPermanent()) return; // carte permanente sur grand écran : rien à fermer
   detailRecipeId = null;
   document.body.classList.remove('detail-open');
   document.querySelectorAll('.recipe-row.open').forEach(el => el.classList.remove('open'));
@@ -2979,12 +3012,15 @@ function renderRecipeDetail() {
   const rated = r.rating != null && r.rating !== '';
   const canRate = canRateRecipes();
 
+  // Structure 2a : titre + Modifier sur la même ligne, puis note, chips, méta bordée.
   let head = '<div class="recipe-detail-head">';
-  head += '<div class="recipe-detail-topbtns">'
+  head += '<div class="recipe-detail-titlerow">'
+    + '<h2 class="recipe-detail-title">' + escapeHtml(r.name) + '</h2>'
+    + '<div class="recipe-detail-cta">'
+    + '<button class="recipe-detail-edit" id="detail-edit-btn" type="button">' + ICONS.pencil + 'Modifier</button>'
     + '<button class="recipe-detail-iconbtn" id="detail-menu-btn" type="button" title="Actions" aria-label="Actions sur la recette">' + ICONS.moreVertical + '</button>'
     + '<button class="recipe-detail-iconbtn" id="detail-close-btn" type="button" title="Fermer" aria-label="Fermer le détail">' + ICONS.x + '</button>'
-    + '</div>';
-  head += '<h2 class="recipe-detail-title">' + escapeHtml(r.name) + '</h2>';
+    + '</div></div>';
   if (rated) {
     head += (canRate ? '<button type="button" class="recipe-detail-rating" data-rate title="Modifier la note">' : '<span class="recipe-detail-rating">')
       + '<span class="rating-stars">' + ratingStars(r.rating) + '</span>'
@@ -2995,20 +3031,22 @@ function renderRecipeDetail() {
       ? '<button type="button" class="recipe-detail-rating" data-rate title="Noter cette recette"><span class="recipe-detail-unrated">Non notée — noter</span></button>'
       : '<span class="recipe-detail-unrated">Non notée</span>';
   }
-  let chips = '';
-  if (r.servings) chips += '<span class="recipe-detail-chip">' + ICONS.users + ' ' + r.servings + ' pers.</span>';
-  if (r.prepTime) chips += '<span class="recipe-detail-chip">' + ICONS.utensils + ' Prépa ' + formatTime(r.prepTime) + '</span>';
-  if (r.cookTime) chips += '<span class="recipe-detail-chip">' + ICONS.flame + ' Cuisson ' + formatTime(r.cookTime) + '</span>';
-  if (chips) head += '<div class="recipe-detail-chips">' + chips + '</div>';
-  head += '<div class="recipe-detail-cta">'
-    + '<button class="btn btn-sm btn-primary" id="detail-edit-btn" type="button"><span class="tb-ico">' + ICONS.pencil + '</span>Modifier</button>'
-    + '</div>';
+  if (r.mealTypes && r.mealTypes.length > 0) {
+    head += '<div class="meal-tags">' + sortMealTypes(r.mealTypes).map(m => '<span class="meal-tag">' + escapeHtml(m) + '</span>').join('') + '</div>';
+  }
+  // Méta en une rangée bordée haut/bas, séparateurs middot
+  const meta = [];
+  if (r.servings) meta.push(r.servings + ' pers.');
+  if (r.prepTime) meta.push('Prépa ' + formatTime(r.prepTime));
+  if (r.cookTime) meta.push('Cuisson ' + formatTime(r.cookTime));
+  if (meta.length) {
+    head += '<div class="recipe-detail-meta">'
+      + meta.map(escapeHtml).join('<span class="meta-dot" aria-hidden="true">·</span>')
+      + '</div>';
+  }
   head += '</div>';
 
   let body = '<div class="recipe-detail-body">';
-  if (r.mealTypes && r.mealTypes.length > 0) {
-    body += '<div class="meal-tags">' + sortMealTypes(r.mealTypes).map(m => '<span class="meal-tag">' + escapeHtml(m) + '</span>').join('') + '</div>';
-  }
   const hasIngs = r.ingredients && r.ingredients.length > 0;
   // Préparation : une étape par ligne non vide, numérotée à l'affichage.
   const steps = (r.instructions || '').split('\n').map(s => s.trim()).filter(Boolean);
@@ -3032,7 +3070,8 @@ function renderRecipeDetail() {
     body += '<div style="color:var(--text-dim); font-style:italic; font-size:13px;">Aucun ingrédient renseigné</div>';
   }
   if ((r.notes || '').trim()) {
-    body += '<div class="recipe-section" style="margin-top:18px;"><div class="recipe-section-title"><span>Notes</span></div><div class="recipe-notes-text">' + escapeHtml(r.notes.trim()) + '</div></div>';
+    // 2a : encadré vert en pied de carte (masqué si la recette n'a pas de note)
+    body += '<div class="recipe-note-box"><b>Note</b> · ' + escapeHtml(r.notes.trim()) + '</div>';
   }
   if (r.origin && r.origin.type !== 'none') {
     let o = '';
@@ -3825,30 +3864,26 @@ function buildFilterBar() {
   const ratingWrap = document.getElementById('filter-rating-wrapper');
   ratingWrap.innerHTML = '';
   const min = state.filters.ratingMin;
-  const starsRow = document.createElement('div');
-  starsRow.className = 'rating-filter';
-  for (let i = 1; i <= 5; i++) {
-    const val = i * 2; // 2,4,6,8,10
-    const star = document.createElement('button');
-    star.type = 'button';
-    star.className = 'star-btn' + (min != null && val <= min ? ' on' : '');
-    star.innerHTML = ICONS.star; // remplissage plein/vide géré en CSS via .on
-    star.title = '≥ ' + val + '/10';
-    star.setAttribute('aria-label', 'Note minimale ' + val + ' sur 10');
-    star.onclick = () => {
+  // 2a : seuils « 6+ 7+ 8+ 9+ » (boutons carrés-arrondis) au lieu du rail d'étoiles
+  const seuilRow = document.createElement('div');
+  seuilRow.className = 'rating-steps';
+  [6, 7, 8, 9].forEach(val => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'rating-step' + (min === val ? ' on' : '');
+    b.textContent = val + '+';
+    b.title = 'Note minimale ' + val + '/10';
+    b.setAttribute('aria-pressed', String(min === val));
+    b.onclick = () => {
       state.filters.ratingMin = (state.filters.ratingMin === val) ? null : val;
       if (state.filters.ratingMin == null) state.filters.includeUnrated = false;
       saveLocal();
       buildFilterBar();
       renderRecipes();
     };
-    starsRow.appendChild(star);
-  }
-  const lbl = document.createElement('span');
-  lbl.className = 'rating-min-label';
-  lbl.textContent = min != null ? '≥ ' + min + '/10' : 'Toutes les notes';
-  starsRow.appendChild(lbl);
-  ratingWrap.appendChild(starsRow);
+    seuilRow.appendChild(b);
+  });
+  ratingWrap.appendChild(seuilRow);
   // « Inclure les non notées » — pertinent seulement quand un seuil est posé
   const unratedLbl = document.createElement('label');
   unratedLbl.className = 'rating-unrated';
@@ -3981,9 +4016,9 @@ function openFilterSheet() {
 }
 // Desktop (≥769px) : popover ancré sous le bouton « Filtres » (maquette Sylva).
 // Mobile : on retire les styles inline pour laisser le bottom-sheet CSS s'appliquer.
-// ≥1400px : le panneau est une colonne permanente (CSS), pas un popover.
-// Seuil à garder synchronisé avec le @media (min-width:1400px) de styles.css.
-function isFilterRailDocked() { return window.innerWidth >= 1400; }
+// ≥1280px : le panneau est une colonne permanente (CSS), pas un popover.
+// Seuil à garder synchronisé avec le @media (min-width:1280px) de styles.css.
+function isFilterRailDocked() { return window.innerWidth >= 1280; }
 function positionFilterSheet() {
   const sheet = document.querySelector('.filter-sheet');
   if (!sheet) return;
@@ -4064,6 +4099,7 @@ function resetAllFilters() {
   renderRecipes();
 }
 document.getElementById('btn-reset-filters').onclick = resetAllFilters;
+document.getElementById('btn-reset-filters-rail').onclick = resetAllFilters; // pied du rail docké
 
 // Count active filters and update badge
 function updateFilterBadge() {
@@ -4089,6 +4125,12 @@ function updateFilterBadge() {
                  + (f.includeFamilies || []).length + (f.excludeFamilies || []).length;
   const advEl = document.getElementById('filter-adv-count');
   if (advEl) { advEl.textContent = advCount; advEl.style.display = advCount ? '' : 'none'; }
+  // Pied du rail docké : « N filtre(s) actif(s) »
+  const railCount = document.getElementById('filter-active-count');
+  if (railCount) {
+    railCount.textContent = count === 0 ? 'Aucun filtre actif'
+      : count + ' filtre' + (count > 1 ? 's' : '') + ' actif' + (count > 1 ? 's' : '');
+  }
 }
 
 // Render active-filter chips bar (tap to remove)

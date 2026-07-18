@@ -214,24 +214,93 @@ h1, h2 {
 /* ===================================================================
    BARRE SUPÉRIEURE (topbar)
    =================================================================== */
-/* Barre supérieure allégée : plus de bandeau ni de titre « Mes recettes ».
-   Elle ne porte que des pastilles autoportantes (retour / Courses / avatar),
-   posées directement sur le fond forêt. Reste sticky pour rester atteignable
-   au scroll ; ce sont les pastilles, pas la barre, qui portent le verre. */
+/* ===================================================================
+   BARRE DE COMMANDE (direction 2a) — une seule barre : marque, recherche,
+   trier, panier, ajouter, avatar. Remplace l'ancienne topbar + la toolbar
+   de l'onglet Recettes (qui se marchaient dessus et se cassaient en 2 lignes).
+   =================================================================== */
 .topbar {
   position: sticky;
-  top: 0;
+  top: 8px;
   z-index: 100;
   display: flex;
   align-items: center;
   gap: 14px;
-  padding: calc(8px + env(safe-area-inset-top)) 24px 8px;
-  background: none;
-  border-bottom: 0;
-  box-shadow: none;
-  pointer-events: none; /* le vide de la barre ne doit pas bloquer le contenu dessous */
+  padding: 11px 16px;
+  margin-bottom: 16px;
+  background: rgba(255, 255, 255, .74);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, .65);
+  border-radius: 18px;
+  box-shadow: 0 8px 24px rgba(20, 48, 32, .12);
 }
-.topbar > * { pointer-events: auto; }
+/* Marque : carré vert + nom + compteur */
+.cmd-brand { display: inline-flex; align-items: center; gap: 9px; flex-shrink: 0; }
+.cmd-brand-mark {
+  width: 30px; height: 30px;
+  border-radius: 9px;
+  background: var(--green-600);
+  color: #fff;
+  display: flex; align-items: center; justify-content: center;
+}
+.cmd-brand-mark svg { width: 17px; height: 17px; }
+.cmd-brand-name {
+  font-family: var(--font-display);
+  font-size: 16px; font-weight: 700;
+  color: var(--text-strong);
+  white-space: nowrap;
+}
+.cmd-brand-count { font-size: 12.5px; font-weight: 600; color: var(--mist-500); white-space: nowrap; }
+/* Recherche : seul élément extensible */
+.cmd-search {
+  flex: 1; min-width: 160px;
+  display: flex; align-items: center; gap: 9px;
+  background: var(--mist-100);
+  border: 1px solid var(--mist-200);
+  border-radius: 999px;
+  padding: 9px 16px;
+  color: var(--mist-500);
+}
+.cmd-search .search-ico { display: inline-flex; flex-shrink: 0; }
+.cmd-search .search-ico svg { width: 15px; height: 15px; }
+.cmd-search input {
+  flex: 1; min-width: 0;
+  border: 0; background: none; outline: none;
+  font: inherit; font-size: 13.5px;
+  color: var(--text);
+}
+.cmd-search input::placeholder { color: var(--mist-500); }
+/* Boutons texte de la barre */
+.cmd-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: none; border: 0; padding: 4px 2px;
+  font: inherit; font-size: 13px; font-weight: 600;
+  color: var(--mist-800);
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.cmd-btn:hover { color: var(--green-700); }
+.cmd-btn svg { width: 15px; height: 15px; }
+.cmd-btn[aria-pressed="true"] { color: var(--green-600); }
+.cmd-icon-only .cmd-btn-label { display: none; }
+.cmd-sort { position: relative; flex-shrink: 0; }
+.cmd-sep { width: 1px; height: 22px; background: var(--mist-200); flex-shrink: 0; }
+/* Bouton plein « Ajouter » */
+.cmd-add {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--green-600); color: #fff;
+  border: 0; border-radius: 999px;
+  padding: 9px 16px;
+  font: inherit; font-size: 13.5px; font-weight: 700;
+  cursor: pointer; white-space: nowrap; flex-shrink: 0;
+  transition: filter var(--dur-fast, .14s) var(--ease-out);
+}
+.cmd-add:hover { filter: brightness(1.05); }
+.cmd-add svg { width: 15px; height: 15px; }
+/* Contrôles propres à l'onglet Recettes : masqués sur Données / Réglages */
+body:not(:has(#tab-recipes.active)) .cmd-recipes-only { display: none !important; }
 /* Retour aux recettes : masqué sur l'écran principal (tab-btn.active) */
 .topbar-back {
   display: inline-flex;
@@ -416,15 +485,30 @@ body:has(#tab-recipes.active) .topbar-back { display: none; }
 /* ===================================================================
    LAYOUT
    =================================================================== */
-.app-layout { display: flex; flex-direction: column; min-height: 100vh; }
+/* Cadre arrondi de la direction 2a : contient la barre de commande + les
+   colonnes. Le fond forêt reste peint sur body (réglable dans Apparence) —
+   le cadre ne fait que le délimiter (bordure claire + ombre verte diffuse). */
+.app-layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  padding: 22px;
+  margin: 20px auto;
+  width: calc(100% - 40px);
+  max-width: 1800px;
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, .5);
+  box-shadow: 0 18px 48px rgba(20, 48, 32, .14);
+}
 main {
   flex: 1;
-  padding: 22px 28px 48px;
+  padding: 0;
   min-width: 0;
   display: flex;
   justify-content: center;
 }
-main > .tab { width: 100%; max-width: 1180px; }
+main > .tab { width: 100%; max-width: none; }
+main > #tab-data, main > #tab-settings { max-width: 1180px; }
 .tab { display: none; }
 .tab.active { display: block; }
 #tab-data.active { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
@@ -563,33 +647,54 @@ label {
 /* ===================================================================
    RECETTES — liste en lignes + panneau détail (maquette Sylva)
    =================================================================== */
-.recipes-layout { display: flex; gap: 24px; align-items: flex-start; }
-.recipes-main { flex: 1 1 480px; min-width: 0; }
+/* Rangée 3 colonnes (2a) : filtres 224 · liste flex · détail 392 */
+.recipes-layout { display: flex; gap: 16px; align-items: stretch; }
+.recipes-main { flex: 1; min-width: 0; }
 
+/* Liste dense (2a) : grille de colonnes alignées, en-tête en eyebrow mono */
 .recipe-list {
-  background: var(--glass-fill-strong);
-  backdrop-filter: blur(var(--blur-md));
-  -webkit-backdrop-filter: blur(var(--blur-md));
-  border: 1px solid var(--glass-border);
-  border-radius: 20px;
-  box-shadow: var(--shadow-glass);
+  background: rgba(255, 255, 255, .78);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, .65);
+  border-radius: 18px;
+  box-shadow: 0 12px 40px rgba(20, 48, 32, .16), inset 0 1px 0 rgba(255, 255, 255, .55);
   overflow: hidden;
   display: block;
+  align-self: flex-start;
 }
+/* Grille partagée par l'en-tête et les lignes : (case) · nom · note · pers. · temps */
+.recipe-list-head,
 .recipe-row {
-  display: flex;
+  display: grid;
+  grid-template-columns: 24px 1fr 92px 56px 128px;
   align-items: center;
   gap: 14px;
+}
+.recipe-list-head {
   padding: 9px 18px;
-  border-bottom: 1px solid var(--border-soft);
+  border-bottom: 1px solid var(--mist-200);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--mist-500);
+}
+.recipe-row {
+  padding: 7px 18px;
+  border-bottom: 1px solid var(--mist-100);
   cursor: pointer;
   transition: background var(--dur-fast) var(--ease-soft);
   -webkit-user-select: none;
   user-select: none;
 }
+/* Les tags passent dans le détail : ils casseraient la grille dense */
+.recipe-row-tags { display: none !important; }
 .recipe-row:last-child { border-bottom: 0; }
-.recipe-row:hover { background: rgba(47, 125, 85, .06); }
-.recipe-row.open { background: rgba(47, 125, 85, .09); }
+.recipe-row:hover { background: var(--mist-50); }
+/* Ligne active = recette affichée dans le détail : fond vert + barre gauche */
+.recipe-row.open { background: var(--green-50); box-shadow: inset 3px 0 0 var(--green-600); }
 .recipe-row input[type="checkbox"] {
   width: 17px; height: 17px;
   accent-color: var(--green-600);
@@ -597,8 +702,7 @@ label {
   flex-shrink: 0;
 }
 .recipe-row-name {
-  flex: 1 1 220px;
-  min-width: 120px;
+  min-width: 0;
   font-size: 14px;
   font-weight: 700;
   color: var(--text-strong);
@@ -611,8 +715,8 @@ label {
   align-items: center;
   gap: 2px;
   color: var(--sun-600);
-  width: 72px;
-  flex-shrink: 0;
+  min-width: 0;
+  justify-self: start;
   background: none; border: 0; padding: 2px 4px; border-radius: 8px;
   font: inherit; cursor: pointer;
 }
@@ -634,8 +738,7 @@ label {
   white-space: nowrap;
 }
 .recipe-row-meta svg { width: 13px; height: 13px; color: var(--text-dim); }
-.recipe-row-meta.servings { width: 52px; }
-.recipe-row-meta.time { width: 108px; }
+.recipe-row-meta.servings, .recipe-row-meta.time { width: auto; min-width: 0; }
 .recipe-row-tags { display: flex; gap: 5px; flex-shrink: 0; justify-content: flex-end; }
 .meal-tag {
   font-size: 11px;
@@ -667,21 +770,70 @@ label {
 }
 .recipe-detail {
   display: none;
-  width: 400px;
+  width: 392px;
   flex-shrink: 0;
+  align-self: flex-start;
   position: sticky;
   top: calc(76px + env(safe-area-inset-top));
-  max-height: calc(100vh - 100px);
+  max-height: calc(100vh - 120px);
   overflow-y: auto;
-  background: var(--glass-fill-strong);
-  backdrop-filter: blur(var(--blur-lg));
-  -webkit-backdrop-filter: blur(var(--blur-lg));
-  border: 1px solid var(--glass-border);
-  border-radius: 24px;
-  box-shadow: var(--shadow-glass);
+  /* Surface 2a : la plus opaque des trois (profondeur maximale) */
+  background: rgba(255, 255, 255, .82);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, .7);
+  border-radius: 20px;
+  box-shadow: 0 12px 40px rgba(20, 48, 32, .18), inset 0 1px 0 rgba(255, 255, 255, .55);
+  padding: 22px;
   animation: sylvaPop var(--dur-base) var(--ease-out);
 }
 body.detail-open .recipe-detail { display: block; }
+/* ---- Carte de détail, direction 2a ---- */
+.recipe-detail-titlerow {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+}
+.recipe-detail-edit {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--green-600); color: #fff;
+  border: 0; border-radius: 999px;
+  padding: 8px 15px;
+  font: inherit; font-size: 13px; font-weight: 700;
+  cursor: pointer; white-space: nowrap; flex-shrink: 0;
+  transition: filter var(--dur-fast) var(--ease-out);
+}
+.recipe-detail-edit:hover { filter: brightness(1.05); }
+.recipe-detail-edit svg { width: 14px; height: 14px; }
+/* Méta : une rangée bordée haut/bas, séparateurs middot */
+.recipe-detail-meta {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+  padding: 12px 0;
+  border-top: 1px solid var(--mist-200);
+  border-bottom: 1px solid var(--mist-200);
+  font-size: 12.5px; font-weight: 600; color: var(--mist-700);
+}
+.recipe-detail-meta .meta-dot { color: var(--mist-300); }
+/* Corps : ingrédients | préparation côte à côte */
+.recipe-detail-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+.recipe-section-title {
+  font-family: var(--font-mono);
+  font-size: 10px; font-weight: 600;
+  letter-spacing: .1em; text-transform: uppercase;
+  color: var(--mist-500);
+  margin-bottom: 8px;
+}
+/* Encadré note en pied de carte */
+.recipe-note-box {
+  margin-top: 2px;
+  background: var(--green-50);
+  border: 1px solid var(--green-100);
+  border-radius: 12px;
+  padding: 11px 14px;
+  font-size: 12.5px; line-height: 1.5;
+  color: var(--green-800);
+}
 .recipe-detail-head {
   background: rgba(255, 255, 255, .5);
   border-bottom: 1px solid var(--border-soft);
@@ -734,43 +886,25 @@ button.recipe-detail-rating:hover { background: rgba(183, 166, 58, .12); }
 .recipe-detail-cta .btn-primary { flex: 1; }
 .recipe-detail-body { padding: 20px 22px 22px; }
 .recipe-detail-body .meal-tags { margin-bottom: 18px; }
-/* Ingrédients et préparation empilés (pleine largeur) : évite les colonnes
-   étroites qui coupaient les libellés d'ingrédients. */
-.recipe-detail-cols { display: flex; flex-direction: column; gap: 18px; }
+/* 2a : ingrédients | préparation côte à côte (cf. bloc .recipe-detail-cols plus haut) */
 .recipe-section { margin: 0; padding: 0; border: 0; }
 .recipe-section + .recipe-section { margin-top: 18px; }
+.recipe-detail-cols > .recipe-section + .recipe-section { margin-top: 0; } /* en grille, pas de décalage vertical */
 .recipe-section-title {
   display: flex; align-items: center; gap: 6px;
-  font-size: 11px; font-weight: 700;
-  text-transform: uppercase; letter-spacing: var(--ls-caps);
-  color: var(--text-muted); margin-bottom: 10px;
+  font-family: var(--font-mono);
+  font-size: 10px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: .1em;
+  color: var(--mist-500); margin-bottom: 8px;
 }
 .recipe-section-title svg { width: 13px; height: 13px; flex-shrink: 0; }
 /* Encadré : grille 2 colonnes, quantité (auto, alignée sur la plus large) +
    nom, séparateurs pointillés par ligne. */
-.ingredients-list {
-  list-style: none;
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  align-items: baseline;
-  column-gap: 16px;
-  background: var(--glass-fill-tint);
-  border: 1px solid var(--glass-border-soft);
-  border-radius: 14px;
-  padding: 2px 16px;
-}
-.ingredients-list li { display: contents; }
-.ingredients-list .ing-qty,
-.ingredients-list .ing-name {
-  padding: 9px 0;
-  border-bottom: 1px dashed var(--border-soft);
-  font-size: 13px;
-  line-height: 1.4;
-}
-.ingredients-list li:last-child .ing-qty,
-.ingredients-list li:last-child .ing-name { border-bottom: none; }
-.ing-qty { color: var(--green-700); font-weight: 700; white-space: nowrap; }
-.ing-name { color: var(--text); }
+/* 2a : liste simple « quantité en gras + nom », sans encadré ni séparateurs */
+.ingredients-list { list-style: none; margin: 0; padding: 0; }
+.ingredients-list li { padding: 3px 0; font-size: 13px; line-height: 1.35; }
+.ing-qty { color: var(--green-700); font-weight: 700; white-space: nowrap; margin-right: 4px; }
+.ing-name { color: var(--mist-800); }
 .recipe-steps {
   margin: 0; padding: 0; list-style: none;
   display: flex; flex-direction: column; gap: 9px;
@@ -1593,7 +1727,37 @@ body.cart-open .cart-drawer { transform: translateX(0); visibility: visible; }
   color: var(--green-800);
   border-color: var(--green-300);
 }
-.filter-sheet-label {
+/* Eyebrow mono (2a) : libellé de groupe de filtres / de bloc du détail */
+.filter-sheet-label,
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--mist-500);
+  margin-bottom: 9px;
+}
+/* Pied du rail de filtres : masqué hors mode rail (cf. @media 1280) */
+.filter-rail-foot {
+  display: none;
+  margin-top: auto;
+  align-items: center;
+  gap: 5px;
+  border-top: 1px solid var(--mist-200);
+  padding-top: 12px;
+  font-size: 12px;
+  color: var(--mist-500);
+}
+.filter-rail-foot button {
+  background: none; border: 0; padding: 0;
+  font: inherit; font-size: 12px; font-weight: 600;
+  color: var(--green-600); cursor: pointer;
+}
+.filter-rail-foot button:hover { text-decoration: underline; }
+.filter-sheet-title-ico { display: inline-flex; color: var(--green-600); margin-right: 8px; }
+.filter-sheet-title-ico svg { width: 16px; height: 16px; }
+.filter-sheet-label-legacy {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -1604,7 +1768,8 @@ body.cart-open .cart-drawer { transform: translateX(0); visibility: visible; }
   letter-spacing: var(--ls-caps);
   margin-bottom: 7px;
 }
-.filter-sheet-label .sec-ico { display: inline-flex; color: var(--text-dim); }
+/* 2a : eyebrows en texte seul, sans icône de section */
+.filter-sheet-label .sec-ico { display: none; }
 .filter-sheet-label .sec-ico svg { width: 14px; height: 14px; }
 /* Facette unifiée : chips sélectionnés + recherche + liste repliable */
 .facet { display: flex; flex-direction: column; gap: 7px; }
@@ -1633,6 +1798,37 @@ body.cart-open .cart-drawer { transform: translateX(0); visibility: visible; }
 .facet-empty { font-size: 12px; color: var(--text-dim); padding: 4px 9px; }
 .facet-more { align-self: flex-start; background: none; border: 0; color: var(--green-700); font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; padding: 2px 4px; }
 .facet-more:hover { text-decoration: underline; }
+/* 2a — Type de plat en chips pilule qui s'enroulent (la recherche reste : 23
+   types en vrai, contre 5 dans la maquette). Sélectionné = plein vert. */
+#filter-meal-types .facet-list { flex-direction: row; flex-wrap: wrap; gap: 6px; max-height: 168px; }
+#filter-meal-types .facet-opt {
+  background: rgba(255, 255, 255, .7);
+  border: 1px solid var(--mist-200);
+  border-radius: 999px;
+  padding: 4px 11px;
+  font-size: 12px; font-weight: 600;
+  color: var(--mist-700);
+  white-space: nowrap;
+}
+#filter-meal-types .facet-opt:hover { border-color: var(--mist-300); background: rgba(255, 255, 255, .9); color: var(--text-strong); }
+#filter-meal-types .facet-chip {
+  background: var(--green-600); color: #fff;
+  padding: 4px 7px 4px 11px;
+  font-size: 12px; font-weight: 600;
+}
+/* Note minimum : boutons carrés-arrondis « 6+ 7+ 8+ 9+ » */
+.rating-steps { display: flex; flex-wrap: wrap; gap: 6px; }
+.rating-step {
+  background: rgba(255, 255, 255, .7);
+  border: 1px solid var(--mist-200);
+  border-radius: 9px;
+  padding: 5px 10px;
+  font: inherit; font-size: 12px; font-weight: 700;
+  color: var(--mist-700);
+  cursor: pointer;
+}
+.rating-step:hover { border-color: var(--mist-300); }
+.rating-step.on { background: #faf6e0; border-color: #eee6a4; color: var(--sun-600); }
 /* Compteur de filtres actifs sur la section « Avancé » */
 .adv-count {
   display: inline-flex; align-items: center; justify-content: center;
@@ -1666,6 +1862,10 @@ body.cart-open .cart-drawer { transform: translateX(0); visibility: visible; }
 .time-presets-group { display: flex; flex-direction: column; gap: 9px; }
 .time-row { display: flex; align-items: center; gap: 10px; }
 .time-row-label { font-size: 12px; color: var(--text-muted); width: 84px; flex-shrink: 0; }
+/* Dans le rail docké, la colonne fait 224px : le libellé passe au-dessus */
+body.filter-rail-on .time-row { display: block; }
+body.filter-rail-on .time-row-label { display: block; width: auto; margin-bottom: 6px; }
+body.filter-rail-on .time-presets-group { gap: 12px; }
 .time-presets { display: flex; flex-wrap: wrap; gap: 6px; }
 /* Filtre Note — sélecteur d'étoiles « ≥ » */
 .rating-filter { display: flex; align-items: center; gap: 3px; }
@@ -1889,7 +2089,7 @@ body.cart-open .cart-drawer { transform: translateX(0); visibility: visible; }
    (filtres | liste | détail). En dessous il redevient popover / bottom-sheet.
    Seuil calé pour que la liste garde ~600px : en dessous la toolbar repassait
    sur 2 lignes et les titres se tronquaient. */
-@media (min-width: 1400px) {
+@media (min-width: 1280px) {
   /* .active inclus : sinon un popover resté ouvert avant l'agrandissement de la
      fenêtre garderait display:flex (spécificité supérieure) et casserait le rail. */
   .filter-sheet-overlay,
@@ -1898,7 +2098,7 @@ body.cart-open .cart-drawer { transform: translateX(0); visibility: visible; }
     position: sticky;
     inset: auto;              /* annule le inset:0 du mode overlay */
     top: calc(76px + env(safe-area-inset-top));
-    flex: 0 0 280px;
+    flex: 0 0 224px;
     background: none;
     pointer-events: auto;
     z-index: 1;               /* reste sous la topbar et les modales */
@@ -1909,20 +2109,31 @@ body.cart-open .cart-drawer { transform: translateX(0); visibility: visible; }
     max-width: none;
     max-height: calc(100dvh - 120px);
     animation: none;
+    /* Surface 2a : verre clair, radius 20, padding 18 */
+    background: rgba(255, 255, 255, .76);
+    -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, .65);
+    border-radius: 20px;
+    box-shadow: 0 12px 40px rgba(20, 48, 32, .14);
+    padding: 18px;
   }
+  .filter-sheet-header { padding: 0; border-bottom: 0; margin-bottom: 18px; }
+  .filter-sheet-body { padding: 0; overflow-y: auto; }
+  .filter-sheet-section { margin-bottom: 18px; }
+  /* Pied du rail : « N filtre(s) actif(s) · Tout effacer » */
+  .filter-rail-foot { display: flex; }
   /* Un rail permanent n'a ni croix ni bouton « Voir N recettes » ni déclencheur.
      (Ce bloc doit rester APRÈS .filter-sheet-close/-footer : même spécificité.) */
   .filter-sheet-close,
   .filter-sheet-footer,
+  .filter-sheet-header #btn-reset-filters,
   #btn-toggle-filter { display: none; }
 
-  /* L'onglet Recettes sort du gabarit centré à 1180px : avec 3 colonnes il ne
-     restait que ~450px pour la liste (titres tronqués, toolbar sur 2 lignes).
-     Les autres onglets gardent leur colonne lisible. */
-  main > #tab-recipes { max-width: 1800px; }
-  /* Le détail suit la largeur dispo au lieu de comprimer la liste : fluide,
-     borné pour rester lisible (et laisser ~500px à la liste dès 1280px). */
-  .recipe-detail { width: clamp(400px, 26vw, 520px); }
+  /* Détail permanent en colonne de droite (2a) : ni croix ni scrim */
+  .recipe-detail { width: 392px; display: block; }
+  #detail-close-btn { display: none; }
+  .recipe-detail-empty { color: var(--mist-500); font-size: 13px; font-style: italic; }
   /* Le tiroir Courses masque le reste de l'UI : le rail en fait partie */
   body.cart-open .filter-sheet-overlay { visibility: hidden; }
 }
@@ -2189,19 +2400,39 @@ select.bug-tab-select option{background:#fff;color:var(--text);font-weight:500;t
    MOBILE
    =================================================================== */
 @media (max-width: 768px) {
-  .app-layout { min-height: 100dvh; }
+  /* Le cadre se resserre : sur petit écran chaque pixel de largeur compte */
+  .app-layout {
+    min-height: 100dvh;
+    margin: 8px auto;
+    width: calc(100% - 16px);
+    padding: 10px;
+    border-radius: 18px;
+  }
 
-  .topbar { padding: calc(6px + env(safe-area-inset-top)) 12px 6px; gap: 10px; }
+  /* Barre de commande mobile : recherche sur sa propre ligne, actions en icônes */
+  .topbar {
+    top: 4px;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 8px 10px;
+    margin-bottom: 10px;
+  }
+  .cmd-search { order: 10; flex-basis: 100%; padding: 8px 14px; }
+  .cmd-btn-label, .topbar-cart-label, .cmd-brand-count { display: none; }
+  .cmd-sep { display: none; }
+  .cmd-brand-name { font-size: 15px; }
+  .cmd-add { padding: 8px 12px; margin-left: auto; }
   .topbar-back { padding: 7px 14px 7px 10px; font-size: 13px; }
   .topbar-cart-btn { padding: 8px 12px; }
   .sidebar-user-trigger { width: 38px; height: 38px; }
   .sidebar-user-avatar { width: 30px; height: 30px; }
   .user-menu { position: fixed; top: calc(env(safe-area-inset-top) + 54px); right: 10px; left: auto; width: min(264px, calc(100vw - 20px)); }
 
-  main { padding: 14px 12px calc(24px + env(safe-area-inset-bottom)); }
+  main { padding: 0 0 calc(16px + env(safe-area-inset-bottom)); }
 
-  /* Recettes : colonnes secondaires masquées */
-  .recipe-row { gap: 10px; padding: 10px 14px; }
+  /* Recettes : colonnes secondaires masquées — grille resserrée */
+  .recipe-list-head { display: none; }
+  .recipe-row { grid-template-columns: 24px 1fr 72px 44px; gap: 10px; padding: 10px 14px; }
   .recipe-row-meta.time, .recipe-row-tags { display: none; }
   .recipe-row-meta.servings { width: auto; }
   .recipe-row input[type="checkbox"] { width: 19px; height: 19px; }
