@@ -807,12 +807,11 @@ let state = {
   filters: {
     search: '',
     sort: 'name-asc',
-    ratingMin: null,
-    unratedOnly: false,
+    ratingSel: [],
     prepMax: null,
     cookMax: null,
     mealTypes: [],
-    temperature: null,
+    temperatures: [],
     vegetarianOnly: false,
     pescatarianOnly: false,
     includeIngredients: [],
@@ -1450,7 +1449,7 @@ function load() {
       if (!state.mealTypes.some(m => normalizeText(m) === 'aucun')) {
         state.mealTypes.unshift('Aucun');
       }
-      if (!state.filters) state.filters = { search: '', sort: 'name-asc', ratingMin: null, prepMax: null, cookMax: null, mealTypes: [], temperature: null, vegetarianOnly: false, pescatarianOnly: false, unratedOnly: false, includeIngredients: [], excludeIngredients: [], includeFamilies: [], excludeFamilies: [], selectedOnly: false };
+      if (!state.filters) state.filters = { search: '', sort: 'name-asc', ratingSel: [], prepMax: null, cookMax: null, mealTypes: [], temperatures: [], vegetarianOnly: false, pescatarianOnly: false, includeIngredients: [], excludeIngredients: [], includeFamilies: [], excludeFamilies: [], selectedOnly: false };
       // Migration : ajouter nouveaux champs filtres s'ils manquent
       // Filtre Familles retiré de l'UI : on purge d'anciens filtres persistés,
       // sinon ils resteraient actifs sans moyen de les enlever.
@@ -1483,7 +1482,19 @@ function load() {
         delete state.filters.ratingValues;
         delete state.filters.ratingMax;
       }
-      if (state.filters.ratingMin === undefined) state.filters.ratingMin = null;
+      // Sélection multiple : ancien couple (ratingMin, unratedOnly) → ratingSel[]
+      if (!Array.isArray(state.filters.ratingSel)) {
+        const sel = [];
+        if (state.filters.unratedOnly) sel.push('unrated');
+        else if (state.filters.ratingMin != null) sel.push(state.filters.ratingMin);
+        state.filters.ratingSel = sel;
+      }
+      delete state.filters.ratingMin;
+      delete state.filters.unratedOnly;
+      if (!Array.isArray(state.filters.temperatures)) {
+        state.filters.temperatures = state.filters.temperature ? [state.filters.temperature] : [];
+      }
+      delete state.filters.temperature;
       delete state.filters.includeUnrated; // réglage retiré de l'UI
       if (state.filters.selectionMode === undefined) state.filters.selectionMode = 'all';
       if (!state.selectedRecipeIds) state.selectedRecipeIds = [];
@@ -2784,15 +2795,15 @@ function recipeMatches(r, f, skip) {
       if (!inName && !inIng && !inMeal) return false;
     }
   }
-  if (!skip.rating) {
+  if (!skip.rating && (f.ratingSel || []).length) {
+    // Sélection multiple : union des critères cochés (« Non notées » OU ≥ seuil).
+    // Plusieurs seuils = le plus permissif, donc le minimum.
     const rating = r.rating;
     const isUnrated = rating == null || rating === '';
-    if (f.unratedOnly) {
-      if (!isUnrated) return false;           // « Non notées » : exclusif du seuil
-    } else if (f.ratingMin != null) {
-      if (isUnrated) return false;            // sans note : voir le bouton « Non notées »
-      if (Number(rating) < f.ratingMin) return false;
-    }
+    const seuils = f.ratingSel.filter(v => v !== 'unrated').map(Number);
+    const okUnrated = isUnrated && f.ratingSel.includes('unrated');
+    const okSeuil = !isUnrated && seuils.length && Number(rating) >= Math.min(...seuils);
+    if (!okUnrated && !okSeuil) return false;
   }
   if (!skip.prep && f.prepMax != null && f.prepMax !== '' && !isNaN(f.prepMax)) {
     // Durée inconnue → ne qualifie pas pour « ≤ X min » (sinon les recettes sans temps passent tout)
@@ -2821,7 +2832,7 @@ function recipeMatches(r, f, skip) {
   // sur les mêmes données). Les listes restent dans state.filters mais vidées
   // au chargement, cf. load() — sinon un filtre persisté resterait actif sans
   // aucun moyen de le retirer.
-  if (f.temperature && (r.temperature || null) !== f.temperature) return false;
+  if ((f.temperatures || []).length && !f.temperatures.includes(r.temperature || null)) return false;
   if (f.vegetarianOnly && !isVegetarianRecipe(r)) return false;
   if (f.pescatarianOnly && !isPescatarianRecipe(r)) return false;
   if (!skip.selected && f.selectedOnly && !state.selectedRecipeIds.includes(r.id)) return false;
@@ -3842,50 +3853,46 @@ function buildFilterBar() {
   // Filtre Note : sélecteur d'étoiles « note minimale ≥ » (chaque étoile = 2/10)
   const ratingWrap = document.getElementById('filter-rating-wrapper');
   ratingWrap.innerHTML = '';
-  const min = state.filters.ratingMin;
-  // 2a : seuils « 6+ 7+ 8+ 9+ » (boutons carrés-arrondis) au lieu du rail d'étoiles
+  // Sélection multiple : chaque chip s'ajoute/se retire (union des critères)
+  const sel = state.filters.ratingSel || (state.filters.ratingSel = []);
   const seuilRow = document.createElement('div');
   seuilRow.className = 'rating-steps';
-  // « Non notées » : exclusif des seuils (les deux ensemble ne renverraient rien)
-  const unratedBtn = document.createElement('button');
-  unratedBtn.type = 'button';
-  unratedBtn.className = 'rating-step rating-step-wide' + (state.filters.unratedOnly ? ' on' : '');
-  unratedBtn.textContent = 'Non notées';
-  unratedBtn.title = 'Afficher uniquement les recettes sans note';
-  unratedBtn.setAttribute('aria-pressed', String(!!state.filters.unratedOnly));
-  unratedBtn.onclick = () => {
-    state.filters.unratedOnly = !state.filters.unratedOnly;
-    if (state.filters.unratedOnly) state.filters.ratingMin = null;
+  const toggleRating = (val) => {
+    const i = sel.indexOf(val);
+    if (i === -1) sel.push(val); else sel.splice(i, 1);
     saveLocal();
     buildFilterBar();
     renderRecipes();
   };
+  const unratedBtn = document.createElement('button');
+  unratedBtn.type = 'button';
+  unratedBtn.className = 'rating-step rating-step-wide' + (sel.includes('unrated') ? ' on' : '');
+  unratedBtn.textContent = 'Non notées';
+  unratedBtn.title = 'Inclure les recettes sans note';
+  unratedBtn.setAttribute('aria-pressed', String(sel.includes('unrated')));
+  unratedBtn.onclick = () => toggleRating('unrated');
   seuilRow.appendChild(unratedBtn);
   [6, 7, 8, 9].forEach(val => {
     const b = document.createElement('button');
     b.type = 'button';
-    b.className = 'rating-step' + (min === val ? ' on' : '');
+    b.className = 'rating-step' + (sel.includes(val) ? ' on' : '');
     b.textContent = val + '+';
     b.title = 'Note minimale ' + val + '/10';
-    b.setAttribute('aria-pressed', String(min === val));
-    b.onclick = () => {
-      state.filters.ratingMin = (state.filters.ratingMin === val) ? null : val;
-      state.filters.unratedOnly = false; // exclusif de « Non notées »
-      saveLocal();
-      buildFilterBar();
-      renderRecipes();
-    };
+    b.setAttribute('aria-pressed', String(sel.includes(val)));
+    b.onclick = () => toggleRating(val);
     seuilRow.appendChild(b);
   });
   ratingWrap.appendChild(seuilRow);
 
   // Filtre Chaud / froid (chip exclusif, recliquer = tout)
+  const temps = state.filters.temperatures || (state.filters.temperatures = []);
   document.querySelectorAll('#filter-temperature .temp-chip').forEach(b => {
-    const on = state.filters.temperature === b.dataset.temp;
+    const on = temps.includes(b.dataset.temp);
     b.classList.toggle('on', on);
     b.setAttribute('aria-pressed', String(on));
     b.onclick = () => {
-      state.filters.temperature = on ? null : b.dataset.temp;
+      const i = temps.indexOf(b.dataset.temp);
+      if (i === -1) temps.push(b.dataset.temp); else temps.splice(i, 1);
       saveLocal();
       buildFilterBar();
       renderRecipes();
@@ -4087,7 +4094,7 @@ document.addEventListener('keydown', e => {
 });
 
 function resetAllFilters() {
-  state.filters = { search: '', sort: 'name-asc', ratingMin: null, prepMax: null, cookMax: null, mealTypes: [], temperature: null, vegetarianOnly: false, pescatarianOnly: false, unratedOnly: false, includeIngredients: [], excludeIngredients: [], includeFamilies: [], excludeFamilies: [], selectedOnly: false };
+  state.filters = { search: '', sort: 'name-asc', ratingSel: [], prepMax: null, cookMax: null, mealTypes: [], temperatures: [], vegetarianOnly: false, pescatarianOnly: false, includeIngredients: [], excludeIngredients: [], includeFamilies: [], excludeFamilies: [], selectedOnly: false };
   document.getElementById('search-input').value = '';
   setSortValue('name-asc');
   const sb = document.getElementById('btn-toggle-selection-only');
@@ -4103,10 +4110,9 @@ document.getElementById('btn-reset-filters-rail').onclick = resetAllFilters; // 
 function updateFilterBadge() {
   const f = state.filters;
   let count = 0;
-  if (f.ratingMin != null) count++;
-  if (f.unratedOnly) count++;
+  count += (f.ratingSel || []).length;
   if (f.mealTypes && f.mealTypes.length) count += f.mealTypes.length;
-  if (f.temperature) count++;
+  count += (f.temperatures || []).length;
   if (f.vegetarianOnly) count++;
   if (f.pescatarianOnly) count++;
   if (f.prepMax !== null && f.prepMax !== undefined) count++;
@@ -4147,7 +4153,7 @@ function updateActiveChips() {
     bar.appendChild(chip);
   };
   (f.mealTypes || []).forEach(mt => addChip(mt, () => { state.filters.mealTypes = state.filters.mealTypes.filter(x => x !== mt); }));
-  if (f.ratingMin != null) addChip('Note ≥ ' + f.ratingMin + '/10', () => { state.filters.ratingMin = null; });
+  (f.ratingSel || []).forEach(v => addChip(v === 'unrated' ? 'Non notées' : 'Note ≥ ' + v + '/10', () => { state.filters.ratingSel = f.ratingSel.filter(x => x !== v); }));
   if (f.prepMax !== null && f.prepMax !== undefined) addChip('Prép. ≤ ' + f.prepMax + ' min', () => { state.filters.prepMax = null; });
   if (f.cookMax !== null && f.cookMax !== undefined) addChip('Cuisson ≤ ' + f.cookMax + ' min', () => { state.filters.cookMax = null; });
   (f.includeIngredients || []).forEach(id => { const n = getIngredientName(id); if (n) addChip('+ ' + n, () => { state.filters.includeIngredients = state.filters.includeIngredients.filter(x => x !== id); }); });
