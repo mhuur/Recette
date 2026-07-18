@@ -10,6 +10,8 @@ __*
 
 # Sauvegardes exportées depuis l'app (Réglages ▸ Sauvegarde .json) : elles
 # contiennent TOUT le carnet. Jamais dans le dépôt — il est sur GitHub.
+recettes-sauvegarde-*.json
+*sauvegarde*.json
 *backup*.json
 carnet*.json
 data/carnet*.json
@@ -21,3 +23,6 @@ data/*.json
 # Copies de conflit OneDrive (« nom (2).ext »)
 * (2).*
 * (3).*
+
+# Fichier de correction des saisons (specifique au carnet, transitoire)
+saisons-corrigees.json

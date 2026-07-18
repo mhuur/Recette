@@ -32,6 +32,7 @@ def extract_table():
                 break
         i += 1
     block = src[start:i + 1]
+    block = re.sub(r'/\*.*?\*/', '', block, flags=re.S)  # commentaires de bloc
     block = re.sub(r'//[^\n]*', '', block)          # commentaires de fin de ligne
     block = block.replace('ALL_YEAR', json.dumps(ALL_YEAR))
     block = re.sub(r"'([^']*)'", lambda m: json.dumps(m.group(1)), block)  # quotes JS → JSON
@@ -49,8 +50,8 @@ def months_label(months):
 def main():
     table = extract_table()
     flat = []                                        # (nom, catégorie, mois)
-    for cat, label in (('legume', 'Légume'), ('fruit', 'Fruit')):
-        for name, months in table[cat].items():
+    for cat, label in (('legume', 'Légume'), ('fruit', 'Fruit'), ('complement', 'Complément')):
+        for name, months in table.get(cat, {}).items():
             flat.append((name, label, months))
     flat.sort(key=lambda x: x[0].lower())
 
@@ -80,10 +81,12 @@ def main():
     for idx, month in enumerate(MONTHS, start=1):
         legumes = sorted(n for n, c, m in flat if c == 'Légume' and idx in m)
         fruits = sorted(n for n, c, m in flat if c == 'Fruit' and idx in m)
+        extra = sorted(n for n, c, m in flat if c == 'Complément' and idx in m)
         out.append('### %s' % month)
         out.append('')
         out.append('- **Légumes (%d)** : %s' % (len(legumes), ', '.join(legumes) or '—'))
         out.append('- **Fruits (%d)** : %s' % (len(fruits), ', '.join(fruits) or '—'))
+        out.append('- **Compléments (%d)** : %s' % (len(extra), ', '.join(extra) or '—'))
         out.append('')
 
     dest = ROOT / 'data' / 'saisons.md'

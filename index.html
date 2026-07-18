@@ -931,14 +931,56 @@ const SEASON_REFERENCE = {
     'Raisin': [8,9,10],
     'Rhubarbe': [5,6,7],
     'Tomate': [5,6,7,8,9,10]
+  },
+  /* Compléments hors Greenpeace : produits réellement saisonniers présents dans
+     le carnet mais absents du calendrier source. Volontairement PAS de
+     champignons de Paris, d'herbes ni d'exotiques (avocat, ananas, mangue,
+     gingembre) : disponibles toute l'année, les dater exclurait des recettes à
+     tort — et le filtre ignorant ce qui n'est pas daté, ne rien mettre est juste. */
+  complement: {
+    'Cèpe': [9,10,11],
+    'Champignon sauvage': [9,10,11],
+    'Cresson': [3,4,5,10,11],
+    'Fève': [4,5,6,7],
+    'Grenade': [10,11,12],
+    'Maïs': [7,8,9,10],
+    'Morille': [3,4,5],
+    'Pois gourmand': [4,5,6,7],
+    'Pourpier': [6,7,8,9],
+    'Roquette': [4,5,6,7,8,9,10]
   }
 };
+/* Synonymes du carnet → produit du calendrier. Le rapprochement par préfixe ne
+   peut pas deviner que « Butternut » est une courge ou « Sucrine » une laitue. */
+const SEASON_ALIASES = {
+  'Salade': 'Laitue', 'Mesclun': 'Laitue', 'Sucrine': 'Laitue',
+  'Butternut': 'Courge', 'Potimarron': 'Courge',
+  'Céleri': 'Céleri-branche', 'Céleri boule': 'Céleri-rave',
+  'Pousses d\'épinards': 'Épinard', 'Feuilles d\'épinards': 'Épinard',
+  'Cébette': 'Oignon', 'Ciboule': 'Oignon'
+};
 // Table plate { nom → mois }, l'ordre n'a pas d'importance (le matching trie par longueur)
-const SEASON_BY_NAME = Object.assign({}, SEASON_REFERENCE.legume, SEASON_REFERENCE.fruit);
+const SEASON_BY_NAME = Object.assign({}, SEASON_REFERENCE.legume, SEASON_REFERENCE.fruit, SEASON_REFERENCE.complement);
+Object.keys(SEASON_ALIASES).forEach(alias => {
+  const cible = SEASON_BY_NAME[SEASON_ALIASES[alias]];
+  if (cible) SEASON_BY_NAME[alias] = cible;
+});
 /* Pièges du rapprochement par préfixe : « Noix de coco » n'est pas la noix de
-   septembre, « Noix de Saint-Jacques » encore moins. Ces mots annulent la
-   correspondance plutôt que de dater à tort un ingrédient. */
-const SEASON_VETO = ['coco', 'muscade', 'cajou', 'pecan', 'saint jacques', 'pignon', 'sirop', 'confiture', 'jus de'];
+   septembre, « Pommes sourires » sont des frites. Ces mots annulent la
+   correspondance plutôt que de dater à tort un ingrédient.
+   ⚠ Ils sont comparés à une clé SINGULARISÉE : écrire « saint jacques » ici ne
+   matchait jamais « saint jacque ». D'où le passage par seasonKey() ci-dessous. */
+const SEASON_VETO = ['coco', 'muscade', 'cajou', 'pecan', 'saint jacques', 'petoncles',
+                     'pignons', 'sirop', 'confiture', 'jus de', 'zeste', 'frits', 'frites',
+                     'wasabi', 'sourires', 'chips', 'seches', 'sechees', 'surgeles'];
+/* Le type déclaré de l'ingrédient est une donnée plus fiable que son nom : un
+   « Poisson » ou une « Charcuterie » ne reçoit pas de saison de fruit/légume.
+   Sans type, on laisse passer (le veto et le préfixe font le tri). */
+function seasonTypeAllows(ing) {
+  const t = normalizeText(getTypeName(ing.typeId) || '');
+  if (!t || t === 'autres' || t === 'autre') return true;
+  return t.includes('fruit') || t.includes('legume');
+}
 
 const DEFAULT_MEAL_TYPES = [
   'Aucun', 'Entrée', 'Plat principal', 'Dessert', 'Accompagnement', 'Apéritif',
@@ -5606,7 +5648,8 @@ function seasonKey(s) {
 function findSeasonMatch(name) {
   const k = seasonKey(name);
   if (!k) return null;
-  if (SEASON_VETO.some(v => k.includes(v))) return null;
+  // seasonKey sur le veto AUSSI : les deux côtés doivent être singularisés
+  if (SEASON_VETO.some(v => k.includes(seasonKey(v)))) return null;
   let best = null, bestLen = 0;
   for (const ref of Object.keys(SEASON_BY_NAME)) {
     const rk = seasonKey(ref);
@@ -5618,6 +5661,7 @@ function findSeasonMatch(name) {
 function planSeasonAssignment() {
   const plan = [];
   state.ingredients.forEach(ing => {
+    if (!seasonTypeAllows(ing)) return; // « Noix de Saint-Jacques » est un poisson
     const ref = findSeasonMatch(ing.name);
     if (!ref) return;
     const months = SEASON_BY_NAME[ref];
