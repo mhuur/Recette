@@ -850,10 +850,12 @@ body.detail-open .recipe-detail { display: block; }
   font-size: 12.5px; line-height: 1.5;
   color: var(--green-800);
 }
+/* 2a : carte d'un seul tenant — pas de bandeau opaque derrière le titre
+   (il masquait le fond forêt et ignorait les réglages Apparence). */
 .recipe-detail-head {
-  background: rgba(255, 255, 255, .5);
-  border-bottom: 1px solid var(--border-soft);
-  padding: 20px 22px 18px;
+  background: none;
+  border-bottom: 0;
+  padding: 0 0 12px;
   position: relative;
 }
 .recipe-detail-topbtns { position: absolute; top: 16px; right: 16px; display: flex; gap: 6px; }
@@ -900,7 +902,7 @@ button.recipe-detail-rating:hover { background: rgba(183, 166, 58, .12); }
 .recipe-detail-cta { display: flex; gap: 8px; margin-top: 16px; }
 .recipe-detail-cta .btn { justify-content: center; }
 .recipe-detail-cta .btn-primary { flex: 1; }
-.recipe-detail-body { padding: 20px 22px 22px; }
+.recipe-detail-body { padding: 0; }
 .recipe-detail-body .meal-tags { margin-bottom: 18px; }
 /* 2a : ingrédients | préparation côte à côte (cf. bloc .recipe-detail-cols plus haut) */
 .recipe-section { margin: 0; padding: 0; border: 0; }
