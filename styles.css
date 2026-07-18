@@ -94,6 +94,10 @@
   --dur-base: 240ms;
 
   /* Fond forêt (réglable via Réglages → Apparence) */
+  /* Menus et popovers : surface OPAQUE, indépendante de l'opacité des encadrés.
+     Un menu translucide laisse lire le contenu derrière (illisible surtout en
+     style « Contour », où le flou est à 0). */
+  --menu-fill: rgba(255, 255, 255, .98);
   --sylva-bg-opacity: 0.35;
   --sylva-bg-pos: center;
   --sylva-bg-size: cover;
@@ -395,7 +399,7 @@ body:has(#tab-recipes.active) .topbar-back { display: none; }
   right: 0;
   width: 236px;
   z-index: 220;
-  background: var(--glass-fill-strong);
+  background: var(--menu-fill);
   backdrop-filter: blur(var(--blur-md));
   -webkit-backdrop-filter: blur(var(--blur-md));
   border: 1px solid var(--glass-border);
@@ -984,7 +988,7 @@ button.recipe-detail-rating:hover { background: rgba(183, 166, 58, .12); }
   position: fixed;
   z-index: 1000;
   min-width: 200px;
-  background: var(--glass-fill-strong);
+  background: var(--menu-fill);
   backdrop-filter: blur(var(--blur-md));
   -webkit-backdrop-filter: blur(var(--blur-md));
   border: 1px solid var(--glass-border);
@@ -1167,7 +1171,7 @@ body:has(.modal-overlay.active) .cart-scrim { visibility: hidden; }
   top: 100%;
   left: 0;
   right: 0;
-  background: var(--glass-fill-strong);
+  background: var(--menu-fill);
   backdrop-filter: blur(var(--blur-md));
   -webkit-backdrop-filter: blur(var(--blur-md));
   border: 1px solid var(--glass-border);
@@ -1236,7 +1240,7 @@ body:has(.modal-overlay.active) .cart-scrim { visibility: hidden; }
   position: absolute;
   top: calc(100% + 6px);
   left: 0;
-  background: var(--glass-fill-strong);
+  background: var(--menu-fill);
   backdrop-filter: blur(var(--blur-md));
   -webkit-backdrop-filter: blur(var(--blur-md));
   border: 1px solid var(--glass-border);
@@ -2051,6 +2055,7 @@ body.filter-rail-on .time-presets-group { gap: 12px; }
   .filter-sheet-overlay { background: transparent; pointer-events: none; }
   .filter-sheet {
     pointer-events: auto;
+    background: var(--menu-fill); /* popover flottant : opaque (le rail docké repasse en verre) */
     position: fixed;
     width: 280px;
     max-width: 280px;
