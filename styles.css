@@ -1952,13 +1952,6 @@ body.filter-rail-on .time-presets-group { gap: 12px; }
 .meal-recipes-empty { padding: 14px; text-align: center; color: var(--text-muted); font-size: 13px; }
 
 .rating-min-label { margin-left: 10px; font-size: 13px; color: var(--text-muted); }
-.rating-unrated {
-  display: flex; align-items: center; gap: 7px;
-  margin-top: 10px; font-size: 12px; font-weight: 500; text-transform: none; letter-spacing: 0;
-  color: var(--text-muted); cursor: pointer;
-}
-.rating-unrated input { accent-color: var(--green-600); cursor: pointer; }
-.rating-unrated:has(input:disabled) { opacity: .5; cursor: default; }
 /* Boutons de sélection (type de plat) — chip Sylva, actif = vert plein */
 .filter-pick {
   font: inherit;
