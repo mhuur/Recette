@@ -3981,8 +3981,9 @@ function openFilterSheet() {
 }
 // Desktop (≥769px) : popover ancré sous le bouton « Filtres » (maquette Sylva).
 // Mobile : on retire les styles inline pour laisser le bottom-sheet CSS s'appliquer.
-// ≥1280px : le panneau est une colonne permanente (CSS), pas un popover.
-function isFilterRailDocked() { return window.innerWidth >= 1280; }
+// ≥1400px : le panneau est une colonne permanente (CSS), pas un popover.
+// Seuil à garder synchronisé avec le @media (min-width:1400px) de styles.css.
+function isFilterRailDocked() { return window.innerWidth >= 1400; }
 function positionFilterSheet() {
   const sheet = document.querySelector('.filter-sheet');
   if (!sheet) return;
