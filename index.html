@@ -65,7 +65,7 @@
   <div class="topbar-actions">
     <button class="btn btn-primary" id="mobile-login-btn"><span class="tb-ico" data-icon="key"></span>Connexion</button>
     <button class="topbar-cart-btn" id="topbar-cart-btn" type="button" title="Liste de courses">
-      <span class="tb-ico" data-icon="shoppingCart" aria-hidden="true"></span><span class="topbar-cart-label">Panier</span>
+      <span class="tb-ico" data-icon="shoppingCart" aria-hidden="true"></span><span class="topbar-cart-label">Courses</span>
       <span class="count-badge hide-if-zero" id="selected-badge" data-value="0">0</span>
     </button>
     <button class="cmd-btn cmd-recipes-only" id="btn-claude-import" type="button" title="Créer une recette à partir d'un lien, d'un texte ou d'une photo, avec Claude"><span class="tb-ico" data-icon="sparkles"></span><span class="cmd-btn-label">Claude</span></button>
@@ -375,6 +375,8 @@
     <button class="cart-drawer-close" id="cart-drawer-close" type="button" title="Fermer"><span class="tb-ico" data-icon="x"></span></button>
   </div>
   <div class="cart-drawer-body">
+    <!-- Colonne d'outils (gauche en desktop, empilée en mobile) -->
+    <div class="cart-side">
     <div class="shopping-toolbar">
       <span class="selected-count">Recettes sélectionnées</span>
       <div id="selected-recipes-list"></div>
@@ -395,7 +397,11 @@
     <label class="quick-filter-chk" style="padding:0 6px;">
       <input type="checkbox" id="group-by-type" checked style="width:auto;"> Grouper par rayon
     </label>
-    <div id="shopping-container"></div>
+    </div>
+    <!-- La liste elle-même : occupe le centre, rayons en colonnes -->
+    <div class="cart-main">
+      <div id="shopping-container"></div>
+    </div>
   </div>
 </aside>
 
