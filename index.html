@@ -60,7 +60,9 @@
       <div class="sort-option" data-sort="time-desc">Temps ↓</div>
     </div>
   </div>
-  <button class="cmd-btn cmd-icon-only cmd-recipes-only" id="btn-toggle-selection-only" type="button" title="Afficher uniquement la sélection" aria-pressed="false"><span class="tb-ico" data-icon="check"></span></button>
+  <!-- Tri et « sélection uniquement » vivent dans l'en-tête de colonnes ; ils ne
+       restent ici qu'en mobile, où cet en-tête est masqué (cf. styles.css). -->
+  <button class="cmd-btn cmd-icon-only cmd-recipes-only js-selection-only" id="btn-toggle-selection-only" type="button" title="Afficher uniquement la sélection" aria-pressed="false"><span class="tb-ico" data-icon="check"></span></button>
   <span class="cmd-sep cmd-recipes-only" aria-hidden="true"></span>
   <div class="topbar-actions">
     <button class="btn btn-primary" id="mobile-login-btn"><span class="tb-ico" data-icon="key"></span>Connexion</button>
@@ -172,8 +174,14 @@
       <div class="recipes-main">
         <!-- Liste dense (2a) : en-tête de colonnes + lignes en grille -->
         <div class="recipe-list">
-          <div class="recipe-list-head" aria-hidden="true">
-            <span></span><span>Recette</span><span>Note</span><span>Pers.</span><span>Temps</span>
+          <!-- En-tête cliquable : 1er clic = croissant, 2e = décroissant. La 1re cellule
+               porte le filtre « sélection uniquement », au-dessus des cases. -->
+          <div class="recipe-list-head">
+            <button type="button" class="rlh-sel js-selection-only" title="Afficher uniquement la sélection" aria-pressed="false"><span class="tb-ico" data-icon="check"></span></button>
+            <button type="button" class="rlh-sort" data-sort-col="name">Recette<span class="rlh-arrow" aria-hidden="true"></span></button>
+            <button type="button" class="rlh-sort" data-sort-col="rating">Note<span class="rlh-arrow" aria-hidden="true"></span></button>
+            <button type="button" class="rlh-sort" data-sort-col="servings">Pers.<span class="rlh-arrow" aria-hidden="true"></span></button>
+            <button type="button" class="rlh-sort" data-sort-col="time">Temps<span class="rlh-arrow" aria-hidden="true"></span></button>
           </div>
           <div id="recipes-container"></div>
         </div>
@@ -2936,6 +2944,8 @@ function getFilteredRecipes() {
     case 'rating-asc': list.sort((a,b) => (a.rating || 11) - (b.rating || 11)); break;
     case 'time-asc': list.sort((a,b) => ((a.prepTime||0)+(a.cookTime||0)) - ((b.prepTime||0)+(b.cookTime||0))); break;
     case 'time-desc': list.sort((a,b) => ((b.prepTime||0)+(b.cookTime||0)) - ((a.prepTime||0)+(a.cookTime||0))); break;
+    case 'servings-asc': list.sort((a,b) => (a.servings || 0) - (b.servings || 0)); break;
+    case 'servings-desc': list.sort((a,b) => (b.servings || 0) - (a.servings || 0)); break;
   }
   return list;
 }
@@ -3905,19 +3915,19 @@ function createFilterMenu(cfg) {
 function buildFilterBar() {
   facetRefreshers.length = 0; // les facettes vont se ré-enregistrer ci-dessous
 
-  // Quick filter: Sélection uniquement (bouton de la toolbar)
-  const selBtn = document.getElementById('btn-toggle-selection-only');
-  if (selBtn) {
-    selBtn.classList.toggle('active', !!state.filters.selectedOnly);
-    selBtn.setAttribute('aria-pressed', String(!!state.filters.selectedOnly));
-    selBtn.onclick = () => {
+  // Quick filter « Sélection uniquement » : en-tête de colonnes en desktop,
+  // barre du haut en mobile — les deux boutons partagent .js-selection-only.
+  document.querySelectorAll('.js-selection-only').forEach(b => {
+    b.classList.toggle('active', !!state.filters.selectedOnly);
+    b.setAttribute('aria-pressed', String(!!state.filters.selectedOnly));
+    b.onclick = () => {
       state.filters.selectedOnly = !state.filters.selectedOnly;
-      selBtn.classList.toggle('active', state.filters.selectedOnly);
-      selBtn.setAttribute('aria-pressed', String(state.filters.selectedOnly));
       saveLocal();
+      buildFilterBar(); // resynchronise les deux boutons
       renderRecipes();
     };
-  }
+  });
+  syncSortHead();
 
   // Filtre Note : sélecteur d'étoiles « note minimale ≥ » (chaque étoile = 2/10)
   const ratingWrap = document.getElementById('filter-rating-wrapper');
@@ -4009,9 +4019,38 @@ function setSortValue(v) {
   document.querySelectorAll('#sort-popup .sort-option').forEach(o => {
     o.classList.toggle('active-sort', o.dataset.sort === v);
   });
+  syncSortHead();
   saveLocal();
   renderRecipes();
 }
+
+/* Tri par en-tête de colonne : 1er clic croissant, 2e décroissant.
+   Le popup de la barre reste pour le mobile, où l'en-tête est masqué. */
+const SORT_COLUMNS = {
+  name:     ['name-asc', 'name-desc'],
+  rating:   ['rating-asc', 'rating-desc'],
+  servings: ['servings-asc', 'servings-desc'],
+  time:     ['time-asc', 'time-desc']
+};
+function syncSortHead() {
+  const cur = state.filters.sort;
+  document.querySelectorAll('.recipe-list-head .rlh-sort').forEach(b => {
+    const pair = SORT_COLUMNS[b.dataset.sortCol] || [];
+    const i = pair.indexOf(cur);
+    b.classList.toggle('on', i !== -1);
+    b.setAttribute('aria-sort', i === 0 ? 'ascending' : i === 1 ? 'descending' : 'none');
+    const arrow = b.querySelector('.rlh-arrow');
+    if (arrow) arrow.textContent = i === 0 ? '↑' : i === 1 ? '↓' : '';
+  });
+}
+document.querySelectorAll('.recipe-list-head .rlh-sort').forEach(b => {
+  b.addEventListener('click', () => {
+    const pair = SORT_COLUMNS[b.dataset.sortCol];
+    if (!pair) return;
+    // déjà croissant sur cette colonne → on inverse ; sinon on (re)part en croissant
+    setSortValue(state.filters.sort === pair[0] ? pair[1] : pair[0]);
+  });
+});
 document.getElementById('sort-btn').addEventListener('click', e => {
   e.stopPropagation();
   document.getElementById('sort-popup').classList.toggle('active');

@@ -707,6 +707,35 @@ label {
   text-transform: uppercase;
   color: var(--mist-500);
 }
+/* En-têtes cliquables : le tri se fait ici (le popup de la barre ne sert plus
+   qu'en mobile, où cet en-tête est masqué). */
+.rlh-sort {
+  display: flex; align-items: center; gap: 4px;
+  background: none; border: 0; padding: 2px 0; margin: 0;
+  font: inherit; letter-spacing: inherit; text-transform: inherit;
+  color: inherit; cursor: pointer; text-align: left;
+  min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  transition: color var(--dur-fast);
+}
+.rlh-sort:hover { color: var(--green-700); }
+.rlh-sort.on { color: var(--green-700); }
+.rlh-arrow { font-family: var(--font-sans); font-size: 11px; line-height: 1; }
+/* Dès que l'en-tête de colonnes est visible (>768px), il porte le tri et le
+   filtre de sélection : les boutons de la barre du haut feraient doublon. */
+@media (min-width: 769px) {
+  .cmd-sort, #btn-toggle-selection-only { display: none; }
+}
+/* Filtre « sélection uniquement », au-dessus de la colonne des cases */
+.rlh-sel {
+  width: 20px; height: 20px; padding: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: none; border: 1px solid transparent; border-radius: 6px;
+  color: var(--mist-400); cursor: pointer;
+  transition: color var(--dur-fast), background var(--dur-fast), border-color var(--dur-fast);
+}
+.rlh-sel:hover { color: var(--green-700); background: rgba(47, 125, 85, .08); }
+.rlh-sel.active { color: #fff; background: var(--green-600); border-color: var(--green-600); }
+.rlh-sel svg { width: 13px; height: 13px; }
 .recipe-row {
   padding: 7px 18px;
   border-bottom: 1px solid var(--mist-100);
