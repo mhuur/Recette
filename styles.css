@@ -1842,6 +1842,10 @@ body.cart-open .cart-drawer { transform: translateX(0); visibility: visible; }
   font-size: 15px; font-weight: 700; line-height: 1;
 }
 .filter-menu-box svg { width: 13px; height: 13px; }
+/* Basculeur ET/OU des ingrédients requis */
+.filter-menu-mode { display: flex; align-items: center; gap: 6px; padding: 9px 4px 0; }
+.filter-menu-mode-label { font-size: 11px; color: var(--text-muted); }
+.chip-sm { padding: 3px 9px; font-size: 11px; }
 /* Aide du cycle requis → interdit → retiré (menu Ingrédients) */
 .filter-menu-hint { font-size: 11px; color: var(--text-dim); padding: 7px 4px 0; }
 .filter-menu-hint .req { color: var(--success); }

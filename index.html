@@ -767,6 +767,13 @@ service cloud.firestore {
   <div class="filter-menu-head">
     <input type="text" class="filter-menu-search" id="filter-ing-search" placeholder="Rechercher un ingrédient…"
            autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" data-form-type="other">
+    <!-- Plusieurs requis : OU par défaut (« de la tomate, peu importe laquelle »),
+         ET sur demande (« tomate ET mozzarella »). Sans ça, cocher 3 tomates = 0 recette. -->
+    <div class="filter-menu-mode" id="filter-ing-mode">
+      <span class="filter-menu-mode-label">Requis :</span>
+      <button type="button" class="chip-toggle chip-sm" data-mode="any">Au moins un</button>
+      <button type="button" class="chip-toggle chip-sm" data-mode="all">Tous</button>
+    </div>
     <div class="filter-menu-hint">1 clic = <b class="req">requis</b> · 2 clics = <b class="exc">interdit</b> · 3 = retiré</div>
   </div>
   <div class="filter-menu-list" id="filter-ing-list" role="listbox" aria-multiselectable="true"></div>
@@ -844,6 +851,7 @@ let state = {
     pescatarianOnly: false,
     includeIngredients: [],
     excludeIngredients: [],
+    ingredientsMode: 'any', // 'any' = au moins un des requis · 'all' = tous
     includeFamilies: [],
     excludeFamilies: [],
     selectedOnly: false
@@ -1477,13 +1485,15 @@ function load() {
       if (!state.mealTypes.some(m => normalizeText(m) === 'aucun')) {
         state.mealTypes.unshift('Aucun');
       }
-      if (!state.filters) state.filters = { search: '', sort: 'name-asc', ratingSel: [], prepMax: null, cookMax: null, mealTypes: [], temperatures: [], vegetarianOnly: false, pescatarianOnly: false, includeIngredients: [], excludeIngredients: [], includeFamilies: [], excludeFamilies: [], selectedOnly: false };
+      if (!state.filters) state.filters = { search: '', sort: 'name-asc', ratingSel: [], prepMax: null, cookMax: null, mealTypes: [], temperatures: [], vegetarianOnly: false, pescatarianOnly: false, includeIngredients: [], excludeIngredients: [], ingredientsMode: 'any', includeFamilies: [], excludeFamilies: [], selectedOnly: false };
       // Migration : ajouter nouveaux champs filtres s'ils manquent
       // Filtre Familles retiré de l'UI : on purge d'anciens filtres persistés,
       // sinon ils resteraient actifs sans moyen de les enlever.
       state.filters.includeFamilies = [];
       state.filters.excludeFamilies = [];
       if (state.filters.selectedOnly === undefined) state.filters.selectedOnly = false;
+      // Filtres d'avant le basculeur : 'any' (au moins un) est le nouveau défaut.
+      if (state.filters.ingredientsMode !== 'all') state.filters.ingredientsMode = 'any';
       // Migration depuis ancien selectionMode
       if (state.filters.selectionMode !== undefined) {
         state.filters.selectedOnly = state.filters.selectionMode === 'checked';
@@ -2849,7 +2859,12 @@ function recipeMatches(r, f, skip) {
   if (!skip.ingredients) {
     if (f.includeIngredients.length > 0) {
       const ids = (r.ingredients || []).map(i => i.ingredientId);
-      if (!f.includeIngredients.every(iid => ids.includes(iid))) return false;
+      // 'any' (défaut) = au moins un des requis — « une recette avec de la tomate,
+      // peu importe laquelle » ; 'all' = tous, pour croiser « tomate ET mozzarella ».
+      const ok = f.ingredientsMode === 'all'
+        ? f.includeIngredients.every(iid => ids.includes(iid))
+        : f.includeIngredients.some(iid => ids.includes(iid));
+      if (!ok) return false;
     }
     if (f.excludeIngredients.length > 0) {
       const ids = (r.ingredients || []).map(i => i.ingredientId);
@@ -3839,6 +3854,7 @@ function createFilterMenu(cfg) {
     if (valueEl) valueEl.textContent = s.label;
     btn.classList.toggle('on', s.active);
     btn.title = s.title;
+    cfg.refreshExtra?.(); // contrôles propres au menu (ex. basculeur tous/au moins un)
     if (isOpen()) renderList();
   }
 
@@ -4019,16 +4035,38 @@ createFilterMenu({
     }
   },
   clearAll: () => { state.filters.includeIngredients = []; state.filters.excludeIngredients = []; },
+  // Le basculeur ET/OU vit dans l'en-tête du menu : on le resynchronise à chaque refresh.
+  refreshExtra: () => {
+    const mode = state.filters.ingredientsMode === 'all' ? 'all' : 'any';
+    document.querySelectorAll('#filter-ing-mode .chip-toggle').forEach(b => {
+      const on = b.dataset.mode === mode;
+      b.classList.toggle('on', on);
+      b.setAttribute('aria-pressed', String(on));
+    });
+  },
   summary: () => {
-    const inc = (state.filters.includeIngredients || []).map(id => '+' + getIngredientName(id));
+    const incIds = state.filters.includeIngredients || [];
+    const inc = incIds.map(id => '+' + getIngredientName(id));
     const exc = (state.filters.excludeIngredients || []).map(id => '−' + getIngredientName(id));
     const all = [...inc, ...exc];
+    // « tous » n'est signalé que quand il change vraiment le résultat (2 requis ou plus)
+    const suffix = (state.filters.ingredientsMode === 'all' && incIds.length > 1) ? ' (tous)' : '';
     return {
       active: all.length > 0,
-      label: !all.length ? 'Tous les ingrédients' : all.length <= 2 ? all.join(', ') : all.length + ' ingrédients',
-      title: all.length ? 'Ingrédients : ' + all.join(', ') : 'Aucun ingrédient requis ni interdit'
+      label: !all.length ? 'Tous les ingrédients'
+           : (all.length <= 2 ? all.join(', ') : all.length + ' ingrédients') + suffix,
+      title: all.length ? 'Ingrédients : ' + all.join(', ') + suffix : 'Aucun ingrédient requis ni interdit'
     };
   }
+});
+
+// Basculeur « au moins un / tous » (câblé une fois : le markup est statique)
+document.querySelectorAll('#filter-ing-mode .chip-toggle').forEach(b => {
+  b.addEventListener('click', () => {
+    state.filters.ingredientsMode = b.dataset.mode;
+    saveLocal();
+    renderRecipes(); // → refreshAllFacets → refresh() → refreshExtra() met à jour les bulles
+  });
 });
 
 createFilterMenu({
@@ -4184,7 +4222,7 @@ document.addEventListener('keydown', e => {
 });
 
 function resetAllFilters() {
-  state.filters = { search: '', sort: 'name-asc', ratingSel: [], prepMax: null, cookMax: null, mealTypes: [], temperatures: [], vegetarianOnly: false, pescatarianOnly: false, includeIngredients: [], excludeIngredients: [], includeFamilies: [], excludeFamilies: [], selectedOnly: false };
+  state.filters = { search: '', sort: 'name-asc', ratingSel: [], prepMax: null, cookMax: null, mealTypes: [], temperatures: [], vegetarianOnly: false, pescatarianOnly: false, includeIngredients: [], excludeIngredients: [], ingredientsMode: 'any', includeFamilies: [], excludeFamilies: [], selectedOnly: false };
   document.getElementById('search-input').value = '';
   setSortValue('name-asc');
   const sb = document.getElementById('btn-toggle-selection-only');
