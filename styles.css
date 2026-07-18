@@ -659,10 +659,13 @@ label {
 .meal-tags { display: flex; flex-wrap: wrap; gap: 4px; }
 
 /* Panneau détail */
+/* Transparent : on laisse voir le fond forêt du body. Le texte de l'app ne
+   transparaît pas car .topbar + .recipes-main sont masqués quand le détail
+   est ouvert (cf. media ≤1100px). Sert aussi de zone de clic pour fermer. */
 .detail-scrim {
   display: none;
   position: fixed; inset: 0;
-  background: var(--scrim-veil);
+  background: transparent;
   z-index: 140;
 }
 .recipe-detail {
@@ -893,7 +896,7 @@ button.recipe-detail-rating:hover { background: rgba(183, 166, 58, .12); }
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: var(--scrim-veil);
+  background: transparent; /* fond forêt visible ; l'UI derrière est masquée (cf. body:has) */
   display: none;
   align-items: flex-start;
   justify-content: center;
@@ -902,6 +905,11 @@ button.recipe-detail-rating:hover { background: rgba(183, 166, 58, .12); }
   overflow-y: auto;
 }
 .modal-overlay.active { display: flex; }
+/* Modale ouverte = carte seule sur le fond forêt : on masque tout le reste
+   (barre, liste, panneau détail, tiroir courses) pour ne rien voir transparaître. */
+body:has(.modal-overlay.active) .app-layout,
+body:has(.modal-overlay.active) .cart-drawer,
+body:has(.modal-overlay.active) .cart-scrim { visibility: hidden; }
 .modal {
   background: var(--glass-fill-strong);
   backdrop-filter: blur(var(--blur-lg));
@@ -1173,10 +1181,15 @@ button.recipe-detail-rating:hover { background: rgba(183, 166, 58, .12); }
   display: none;
   position: fixed;
   inset: 0;
-  background: var(--scrim-veil);
+  background: transparent; /* fond forêt visible ; l'UI derrière est masquée */
   z-index: 240;
 }
 body.cart-open .cart-scrim { display: block; }
+/* Tiroir courses seul sur le fond forêt : masque le reste derrière. */
+body.cart-open .topbar,
+body.cart-open .recipes-main,
+body.cart-open .recipe-detail,
+body.cart-open .detail-scrim { visibility: hidden; }
 .cart-drawer {
   position: fixed;
   top: 0; right: 0; bottom: 0;
@@ -2120,6 +2133,10 @@ select.bug-tab-select option{background:#fff;color:var(--text);font-weight:500;t
    AVANT le bloc mobile : les règles ≤768px doivent gagner. */
 @media (max-width: 1100px) {
   body.detail-open .detail-scrim { display: block; }
+  /* Carte détail seule sur le fond forêt : masque la barre du haut + la liste
+     derrière (sinon leur texte transparaîtrait à travers la carte translucide). */
+  body.detail-open .topbar,
+  body.detail-open .recipes-main { visibility: hidden; }
   .recipe-detail {
     position: fixed;
     top: 16px; right: 16px; bottom: 16px;
