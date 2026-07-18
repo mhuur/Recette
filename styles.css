@@ -884,6 +884,9 @@ body.detail-open .recipe-detail { display: block; }
   padding: 0;
 }
 .recipe-detail-iconbtn:hover { color: var(--text-strong); }
+/* Suppression : seule action restante de l'ancien menu ⋮ */
+.recipe-detail-iconbtn.danger { color: var(--danger); border-color: color-mix(in srgb, var(--danger) 35%, transparent); }
+.recipe-detail-iconbtn.danger:hover { color: var(--danger); background: var(--danger-soft); }
 .recipe-detail-iconbtn svg { width: 15px; height: 15px; }
 .recipe-detail-title {
   margin: 0 0 8px;
@@ -998,43 +1001,6 @@ button.recipe-detail-rating:hover { background: rgba(183, 166, 58, .12); }
 .recipe-types-label { display: none; }
 
 /* Menu contextuel de recette (appendé au body, positionné en JS) */
-.recipe-context-menu {
-  position: fixed;
-  z-index: 1000;
-  min-width: 200px;
-  background: var(--menu-fill);
-  backdrop-filter: blur(var(--blur-md));
-  -webkit-backdrop-filter: blur(var(--blur-md));
-  border: 1px solid var(--glass-border);
-  border-radius: 14px;
-  box-shadow: var(--shadow-glass);
-  padding: 5px;
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-  animation: sylvaPop var(--dur-fast) var(--ease-out);
-}
-.recipe-context-menu button {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  width: 100%;
-  padding: 9px 11px;
-  background: none;
-  border: none;
-  border-radius: 10px;
-  color: var(--text);
-  font-size: 13px;
-  font-weight: 600;
-  text-align: left;
-  cursor: pointer;
-}
-.recipe-context-menu button svg { width: 16px; height: 16px; flex: 0 0 auto; color: var(--text-muted); }
-.recipe-context-menu button:hover { background: rgba(47, 125, 85, .08); }
-.recipe-context-menu button.danger { color: var(--danger); }
-.recipe-context-menu button.danger:hover { background: var(--danger-soft); }
-.recipe-context-menu button.danger svg { color: var(--danger); }
-.recipe-context-menu .rcm-sep { height: 1px; background: var(--border-soft); margin: 3px 8px; }
 
 /* Zones de texte de la modale recette */
 .recipe-textarea {

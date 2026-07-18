@@ -3018,7 +3018,7 @@ function renderRecipeDetail() {
     + '<h2 class="recipe-detail-title">' + escapeHtml(r.name) + '</h2>'
     + '<div class="recipe-detail-cta">'
     + '<button class="recipe-detail-edit" id="detail-edit-btn" type="button">' + ICONS.pencil + 'Modifier</button>'
-    + '<button class="recipe-detail-iconbtn" id="detail-menu-btn" type="button" title="Actions" aria-label="Actions sur la recette">' + ICONS.moreVertical + '</button>'
+    + '<button class="recipe-detail-iconbtn danger" id="detail-delete-btn" type="button" title="Supprimer" aria-label="Supprimer la recette">' + ICONS.trash2 + '</button>'
     + '<button class="recipe-detail-iconbtn" id="detail-close-btn" type="button" title="Fermer" aria-label="Fermer le détail">' + ICONS.x + '</button>'
     + '</div></div>';
   if (rated) {
@@ -3089,7 +3089,7 @@ function renderRecipeDetail() {
   panel.innerHTML = head + body;
 
   panel.querySelector('#detail-close-btn').onclick = closeRecipeDetail;
-  panel.querySelector('#detail-menu-btn').onclick = (e) => { e.stopPropagation(); openRecipeMenu(r, e.currentTarget); };
+  panel.querySelector('#detail-delete-btn').onclick = (e) => { e.stopPropagation(); deleteRecipeFromMenu(r); };
   panel.querySelector('#detail-edit-btn').onclick = () => openRecipeModal(r);
   const rateBtn = panel.querySelector('[data-rate]');
   if (rateBtn) rateBtn.onclick = () => openRatingDialog(r);
@@ -3100,74 +3100,6 @@ document.addEventListener('keydown', e => {
       && !document.querySelector('.modal-overlay.active')
       && !document.body.classList.contains('cart-open')) closeRecipeDetail();
 });
-
-/* ========================================================================
-   MENU CONTEXTUEL DES CARTES RECETTE (appendé au body, positionné en JS)
-   ======================================================================== */
-let recipeMenuEl = null;
-function recipeMenuKeyHandler(e) { if (e.key === 'Escape') closeRecipeMenu(); }
-function recipeMenuOutsideHandler(e) {
-  if (recipeMenuEl && !recipeMenuEl.contains(e.target)) closeRecipeMenu();
-}
-function closeRecipeMenu() {
-  if (recipeMenuEl) { recipeMenuEl.remove(); recipeMenuEl = null; }
-  document.removeEventListener('keydown', recipeMenuKeyHandler, true);
-  document.removeEventListener('click', recipeMenuOutsideHandler);
-  window.removeEventListener('scroll', closeRecipeMenu, true);
-}
-function openRecipeMenu(r, anchorEl) {
-  // Reclic sur le même bouton → ferme (toggle)
-  const wasOpen = recipeMenuEl && recipeMenuEl._anchor === anchorEl;
-  closeRecipeMenu();
-  if (wasOpen) return;
-
-  const menu = document.createElement('div');
-  menu.className = 'recipe-context-menu';
-  menu.setAttribute('role', 'menu');
-  menu._anchor = anchorEl;
-
-  const addItem = (iconKey, label, onClick, opts = {}) => {
-    const b = document.createElement('button');
-    b.type = 'button';
-    b.setAttribute('role', 'menuitem');
-    if (opts.danger) b.className = 'danger';
-    b.innerHTML = (ICONS[iconKey] || '') + '<span>' + escapeHtml(label) + '</span>';
-    b.onclick = (e) => { e.stopPropagation(); closeRecipeMenu(); onClick(); };
-    menu.appendChild(b);
-  };
-  const addSep = () => { const s = document.createElement('div'); s.className = 'rcm-sep'; menu.appendChild(s); };
-
-  addItem('pencil', 'Modifier', () => openRecipeModal(r));
-  addItem('copy', 'Dupliquer', () => duplicateRecipe(r));
-  const inList = state.selectedRecipeIds.includes(r.id);
-  addItem('shoppingCart', inList ? 'Retirer des courses' : 'Ajouter aux courses', () => toggleRecipeSelection(r));
-  if (r.origin && r.origin.type === 'url' && r.origin.url) {
-    addItem('externalLink', 'Ouvrir la source', () => window.open(r.origin.url, '_blank', 'noopener'));
-  }
-  addSep();
-  addItem('trash2', 'Supprimer', () => deleteRecipeFromMenu(r), { danger: true });
-
-  document.body.appendChild(menu);
-  recipeMenuEl = menu;
-
-  // Positionnement : sous le bouton, aligné à droite ; bascule au-dessus si déborde
-  const rect = anchorEl.getBoundingClientRect();
-  const vw = window.innerWidth, vh = window.innerHeight, margin = 8;
-  const mw = menu.offsetWidth, mh = menu.offsetHeight;
-  let left = rect.right - mw;
-  left = Math.max(margin, Math.min(left, vw - margin - mw));
-  let top = rect.bottom + 4;
-  if (top + mh > vh - margin) top = Math.max(margin, rect.top - mh - 4);
-  menu.style.left = left + 'px';
-  menu.style.top = top + 'px';
-
-  // Fermeture : Échap, clic extérieur (au prochain clic), scroll
-  document.addEventListener('keydown', recipeMenuKeyHandler, true);
-  window.addEventListener('scroll', closeRecipeMenu, true);
-  setTimeout(() => document.addEventListener('click', recipeMenuOutsideHandler), 0);
-  // Le clic du ⋮ fait stopPropagation : on arme le bouton retour ici, dans le geste.
-  if (typeof syncBackGuard === 'function') syncBackGuard();
-}
 
 function duplicateRecipe(r) {
   const copy = JSON.parse(JSON.stringify(r));
@@ -6764,11 +6696,9 @@ const BACK_LAYERS = [
                 && document.getElementById('filter-sheet-overlay')?.classList.contains('active') === true,
     close: () => closeFilterSheet() },
   { isOpen: () => !!document.querySelector('.modal-overlay.active'), close: () => closeAllModals() },
-  { isOpen: () => !!document.querySelector('.recipe-context-menu')
-                || document.getElementById('sort-popup')?.classList.contains('active') === true
+  { isOpen: () => document.getElementById('sort-popup')?.classList.contains('active') === true
                 || document.getElementById('user-avatar-wrapper')?.classList.contains('open') === true,
     close: () => {
-      closeRecipeMenu();
       document.getElementById('sort-popup')?.classList.remove('active');
       document.getElementById('user-avatar-wrapper')?.classList.remove('open');
     } },
