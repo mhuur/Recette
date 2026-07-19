@@ -1731,6 +1731,14 @@ body.sugg-preview-open .sugg-preview { display: flex; }
   .sugg-foot { grid-area: foot; }
 }
 
+/* Grand écran : la carte se cale sur la seule colonne LISTE et libère la place
+   de la colonne détail (392px + gap) — occuper liste + détail la rendait trop
+   large. Seuil à 1500px : en dessous, la colonne liste seule serait trop étroite,
+   la carte reprend donc toute la largeur disponible. */
+@media (min-width: 1500px) {
+  .sugg-drawer { right: calc(392px + 16px); }
+}
+
 /* Carte « recettes sélectionnées » dans le tiroir */
 .shopping-toolbar {
   background: var(--glass-fill-strong);
