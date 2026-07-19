@@ -70,6 +70,7 @@
       <span class="tb-ico" data-icon="shoppingCart" aria-hidden="true"></span><span class="topbar-cart-label">Courses</span>
       <span class="count-badge hide-if-zero" id="selected-badge" data-value="0">0</span>
     </button>
+    <button class="cmd-btn cmd-recipes-only" id="btn-suggest" type="button" title="Se faire proposer des recettes"><span class="tb-ico" data-icon="lightbulb"></span><span class="cmd-btn-label">Idées</span></button>
     <button class="cmd-btn cmd-recipes-only" id="btn-claude-import" type="button" title="Créer une recette à partir d'un lien, d'un texte ou d'une photo, avec Claude"><span class="tb-ico" data-icon="sparkles"></span><span class="cmd-btn-label">Claude</span></button>
     <button class="cmd-add cmd-recipes-only" id="btn-new-recipe-inline" type="button"><span class="tb-ico" data-icon="plus"></span><span class="cmd-btn-label">Ajouter</span></button>
     <div class="sidebar-user" id="sidebar-user">
@@ -380,6 +381,34 @@
     <!-- La liste elle-même : occupe le centre, rayons en colonnes -->
     <div class="cart-main">
       <div id="shopping-container"></div>
+    </div>
+  </div>
+</aside>
+
+<!-- Tiroir Suggestions : propose des recettes à retenir sans parcourir le carnet.
+     Même structure que le tiroir Courses (fond forêt visible, back guard). -->
+<div class="sugg-scrim" id="sugg-scrim"></div>
+<aside class="sugg-drawer" id="sugg-drawer" aria-label="Suggestions de recettes">
+  <div class="cart-drawer-head">
+    <span class="tb-ico" data-icon="lightbulb" aria-hidden="true"></span>
+    <div class="cart-drawer-titles">
+      <div class="cart-drawer-title">Idées de recettes</div>
+      <div class="cart-drawer-sub" id="sugg-pool-info">—</div>
+    </div>
+    <button class="cart-drawer-close" id="sugg-close" type="button" title="Fermer"><span class="tb-ico" data-icon="x"></span></button>
+  </div>
+  <div class="sugg-body">
+    <div class="sugg-toolbar">
+      <label class="sugg-count-ctrl">
+        <span>Combien&nbsp;?</span>
+        <input type="range" id="sugg-count" min="3" max="10" step="1" value="5">
+        <output id="sugg-count-val">5</output>
+      </label>
+      <button class="btn btn-sm" id="sugg-reroll" type="button"><span class="tb-ico" data-icon="refreshCw"></span>Tout relancer</button>
+    </div>
+    <div id="sugg-list" class="sugg-list"></div>
+    <div class="sugg-foot">
+      <button class="btn btn-primary" id="sugg-accept" type="button"><span class="tb-ico" data-icon="check"></span>Ajouter à ma sélection</button>
     </div>
   </div>
 </aside>
@@ -2180,6 +2209,234 @@ document.addEventListener('keydown', e => {
 });
 
 /* ========================================================================
+   TIROIR SUGGESTIONS — « qu'est-ce qu'on mange ? » sans parcourir le carnet.
+   Tirage pondéré, pas un dé : les recettes éprouvées sortent plus souvent, les
+   jamais retenues gardent leur chance, et ce qui vient d'être fait s'efface.
+   ======================================================================== */
+const SUGG_COUNT_KEY = 'sylva_suggest_count_v1';
+// [jours écoulés, facteur] — une recette retenue hier ne doit quasiment pas
+// ressortir, une oubliée depuis 4 mois redevient une candidate normale.
+const SUGG_RECENCY = [[14, 0.05], [30, 0.25], [60, 0.6], [120, 0.85]];
+// Tirage courant : { id, pinned } — les épinglées survivent aux relances.
+let suggItems = [];
+
+function suggCount() {
+  const el = document.getElementById('sugg-count');
+  return el ? parseInt(el.value, 10) || 5 : 5;
+}
+
+// Poids d'une recette pour le tirage. `drawn` = recettes déjà retenues dans ce
+// tirage, pour éviter trois plats du même genre à la suite.
+function suggestionWeight(r, drawn) {
+  const rating = (r.rating == null || r.rating === '') ? null : Number(r.rating);
+  let w;
+  if (rating == null) w = 3;          // jamais notée : mérite d'être testée
+  else if (rating >= 9) w = 5;
+  else if (rating >= 8) w = 4;
+  else if (rating >= 7) w = 3;
+  else if (rating >= 6) w = 1.8;
+  else w = 0.5;                        // notée sous 6 : rarement proposée
+
+  if (!r.lastPickedAt) {
+    w *= 1.5;                          // jamais retenue : coup de pouce
+  } else {
+    const days = (Date.now() - r.lastPickedAt) / 86400000;
+    for (const [limit, factor] of SUGG_RECENCY) {
+      if (days < limit) { w *= factor; break; }
+    }
+  }
+
+  // Variété : pénalise un type de plat ou une famille de protéines déjà tirés.
+  for (const other of drawn) {
+    const sameMeal = (r.mealTypes || []).some(t => t !== 'Aucun' && (other.mealTypes || []).includes(t));
+    if (sameMeal) w *= 0.4;
+    if (recipeHasFamilies(r, MEAT_FAMILIES) && recipeHasFamilies(other, MEAT_FAMILIES)) w *= 0.55;
+    if (recipeHasFamilies(r, FISH_FAMILIES) && recipeHasFamilies(other, FISH_FAMILIES)) w *= 0.55;
+  }
+  return Math.max(w, 0.02); // jamais zéro : avec un carnet étroit tout doit rester tirable
+}
+
+// Tire `n` recettes dans les recettes filtrées, hors `excludeIds`.
+function pickSuggestions(n, excludeIds, alreadyDrawn) {
+  const pool = getFilteredRecipes().filter(r => !excludeIds.has(r.id));
+  const drawn = (alreadyDrawn || []).slice();
+  const out = [];
+  while (out.length < n && pool.length) {
+    const weights = pool.map(r => suggestionWeight(r, drawn));
+    const total = weights.reduce((a, b) => a + b, 0);
+    let x = Math.random() * total;
+    let i = 0;
+    while (i < weights.length - 1 && x > weights[i]) { x -= weights[i]; i++; }
+    const chosen = pool.splice(i, 1)[0];
+    out.push(chosen);
+    drawn.push(chosen);
+  }
+  return out;
+}
+
+// Recettes à ne jamais proposer : déjà dans la sélection, ou déjà à l'écran.
+function suggExcluded(keepIds) {
+  const ex = new Set(state.selectedRecipeIds);
+  (keepIds || []).forEach(id => ex.add(id));
+  return ex;
+}
+
+function suggDrawnRecipes(ids) {
+  return ids.map(id => state.recipes.find(r => r.id === id)).filter(Boolean);
+}
+
+// Relance : `mode` = 'all' (garde les épinglées) ou un id de carte à remplacer.
+function rerollSuggestions(mode) {
+  const keep = mode === 'all' ? suggItems.filter(it => it.pinned) : suggItems.filter(it => it.id !== mode);
+  const keepIds = keep.map(it => it.id);
+  const need = mode === 'all' ? suggCount() - keep.length : 1;
+  const excluded = suggExcluded(keepIds);
+  // « Proposer autre chose » doit écarter la recette refusée, sinon le tirage
+  // peut la resservir aussitôt — le clic paraît sans effet.
+  if (mode !== 'all') excluded.add(mode);
+  const fresh = pickSuggestions(Math.max(need, 0), excluded, suggDrawnRecipes(keepIds));
+  if (mode === 'all') {
+    suggItems = keep.concat(fresh.map(r => ({ id: r.id, pinned: false })));
+  } else {
+    // Remplacement sur place : la carte ne saute pas d'un bout à l'autre de la liste.
+    const idx = suggItems.findIndex(it => it.id === mode);
+    if (fresh.length) suggItems.splice(idx, 1, { id: fresh[0].id, pinned: false });
+    else suggItems.splice(idx, 1);
+  }
+  renderSuggestions();
+}
+
+function renderSuggestions() {
+  const list = document.getElementById('sugg-list');
+  const info = document.getElementById('sugg-pool-info');
+  if (!list) return;
+  const filteredList = getFilteredRecipes();
+  const poolSize = filteredList.filter(r => !state.selectedRecipeIds.includes(r.id)).length;
+  if (info) {
+    // Signaler les filtres seulement s'ils retirent vraiment des recettes : sans ça
+    // on ne comprend pas pourquoi la moitié du carnet ne sort jamais.
+    const narrowed = filteredList.length !== state.recipes.length;
+    info.textContent = poolSize + ' recette' + (poolSize > 1 ? 's' : '')
+      + (narrowed ? ' (filtres actifs)' : '') + ' où piocher';
+  }
+  list.innerHTML = '';
+  if (!suggItems.length) {
+    list.innerHTML = '<div class="sugg-empty">Aucune recette à proposer.<br>Élargis les filtres ou vide la sélection.</div>';
+    return;
+  }
+  suggItems.forEach(it => {
+    const r = state.recipes.find(x => x.id === it.id);
+    if (!r) return;
+    const card = document.createElement('div');
+    card.className = 'sugg-card' + (it.pinned ? ' pinned' : '');
+
+    const main = document.createElement('div');
+    main.className = 'sugg-card-main';
+    main.title = 'Voir la recette';
+    const time = (r.prepTime || 0) + (r.cookTime || 0);
+    const meta = [];
+    if (r.rating != null && r.rating !== '') meta.push('<span class="sugg-chip">' + ICONS.star + escapeHtml(String(r.rating)) + '</span>');
+    if (time) meta.push('<span class="sugg-chip">' + ICONS.clock + time + ' min</span>');
+    const mt = (r.mealTypes || []).filter(t => t !== 'Aucun');
+    if (mt.length) meta.push('<span class="sugg-chip">' + escapeHtml(mt.join(', ')) + '</span>');
+    if (!r.lastPickedAt) meta.push('<span class="sugg-tag-new">jamais faite</span>');
+    main.innerHTML = '<div class="sugg-card-name">' + escapeHtml(r.name) + '</div>'
+      + '<div class="sugg-card-meta">' + meta.join('') + '</div>';
+    main.onclick = () => { closeSuggestDrawer(); openRecipeDetail(r.id); };
+    card.appendChild(main);
+
+    const actions = document.createElement('div');
+    actions.className = 'sugg-card-actions';
+    const pin = document.createElement('button');
+    pin.type = 'button';
+    pin.className = 'sugg-act sugg-act-pin';
+    pin.title = it.pinned ? 'Ne plus garder' : 'Garder au prochain tirage';
+    pin.innerHTML = ICONS.pin;
+    pin.onclick = () => { it.pinned = !it.pinned; renderSuggestions(); };
+    const swap = document.createElement('button');
+    swap.type = 'button';
+    swap.className = 'sugg-act';
+    swap.title = 'Proposer autre chose';
+    swap.innerHTML = ICONS.refreshCw;
+    swap.onclick = () => rerollSuggestions(it.id);
+    actions.appendChild(pin);
+    actions.appendChild(swap);
+    card.appendChild(actions);
+    list.appendChild(card);
+  });
+  const accept = document.getElementById('sugg-accept');
+  if (accept) {
+    accept.innerHTML = ICONS.check + 'Ajouter ' + suggItems.length + ' recette' + (suggItems.length > 1 ? 's' : '') + ' à ma sélection';
+    accept.disabled = !suggItems.length;
+  }
+}
+
+// Mémorise qu'une recette vient d'être retenue : c'est ce qui permet à la
+// suggestion de ne pas reproposer la semaine prochaine ce qu'on mange ce soir.
+function markRecipePicked(id) {
+  const r = state.recipes.find(x => x.id === id);
+  if (r) r.lastPickedAt = Date.now();
+}
+
+function openSuggestDrawer() {
+  document.body.classList.add('sugg-open');
+  suggItems = [];
+  rerollSuggestions('all');
+}
+function closeSuggestDrawer() {
+  document.body.classList.remove('sugg-open');
+}
+
+document.getElementById('btn-suggest')?.addEventListener('click', openSuggestDrawer);
+document.getElementById('sugg-close')?.addEventListener('click', closeSuggestDrawer);
+document.getElementById('sugg-scrim')?.addEventListener('click', closeSuggestDrawer);
+document.getElementById('sugg-reroll')?.addEventListener('click', () => rerollSuggestions('all'));
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && document.body.classList.contains('sugg-open')
+      && !document.querySelector('.modal-overlay.active')) closeSuggestDrawer();
+});
+
+{
+  const countEl = document.getElementById('sugg-count');
+  const outEl = document.getElementById('sugg-count-val');
+  if (countEl) {
+    const saved = parseInt(localStorage.getItem(SUGG_COUNT_KEY) || '', 10);
+    if (saved >= 3 && saved <= 10) countEl.value = String(saved);
+    if (outEl) outEl.textContent = countEl.value;
+    countEl.addEventListener('input', () => {
+      if (outEl) outEl.textContent = countEl.value;
+      try { localStorage.setItem(SUGG_COUNT_KEY, countEl.value); } catch {}
+      // Ajuste le tirage sans tout rejouer : on complète ou on retire par la fin.
+      const n = suggCount();
+      if (suggItems.length > n) {
+        const keep = suggItems.filter(it => it.pinned);
+        suggItems = suggItems.slice(0, Math.max(n, keep.length));
+        renderSuggestions();
+      } else if (suggItems.length < n) {
+        const ids = suggItems.map(it => it.id);
+        const fresh = pickSuggestions(n - suggItems.length, suggExcluded(ids), suggDrawnRecipes(ids));
+        suggItems = suggItems.concat(fresh.map(r => ({ id: r.id, pinned: false })));
+        renderSuggestions();
+      }
+    });
+  }
+}
+
+document.getElementById('sugg-accept')?.addEventListener('click', () => {
+  const added = suggItems.filter(it => !state.selectedRecipeIds.includes(it.id));
+  added.forEach(it => {
+    state.selectedRecipeIds.push(it.id);
+    markRecipePicked(it.id);
+  });
+  save();
+  renderRecipes();
+  closeSuggestDrawer();
+  if (added.length) {
+    toast(added.length + ' recette' + (added.length > 1 ? 's ajoutées' : ' ajoutée') + ' à la sélection', 'success');
+  }
+});
+
+/* ========================================================================
    ONGLET DEBUG — Notes & Remarques (porté de « Devis Photo »)
    Système de remarques/bugs à transmettre à Claude : formulaire compact,
    catégorisation par onglet, filtres, validation, copie presse-papier.
@@ -2976,6 +3233,7 @@ function renderRecipes() {
       e.stopPropagation();
       if (cb.checked) {
         if (!state.selectedRecipeIds.includes(r.id)) state.selectedRecipeIds.push(r.id);
+        markRecipePicked(r.id); // alimente l'anti-répétition des suggestions
       } else {
         state.selectedRecipeIds = state.selectedRecipeIds.filter(x => x !== r.id);
       }
@@ -7048,6 +7306,7 @@ const BACK_LAYERS = [
     close: () => switchTab('recipes') },
   { isOpen: () => document.body.classList.contains('detail-open'), close: () => closeRecipeDetail() },
   { isOpen: () => document.body.classList.contains('cart-open'),   close: () => closeCartDrawer() },
+  { isOpen: () => document.body.classList.contains('sugg-open'),   close: () => closeSuggestDrawer() },
   { isOpen: () => !isFilterRailDocked()
                 && document.getElementById('filter-sheet-overlay')?.classList.contains('active') === true,
     close: () => closeFilterSheet() },
