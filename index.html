@@ -243,7 +243,16 @@
   <!-- Onglet Paramètres -->
   <section id="tab-settings" class="tab">
 
+    <!-- Sous-onglets : une seule rubrique visible à la fois -->
+    <nav class="settings-subnav" id="settings-subnav" role="tablist" aria-label="Rubriques des réglages">
+      <button type="button" class="settings-subtab active" data-pane="general" role="tab" aria-selected="true"><span class="tb-ico" data-icon="settings"></span>Général</button>
+      <button type="button" class="settings-subtab" data-pane="apparence" role="tab" aria-selected="false"><span class="tb-ico" data-icon="image"></span>Apparence</button>
+      <button type="button" class="settings-subtab" data-pane="partage" id="settings-subtab-partage" role="tab" aria-selected="false" hidden><span class="tb-ico" data-icon="link2"></span>Partage<span class="subtab-dot" id="settings-share-dot" style="display:none;"></span></button>
+      <button type="button" class="settings-subtab" data-pane="notes" role="tab" aria-selected="false"><span class="tb-ico" data-icon="bug"></span>Remarques<span class="count-badge hide-if-zero" id="settings-notes-count" data-value="0" style="display:none;">0</span></button>
+    </nav>
+
     <!-- Apparence — fond forêt (maquette Sylva) -->
+    <div class="settings-pane" data-pane="apparence" role="tabpanel">
     <div class="data-section">
       <h3><span class="tb-ico" data-icon="image"></span>Apparence — fond forêt</h3>
       <div class="setting-row">
@@ -280,6 +289,10 @@
         <button type="button" class="setting-reset" id="btn-reset-appearance">Réinitialiser</button>
       </div>
     </div>
+    </div>
+
+    <!-- Général : compte + config avancée -->
+    <div class="settings-pane active" data-pane="general" role="tabpanel">
 
     <!-- Mon compte -->
     <div class="data-section">
@@ -320,6 +333,21 @@
       </div>
     </div>
 
+    <!-- Config avancée -->
+    <div class="data-section">
+      <details>
+        <summary style="cursor:pointer; font-size:13px; color:var(--text-muted); font-weight:500; padding:4px 0;"><span class="tb-ico" data-icon="settings"></span> Configuration avancée Firebase</summary>
+        <div style="margin-top:10px;">
+          <button class="btn btn-ghost btn-sm" id="btn-edit-firebase">Modifier la config Firebase</button>
+        </div>
+      </details>
+    </div>
+
+    </div>
+
+    <!-- Partage -->
+    <div class="settings-pane" data-pane="partage" role="tabpanel">
+
     <!-- Accès invités -->
     <div class="data-section" id="guest-mgmt-section" style="display:none;">
       <h3><span class="tb-ico" data-icon="link2"></span>Accès invités <span id="access-requests-badge"></span></h3>
@@ -351,20 +379,14 @@
       </details>
     </div>
 
+    </div>
+
     <!-- Notes & remarques (ex-onglet Debug, fusionné ici — maquette Sylva) -->
+    <div class="settings-pane" data-pane="notes" role="tabpanel">
     <div class="data-section" id="notes-remarques-section">
       <h3><span class="tb-ico" data-icon="bug"></span>Notes &amp; remarques <span id="debug-count" class="count-badge hide-if-zero" data-value="0">0</span></h3>
       <div id="debug-container"></div>
     </div>
-
-    <!-- Config avancée -->
-    <div class="data-section">
-      <details>
-        <summary style="cursor:pointer; font-size:13px; color:var(--text-muted); font-weight:500; padding:4px 0;"><span class="tb-ico" data-icon="settings"></span> Configuration avancée Firebase</summary>
-        <div style="margin-top:10px;">
-          <button class="btn btn-ghost btn-sm" id="btn-edit-firebase">Modifier la config Firebase</button>
-        </div>
-      </details>
     </div>
 
   </section>
@@ -1299,6 +1321,7 @@ function renderFirebaseUI() {
     // Afficher le panneau de gestion des accès invités (admin uniquement)
     const guestMgmt = document.getElementById('guest-mgmt-section');
     if (guestMgmt) guestMgmt.style.display = '';
+    if (typeof syncSettingsShareTab === 'function') syncSettingsShareTab(true);
     // Souscrire aux demandes d'accès en temps réel
     subscribeToAccessRequests();
     // Traiter un éventuel lien d'approbation/refus
@@ -1307,6 +1330,7 @@ function renderFirebaseUI() {
     sidebarUser.classList.remove('active');
     const guestMgmt = document.getElementById('guest-mgmt-section');
     if (guestMgmt) guestMgmt.style.display = 'none';
+    if (typeof syncSettingsShareTab === 'function') syncSettingsShareTab(false);
   }
 
 }
@@ -2173,6 +2197,44 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
   btn.addEventListener('click', () => switchTab(btn.dataset.tab));
 });
 
+/* ---- Réglages : sous-onglets (une rubrique visible à la fois) ---- */
+const SETTINGS_PANE_KEY = 'sylva_settings_pane_v1';
+
+// persist=false pour les retombées automatiques : ne pas écraser le choix de
+// l'utilisateur quand Partage disparaît le temps que l'auth se résolve.
+function setSettingsPane(pane, persist = true) {
+  const btns = document.querySelectorAll('.settings-subtab');
+  if (!btns.length) return;
+  // Rubrique inconnue ou masquée (Partage hors connexion) → Général.
+  const target = document.querySelector(`.settings-subtab[data-pane="${pane}"]`);
+  if (!target || target.hidden) { pane = 'general'; persist = false; }
+  btns.forEach(b => {
+    const on = b.dataset.pane === pane;
+    b.classList.toggle('active', on);
+    b.setAttribute('aria-selected', on ? 'true' : 'false');
+  });
+  document.querySelectorAll('.settings-pane').forEach(p => p.classList.toggle('active', p.dataset.pane === pane));
+  if (persist) { try { localStorage.setItem(SETTINGS_PANE_KEY, pane); } catch {} }
+}
+
+document.querySelectorAll('.settings-subtab').forEach(btn => {
+  btn.addEventListener('click', () => setSettingsPane(btn.dataset.pane));
+});
+
+// Affiche/masque le sous-onglet Partage selon la connexion (le panneau invités
+// n'existe que pour le propriétaire connecté).
+function syncSettingsShareTab(visible) {
+  const btn = document.getElementById('settings-subtab-partage');
+  if (!btn) return;
+  btn.hidden = !visible;
+  if (!visible) { if (btn.classList.contains('active')) setSettingsPane('general', false); return; }
+  // Partage réapparaît après connexion → restaurer le choix persisté.
+  let saved = null; try { saved = localStorage.getItem(SETTINGS_PANE_KEY); } catch {}
+  if (saved === 'partage' && !btn.classList.contains('active')) setSettingsPane('partage', false);
+}
+
+setSettingsPane((() => { try { return localStorage.getItem(SETTINGS_PANE_KEY); } catch { return null; } })() || 'general', false);
+
 // Items du menu utilisateur qui ouvrent un onglet secondaire (Données / Réglages)
 document.querySelectorAll('.user-menu-item[data-go]').forEach(btn => {
   btn.addEventListener('click', () => {
@@ -2249,7 +2311,7 @@ function bugRelativeTime(ts) {
 // Met à jour les badges « nombre de remarques en cours » (nav + menu user).
 function updateDebugBadges() {
   const open = ((state.bugs && state.bugs.items) || []).filter(it => !it.validated).length;
-  ["debug-count", "menu-debug-count"].forEach(id => {
+  ["debug-count", "menu-debug-count", "settings-notes-count"].forEach(id => {
     const el = document.getElementById(id);
     if (!el) return;
     el.textContent = open;
@@ -6851,6 +6913,8 @@ function renderAccessRequestsList(requests) {
   const pending = requests.filter(r => r.status === 'pending').length;
   const badge = document.getElementById('access-requests-badge');
   if (badge) { badge.textContent = pending; badge.style.display = pending > 0 ? 'inline' : 'none'; }
+  const shareDot = document.getElementById('settings-share-dot');
+  if (shareDot) shareDot.style.display = pending > 0 ? '' : 'none';
 
   if (!requests.length) {
     container.innerHTML = '<p style="color:var(--text-muted);font-size:13px;margin:0;">Aucune demande d\'accès pour l\'instant.</p>';
