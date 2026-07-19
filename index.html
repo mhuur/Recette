@@ -190,6 +190,47 @@
 
       <!-- Panneau détail (maquette Sylva : colonne fixe à droite, volet superposé < 1100px) -->
       <aside class="recipe-detail" id="recipe-detail" aria-label="Détail recette"></aside>
+
+      <!-- Tiroir Idées : DANS le layout, pour occuper exactement la zone à droite
+           du rail de filtres (mêmes haut et bas). Hors du layout, il flottait sans
+           rapport avec le reste de l'écran. -->
+      <aside class="sugg-drawer" id="sugg-drawer" aria-label="Suggestions de recettes">
+        <div class="cart-drawer-head">
+          <span class="tb-ico" data-icon="lightbulb" aria-hidden="true"></span>
+          <div class="cart-drawer-titles">
+            <div class="cart-drawer-title">Idées de recettes</div>
+            <div class="cart-drawer-sub" id="sugg-pool-info">—</div>
+          </div>
+          <button class="cart-drawer-close" id="sugg-close" type="button" title="Fermer"><span class="tb-ico" data-icon="x"></span></button>
+        </div>
+        <div class="sugg-body">
+          <!-- Colonne d'outils (gauche en desktop, empilée en mobile) — même
+               ossature que le tiroir Courses : carte d'outils + liste au centre. -->
+          <div class="sugg-side">
+            <div class="sugg-toolbar">
+              <span class="selected-count">Combien de propositions</span>
+              <div class="sugg-count-ctrl">
+                <input type="range" id="sugg-count" min="3" max="10" step="1" value="5">
+                <output id="sugg-count-val">5</output>
+              </div>
+              <div class="sugg-side-actions">
+                <button class="btn btn-sm" id="sugg-reroll" type="button"><span class="tb-ico" data-icon="refreshCw"></span>Tout relancer</button>
+                <button class="btn btn-sm sugg-filter-btn" id="sugg-ignore-filters" type="button" hidden></button>
+              </div>
+            </div>
+          </div>
+          <div class="sugg-main">
+            <div id="sugg-list" class="sugg-list"></div>
+          </div>
+          <!-- Après la liste dans le DOM : en mobile le bouton doit rester en bas.
+               En desktop, la grille le replace sous les outils, à gauche. -->
+          <div class="sugg-foot">
+            <button class="btn btn-primary" id="sugg-accept" type="button"><span class="tb-ico" data-icon="check"></span>Ajouter à ma sélection</button>
+          </div>
+        </div>
+        <!-- Aperçu d'une recette, par-dessus la liste des idées (le tirage reste intact) -->
+        <div class="sugg-preview" id="sugg-preview"></div>
+      </aside>
     </div>
     <div class="detail-scrim" id="detail-scrim"></div>
   </section>
@@ -383,47 +424,6 @@
       <div id="shopping-container"></div>
     </div>
   </div>
-</aside>
-
-<!-- Tiroir Suggestions : propose des recettes à retenir sans parcourir le carnet.
-     Même structure que le tiroir Courses (fond forêt visible, back guard). -->
-<div class="sugg-scrim" id="sugg-scrim"></div>
-<aside class="sugg-drawer" id="sugg-drawer" aria-label="Suggestions de recettes">
-  <div class="cart-drawer-head">
-    <span class="tb-ico" data-icon="lightbulb" aria-hidden="true"></span>
-    <div class="cart-drawer-titles">
-      <div class="cart-drawer-title">Idées de recettes</div>
-      <div class="cart-drawer-sub" id="sugg-pool-info">—</div>
-    </div>
-    <button class="cart-drawer-close" id="sugg-close" type="button" title="Fermer"><span class="tb-ico" data-icon="x"></span></button>
-  </div>
-  <div class="sugg-body">
-    <!-- Colonne d'outils (gauche en desktop, empilée en mobile) — même ossature
-         que le tiroir Courses : carte d'outils + liste au centre. -->
-    <div class="sugg-side">
-      <div class="sugg-toolbar">
-        <span class="selected-count">Combien de propositions</span>
-        <div class="sugg-count-ctrl">
-          <input type="range" id="sugg-count" min="3" max="10" step="1" value="5">
-          <output id="sugg-count-val">5</output>
-        </div>
-        <div class="sugg-side-actions">
-          <button class="btn btn-sm" id="sugg-reroll" type="button"><span class="tb-ico" data-icon="refreshCw"></span>Tout relancer</button>
-          <button class="btn btn-sm sugg-filter-btn" id="sugg-ignore-filters" type="button" hidden></button>
-        </div>
-      </div>
-    </div>
-    <div class="sugg-main">
-      <div id="sugg-list" class="sugg-list"></div>
-    </div>
-    <!-- Après la liste dans le DOM : en mobile le bouton doit rester en bas.
-         En desktop, la grille le replace sous les outils, à gauche. -->
-    <div class="sugg-foot">
-      <button class="btn btn-primary" id="sugg-accept" type="button"><span class="tb-ico" data-icon="check"></span>Ajouter à ma sélection</button>
-    </div>
-  </div>
-  <!-- Aperçu d'une recette, par-dessus la liste des idées (le tirage reste intact) -->
-  <div class="sugg-preview" id="sugg-preview"></div>
 </aside>
 
 <!-- Écran de connexion -->

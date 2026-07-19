@@ -1506,25 +1506,11 @@ body.cart-open .cart-drawer { transform: translateX(0); visibility: visible; }
    TIROIR SUGGESTIONS — même ossature que le tiroir Courses (scrim
    transparent, UI derrière masquée : le fond forêt doit rester visible).
    =================================================================== */
-/* Voile transparent : ne sert QU'à couvrir le fond, jamais à capter les clics.
-   Il ne ferme plus le tiroir, et `pointer-events: none` laisse le rail de filtres
-   utilisable derrière — un z-index sur le rail ne suffisait pas, il est enfermé
-   dans le contexte d'empilement du cadre, sous ce voile en position fixed. */
-.sugg-scrim {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: transparent;
-  z-index: 240;
-  pointer-events: none;
-}
-body.sugg-open .sugg-scrim { display: block; }
 body.sugg-open .topbar,
 body.sugg-open .recipes-main,
 body.sugg-open .recipe-detail,
 body.sugg-open .detail-scrim { visibility: hidden; }
-body:has(.modal-overlay.active) .sugg-drawer,
-body:has(.modal-overlay.active) .sugg-scrim { visibility: hidden; }
+body:has(.modal-overlay.active) .sugg-drawer { visibility: hidden; }
 .sugg-drawer {
   position: fixed;
   top: 0; right: 0; bottom: 0;
@@ -1599,12 +1585,13 @@ body.sugg-open .sugg-drawer { transform: translateX(0); visibility: visible; }
   box-shadow: inset 3px 0 0 var(--green-600, var(--primary)), var(--shadow-glass-sm);
 }
 .sugg-card-main { flex: 1; min-width: 0; cursor: pointer; }
+/* Le nom passe à la ligne : les titres de recettes sont longs et aucune largeur
+   ne suffit (même constat que .serving-name dans le tiroir Courses). Tronquer
+   « Chou kale et tofu caramélisé à la sauce… » ne permet pas de choisir. */
 .sugg-card-name {
   font-weight: 650;
   color: var(--text-strong);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
 }
 .sugg-card-meta {
   display: flex;
@@ -1705,37 +1692,37 @@ body.sugg-preview-open .sugg-preview { display: flex; }
 .sugg-preview-origin a { color: var(--primary); }
 .sugg-preview-notes { font-size: 13px; color: var(--text); margin: 0; white-space: pre-wrap; }
 
-/* Desktop : carte centrée, hauteur RÉGLÉE SUR LE CONTENU — pleine hauteur, elle
-   paraissait étroite et vide sous 4 cartes. Assez large pour que le rail de
-   filtres reste dégagé à gauche et manipulable. */
-@media (min-width: 1100px) {
+/* Desktop (rail docké) : la carte prend EXACTEMENT la place de la liste + du
+   détail, à droite du rail de filtres et à la même hauteur que lui. Posée en
+   flottant, elle n'avait de rapport ni avec le rail ni avec le cadre.
+   `.recipes-layout` = flex `224px | 1fr | 392px`, gap 16 → décalage de 240px. */
+@media (min-width: 1280px) {
+  .recipes-layout { position: relative; }
   .sugg-drawer {
-    --frame-x: max(20px, calc((100vw - 1800px) / 2));
-    top: 50%;
-    bottom: auto;
-    left: var(--frame-x); right: var(--frame-x);
-    width: min(760px, calc(100vw - 2 * var(--frame-x)));
+    position: absolute;
+    top: 0; bottom: 0;
+    left: calc(224px + 16px);
+    right: 0;
+    width: auto;
     height: auto;
-    max-height: min(80vh, 820px);
-    margin-inline: auto;
     border: 1px solid var(--glass-border);
     border-radius: 24px;
-    transform: translateY(calc(-50% + 10px));
+    transform: translateY(8px);
     opacity: 0;
     transition: transform var(--dur-base) var(--ease-out), opacity var(--dur-base) var(--ease-out);
   }
-  body.sugg-open .sugg-drawer { transform: translateY(-50%); opacity: 1; }
+  body.sugg-open .sugg-drawer { transform: translateY(0); opacity: 1; }
   /* Outils à gauche, liste au centre — comme le tiroir Courses. Les zones
      replacent le bouton d'ajout sous les outils, alors qu'il suit la liste dans
      le DOM (ordre voulu en mobile). */
   .sugg-body {
     display: grid;
-    grid-template-columns: 300px minmax(0, 1fr);
+    grid-template-columns: 280px minmax(0, 1fr);
     grid-template-areas:
       "side main"
       "foot main";
     grid-template-rows: auto 1fr;
-    gap: 14px 18px;
+    gap: 14px 20px;
     align-items: start;
     padding: 18px 22px 22px;
   }
