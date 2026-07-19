@@ -456,8 +456,7 @@ body:has(#tab-recipes.active) .topbar-back { display: none; }
   display: flex; align-items: center; gap: 5px;
 }
 .user-menu-header .sidebar-sync { padding: 4px 0 0; }
-.sidebar-sync svg, #firebase-sync-status svg { width: 13px; height: 13px; flex-shrink: 0; }
-#firebase-sync-status { display: flex; align-items: center; gap: 5px; }
+.sidebar-sync svg { width: 13px; height: 13px; flex-shrink: 0; }
 
 .count-badge {
   display: inline-block;

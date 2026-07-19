@@ -33,6 +33,8 @@ Guide pour Claude Code sur ce projet.
 - **Persistance** : `save()` = localStorage + push Firestore débouncé (5 s) ; `saveLocal()` = local seul (filtres/UI).
 - **Sync** : `fbDocRef` → `users/{uid}/app/data` ; `onSnapshot` temps réel ; `applyCloudData()` applique le cloud.
 - Onglets : `tab-recipes`, `tab-data`, `tab-settings` (Debug fusionné dans Réglages).
+- **Réglages = sous-onglets** (`.settings-subnav` / `.settings-pane`, `setSettingsPane()`, choix persisté par appareil `sylva_settings_pane_v1`) : Apparence (défaut) · Partage · Remarques. « Partage » n'est monté que connecté (`syncSettingsShareTab()`, appelée des deux branches de `renderFirebaseUI()`) ; une nouvelle rubrique = un bouton + un `.settings-pane` de même `data-pane`.
+- **Pas de carte « Mon compte »** : identité, statut de synchro et déconnexion vivent **uniquement** dans le menu de l'avatar (`#user-menu`, `sidebar-user-avatar`, `sidebar-sync-status`, `menu-sign-out`). Push/pull manuels, sauvegarde `.json` et « modifier la config Firebase » retirés en juillet 2026 (jamais utilisés ; le vrai export ré-importable est Données › Export JSON). `openFirebaseModal()` n'a plus qu'un appelant : `mobile-login-btn` quand aucune config n'est stockée.
 
 ### Écran Recettes (direction 2a — handoff `design_handoff_recettes_2a/`, référence)
 - **Une seule barre de commande** `.topbar` (verre, radius 18) : marque + compteur, recherche, Filtres, séparateur, Courses, Claude, Ajouter, avatar. Trier et « sélection uniquement » y sont **masqués ≥769px** (ils vivent dans l'en-tête de colonnes). Les contrôles propres aux recettes portent `.cmd-recipes-only`. Plus de `.toolbar`.

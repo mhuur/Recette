@@ -245,14 +245,13 @@
 
     <!-- Sous-onglets : une seule rubrique visible à la fois -->
     <nav class="settings-subnav" id="settings-subnav" role="tablist" aria-label="Rubriques des réglages">
-      <button type="button" class="settings-subtab active" data-pane="general" role="tab" aria-selected="true"><span class="tb-ico" data-icon="settings"></span>Général</button>
-      <button type="button" class="settings-subtab" data-pane="apparence" role="tab" aria-selected="false"><span class="tb-ico" data-icon="image"></span>Apparence</button>
+      <button type="button" class="settings-subtab active" data-pane="apparence" role="tab" aria-selected="true"><span class="tb-ico" data-icon="image"></span>Apparence</button>
       <button type="button" class="settings-subtab" data-pane="partage" id="settings-subtab-partage" role="tab" aria-selected="false" hidden><span class="tb-ico" data-icon="link2"></span>Partage<span class="subtab-dot" id="settings-share-dot" style="display:none;"></span></button>
       <button type="button" class="settings-subtab" data-pane="notes" role="tab" aria-selected="false"><span class="tb-ico" data-icon="bug"></span>Remarques<span class="count-badge hide-if-zero" id="settings-notes-count" data-value="0" style="display:none;">0</span></button>
     </nav>
 
     <!-- Apparence — fond forêt (maquette Sylva) -->
-    <div class="settings-pane" data-pane="apparence" role="tabpanel">
+    <div class="settings-pane active" data-pane="apparence" role="tabpanel">
     <div class="data-section">
       <h3><span class="tb-ico" data-icon="image"></span>Apparence — fond forêt</h3>
       <div class="setting-row">
@@ -291,59 +290,9 @@
     </div>
     </div>
 
-    <!-- Général : compte + config avancée -->
-    <div class="settings-pane active" data-pane="general" role="tabpanel">
-
-    <!-- Mon compte -->
-    <div class="data-section">
-      <h3><span class="tb-ico" data-icon="user"></span>Mon compte</h3>
-      <div id="firebase-not-configured" style="display:none;">
-        <button class="btn btn-primary" id="btn-setup-firebase"><span class="tb-ico" data-icon="settings"></span>Configurer Firebase</button>
-      </div>
-      <div id="firebase-configured">
-        <div id="firebase-signed-out">
-          <button class="btn btn-primary" id="btn-sign-in"><span class="tb-ico" data-icon="key"></span>Se connecter avec Google</button>
-        </div>
-        <div id="firebase-signed-in" style="display:none;">
-          <div style="display:flex; align-items:center; gap:12px; background:var(--surface); padding:12px; border-radius:10px;">
-            <div id="firebase-user-avatar" style="width:44px; height:44px; border-radius:50%; background:var(--primary); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:18px; color:white; flex-shrink:0;">?</div>
-            <div style="flex:1; min-width:0;">
-              <div id="firebase-user-name" style="font-weight:600;">—</div>
-              <div id="firebase-user-email" style="font-size:12px; color:var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">—</div>
-              <div id="firebase-sync-status" style="font-size:12px; color:var(--success); margin-top:2px;"><span data-icon="cloud"></span><span>Synchronisé</span></div>
-            </div>
-            <button class="btn btn-sm btn-danger" id="btn-sign-out" style="flex-shrink:0;">Déconnexion</button>
-          </div>
-          <div class="data-buttons" style="margin-top:10px;">
-            <button class="btn btn-sm" id="btn-push-cloud"><span class="tb-ico" data-icon="uploadCloud"></span>Forcer l'envoi</button>
-            <button class="btn btn-sm" id="btn-pull-cloud"><span class="tb-ico" data-icon="downloadCloud"></span>Forcer le téléchargement</button>
-            <button class="btn btn-sm" id="btn-export-backup"><span class="tb-ico" data-icon="save"></span>Sauvegarde (.json)</button>
-          </div>
-          <details style="margin-top:12px;">
-            <summary style="cursor:pointer; font-size:12px; color:var(--text-muted); padding:4px 0;">Identifiant (UID)</summary>
-            <div style="display:flex; gap:6px; align-items:center; margin-top:6px;">
-              <code id="firebase-user-uid" style="flex:1; background:var(--bg); padding:6px 8px; border-radius:6px; font-size:11px; word-break:break-all; color:var(--accent);">—</code>
-              <button class="btn btn-xs" id="btn-copy-uid" title="Copier l'UID" aria-label="Copier l'UID"><span class="tb-ico" data-icon="copy"></span></button>
-            </div>
-          </details>
-          <div style="margin-top:8px; font-size:11px; color:var(--text-dim);">
-            Chemin de synchro : <code id="firebase-doc-path" style="color:var(--accent); font-size:10px; word-break:break-all;">—</code>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Config avancée -->
-    <div class="data-section">
-      <details>
-        <summary style="cursor:pointer; font-size:13px; color:var(--text-muted); font-weight:500; padding:4px 0;"><span class="tb-ico" data-icon="settings"></span> Configuration avancée Firebase</summary>
-        <div style="margin-top:10px;">
-          <button class="btn btn-ghost btn-sm" id="btn-edit-firebase">Modifier la config Firebase</button>
-        </div>
-      </details>
-    </div>
-
-    </div>
+    <!-- Carte « Mon compte » retirée : identité, statut de synchro et déconnexion
+         vivent dans le menu de l'avatar (sidebar). Push/pull manuels, sauvegarde
+         .json (doublon de Données › Export) et config Firebase retirés avec elle. -->
 
     <!-- Partage -->
     <div class="settings-pane" data-pane="partage" role="tabpanel">
@@ -976,13 +925,7 @@ function setStoredFirebaseConfig(config) {
 
 function initFirebase() {
   const config = getStoredFirebaseConfig();
-  if (!config) {
-    document.getElementById('firebase-not-configured').style.display = '';
-    document.getElementById('firebase-configured').style.display = 'none';
-    return;
-  }
-  document.getElementById('firebase-not-configured').style.display = 'none';
-  document.getElementById('firebase-configured').style.display = '';
+  if (!config) return;
 
   try {
     if (!fbApp) {
@@ -1260,19 +1203,14 @@ async function pullFromCloud() {
 
 // `icon` = clé de ICONS{} (cloud, alertTriangle, save…) rendue devant le texte.
 function setSyncStatus(text, kind, icon) {
-  const el = document.getElementById('firebase-sync-status');
   const sb = document.getElementById('sidebar-sync-status');
   const color = kind === 'success' ? 'var(--success)' : kind === 'error' ? 'var(--danger)' : 'var(--text-muted)';
   const html = (ICONS[icon] || '') + '<span>' + escapeHtml(text) + '</span>';
-  if (el) { el.innerHTML = html; el.style.color = color; }
   if (sb) { sb.innerHTML = html; sb.style.color = color; }
 }
 
 function renderFirebaseUI() {
   const hasConfig = !!getStoredFirebaseConfig();
-  document.getElementById('firebase-not-configured').style.display = hasConfig ? 'none' : '';
-  document.getElementById('firebase-configured').style.display = hasConfig ? '' : 'none';
-
   // Écran de connexion principal — affiché seulement après résolution de l'auth pour éviter le flash
   const loginOverlay = document.getElementById('login-overlay');
   if (loginOverlay && !guestMode) loginOverlay.classList.toggle('active', authStateResolved && !fbUser);
@@ -1285,32 +1223,18 @@ function renderFirebaseUI() {
 
   const signedIn = !!fbUser;
   document.body.classList.toggle('signed-in', signedIn); // pilote la barre du bas mobile (2 onglets si connecté)
-  document.getElementById('firebase-signed-in').style.display = signedIn ? '' : 'none';
-  document.getElementById('firebase-signed-out').style.display = signedIn ? 'none' : '';
 
   const sidebarUser = document.getElementById('sidebar-user');
   if (signedIn) {
-    document.getElementById('firebase-user-name').textContent = fbUser.displayName || fbUser.email;
-    document.getElementById('firebase-user-email').textContent = fbUser.email;
-    document.getElementById('firebase-user-uid').textContent = fbUser.uid;
-    const pathEl = document.getElementById('firebase-doc-path');
-    if (pathEl && fbDocRef) pathEl.textContent = fbDocRef.path;
-    const avatarEl = document.getElementById('firebase-user-avatar');
+    // Identité : uniquement le menu de l'avatar (la carte « Mon compte » des Réglages a été retirée).
     const sidebarAvatar = document.getElementById('sidebar-user-avatar');
-    if (fbUser.photoURL) {
-      avatarEl.style.background = 'url(' + fbUser.photoURL + ') center/cover';
-      avatarEl.textContent = '';
-      if (sidebarAvatar) {
+    if (sidebarAvatar) {
+      if (fbUser.photoURL) {
         sidebarAvatar.style.background = 'url(' + fbUser.photoURL + ') center/cover';
         sidebarAvatar.textContent = '';
-      }
-    } else {
-      const letter = (fbUser.displayName || fbUser.email || '?').charAt(0).toUpperCase();
-      avatarEl.style.background = 'var(--primary)';
-      avatarEl.textContent = letter;
-      if (sidebarAvatar) {
+      } else {
         sidebarAvatar.style.background = 'var(--primary)';
-        sidebarAvatar.textContent = letter;
+        sidebarAvatar.textContent = (fbUser.displayName || fbUser.email || '?').charAt(0).toUpperCase();
       }
     }
     sidebarUser.classList.add('active');
@@ -1335,9 +1259,8 @@ function renderFirebaseUI() {
 
 }
 
-document.getElementById('btn-setup-firebase').onclick = () => openFirebaseModal();
-document.getElementById('btn-edit-firebase').onclick = () => openFirebaseModal();
-
+// Plus de bouton d'ouverture dans les Réglages : la modale ne sert qu'au cas
+// « aucune config stockée », déclenché depuis le bouton de connexion mobile.
 function openFirebaseModal() {
   const existing = getStoredFirebaseConfig();
   document.getElementById('firebase-config-input').value = existing ? JSON.stringify(existing, null, 2) : '';
@@ -1377,7 +1300,6 @@ document.getElementById('btn-remove-firebase').onclick = () => {
   setTimeout(() => location.reload(), 800);
 };
 
-document.getElementById('btn-sign-in').onclick = () => signInWithGoogle();
 document.getElementById('btn-login-google').onclick = () => signInWithGoogle();
 
 function isMobile() {
@@ -1424,15 +1346,11 @@ async function signInWithGoogle() {
   }
 }
 
-document.getElementById('btn-sign-out').onclick = () => {
-  if (fbAuth) fbAuth.signOut();
-};
-
-// Menu utilisateur dans la sidebar (mêmes actions)
+// Menu utilisateur dans la sidebar — seul point de déconnexion depuis le retrait
+// de la carte « Mon compte » des Réglages.
 {
   const msi = document.getElementById('menu-sign-out');
   if (msi) msi.onclick = () => { if (fbAuth) fbAuth.signOut(); };
-  // (Push/pull cloud manuels retirés du menu avatar — toujours dispo dans Réglages › Mon compte.)
   // Toggle le menu au clic sur le trigger (avatar + « Mon compte »)
   const trigger = document.getElementById('sidebar-user-trigger');
   if (trigger) {
@@ -1447,26 +1365,9 @@ document.getElementById('btn-sign-out').onclick = () => {
   }
 }
 
-document.getElementById('btn-push-cloud').onclick = () => {
-  pushToCloud().then(() => toast('Envoyé vers le cloud', 'success'));
-};
-
-document.getElementById('btn-pull-cloud').onclick = () => {
-  if (!confirm('Cela va remplacer tes données locales par celles du cloud. Continuer ?')) return;
-  pullFromCloud();
-};
-
-document.getElementById('btn-export-backup')?.addEventListener('click', () => {
-  try {
-    const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = 'recettes-sauvegarde-' + new Date().toISOString().slice(0, 10) + '.json';
-    document.body.appendChild(a); a.click(); a.remove();
-    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
-    toast('Sauvegarde téléchargée', 'success');
-  } catch (e) { toast('Erreur sauvegarde : ' + e.message, 'error'); }
-});
+// Push/pull manuels et sauvegarde .json retirés de l'UI (sync automatique ;
+// l'export ré-importable vit dans Données › Export JSON). pushToCloud() et
+// pullFromCloud() restent appelées par la synchro.
 
 /* ========================================================================
    MODE PARTAGÉ (plusieurs comptes Google, mêmes recettes)
@@ -1489,16 +1390,6 @@ function getFirebaseDocRef(user) {
   return fbDb.collection('users').doc(user.uid).collection('app').doc('data');
 }
 
-
-document.getElementById('btn-copy-uid').onclick = async () => {
-  if (!fbUser) return;
-  try {
-    await navigator.clipboard.writeText(fbUser.uid);
-    toast('UID copié !', 'success');
-  } catch {
-    prompt('Copie ton UID manuellement (Ctrl+C) :', fbUser.uid);
-  }
-};
 
 function migrateRecipes() {
   // Toutes les recettes sans type ou avec liste vide → "Aucun"
@@ -2207,7 +2098,7 @@ function setSettingsPane(pane, persist = true) {
   if (!btns.length) return;
   // Rubrique inconnue ou masquée (Partage hors connexion) → Général.
   const target = document.querySelector(`.settings-subtab[data-pane="${pane}"]`);
-  if (!target || target.hidden) { pane = 'general'; persist = false; }
+  if (!target || target.hidden) { pane = 'apparence'; persist = false; }
   btns.forEach(b => {
     const on = b.dataset.pane === pane;
     b.classList.toggle('active', on);
@@ -2227,13 +2118,13 @@ function syncSettingsShareTab(visible) {
   const btn = document.getElementById('settings-subtab-partage');
   if (!btn) return;
   btn.hidden = !visible;
-  if (!visible) { if (btn.classList.contains('active')) setSettingsPane('general', false); return; }
+  if (!visible) { if (btn.classList.contains('active')) setSettingsPane('apparence', false); return; }
   // Partage réapparaît après connexion → restaurer le choix persisté.
   let saved = null; try { saved = localStorage.getItem(SETTINGS_PANE_KEY); } catch {}
   if (saved === 'partage' && !btn.classList.contains('active')) setSettingsPane('partage', false);
 }
 
-setSettingsPane((() => { try { return localStorage.getItem(SETTINGS_PANE_KEY); } catch { return null; } })() || 'general', false);
+setSettingsPane((() => { try { return localStorage.getItem(SETTINGS_PANE_KEY); } catch { return null; } })() || 'apparence', false);
 
 // Items du menu utilisateur qui ouvrent un onglet secondaire (Données / Réglages)
 document.querySelectorAll('.user-menu-item[data-go]').forEach(btn => {
@@ -7001,7 +6892,7 @@ document.getElementById('mobile-login-btn')?.addEventListener('click', () => {
   if (!getStoredFirebaseConfig()) {
     openFirebaseModal();
   } else {
-    document.getElementById('btn-sign-in')?.click();
+    signInWithGoogle();
   }
 });
 
