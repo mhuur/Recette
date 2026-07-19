@@ -1693,22 +1693,36 @@ body.sugg-preview-open .sugg-preview { display: flex; }
 .sugg-preview-origin a { color: var(--primary); }
 .sugg-preview-notes { font-size: 13px; color: var(--text); margin: 0; white-space: pre-wrap; }
 
-/* Desktop : carte centrée comme le tiroir Courses, mais plus étroite —
-   une liste sur une colonne n'a pas besoin de 880px. */
+/* Desktop : carte centrée, hauteur RÉGLÉE SUR LE CONTENU — pleine hauteur, elle
+   paraissait étroite et vide sous 4 cartes. Assez large pour que le rail de
+   filtres reste dégagé à gauche et manipulable. */
 @media (min-width: 1100px) {
   .sugg-drawer {
     --frame-x: max(20px, calc((100vw - 1800px) / 2));
-    top: 20px; bottom: 20px; left: var(--frame-x); right: var(--frame-x);
-    width: min(620px, calc(100vw - 2 * var(--frame-x)));
+    top: 50%;
+    bottom: auto;
+    left: var(--frame-x); right: var(--frame-x);
+    width: min(760px, calc(100vw - 2 * var(--frame-x)));
+    height: auto;
+    max-height: min(80vh, 820px);
     margin-inline: auto;
     border: 1px solid var(--glass-border);
     border-radius: 24px;
-    transform: translateY(10px);
+    transform: translateY(calc(-50% + 10px));
     opacity: 0;
     transition: transform var(--dur-base) var(--ease-out), opacity var(--dur-base) var(--ease-out);
   }
-  body.sugg-open .sugg-drawer { transform: translateY(0); opacity: 1; }
+  body.sugg-open .sugg-drawer { transform: translateY(-50%); opacity: 1; }
   .sugg-body { padding: 18px 22px 22px; }
+}
+
+/* Le rail DOCKÉ passe au-dessus du scrim : changer un filtre tiroir ouvert rejoue
+   le tirage (suggSyncWithFilters), au lieu d'obliger à fermer puis rouvrir.
+   Réservé au rail docké — entre 1100 et 1280px c'est un popover flottant, que
+   `position: relative` sortirait de sa place. */
+body.filter-rail-on.sugg-open .filter-sheet-overlay {
+  position: relative;
+  z-index: 245;
 }
 
 /* Carte « recettes sélectionnées » dans le tiroir */

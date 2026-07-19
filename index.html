@@ -2241,6 +2241,29 @@ function suggPool() {
   return suggIgnoreFilters ? state.recipes.slice() : suggRailFiltered();
 }
 
+// Empreinte des filtres du rail : sert à ne relancer le tirage que quand ils
+// changent réellement (le rail reste manipulable tiroir ouvert).
+function suggFiltersSignature() {
+  const f = state.filters || {};
+  return JSON.stringify([f.includeIngredients, f.excludeIngredients, f.ingredientsMode,
+    f.mealTypes, f.ratingSel, f.temperatures, f.vegetarianOnly, f.pescatarianOnly,
+    f.prepMax, f.cookMax]);
+}
+let suggFilterSig = '';
+
+// Appelée en fin de renderRecipes() : un filtre modifié pendant que le tiroir est
+// ouvert doit rejouer le tirage, sinon les cartes affichées ne correspondent plus
+// au périmètre annoncé juste au-dessus.
+function suggSyncWithFilters() {
+  if (!document.body.classList.contains('sugg-open')) return;
+  const sig = suggFiltersSignature();
+  if (sig === suggFilterSig) return;
+  suggFilterSig = sig;
+  suggIgnoreFilters = false; // toucher au rail = vouloir l'appliquer
+  suggItems = [];
+  rerollSuggestions('all');
+}
+
 // Ce qui restreint réellement le tirage, en clair. Diagnostic autant qu'affichage :
 // le compteur du rail ne dit que « N filtres actifs » sans dire lesquels, et il
 // ignore la recherche et « sélection uniquement ». Quand le pool rétrécit sans
@@ -2393,7 +2416,11 @@ function renderSuggestions() {
     if (time) meta.push('<span class="sugg-chip">' + ICONS.clock + time + ' min</span>');
     const mt = (r.mealTypes || []).filter(t => t !== 'Aucun');
     if (mt.length) meta.push('<span class="sugg-chip">' + escapeHtml(mt.join(', ')) + '</span>');
-    if (!r.lastPickedAt) meta.push('<span class="sugg-tag-new">jamais faite</span>');
+    // « jamais faite » ne vaut que pour une recette SANS note : `lastPickedAt` ne
+    // remonte qu'à l'arrivée des suggestions, alors qu'une note prouve qu'elle a
+    // déjà été cuisinée — l'annoncer « jamais faite » était faux.
+    const unrated = r.rating == null || r.rating === '';
+    if (!r.lastPickedAt && unrated) meta.push('<span class="sugg-tag-new">à tester</span>');
     main.innerHTML = '<div class="sugg-card-name">' + escapeHtml(r.name) + '</div>'
       + '<div class="sugg-card-meta">' + meta.join('') + '</div>';
     main.onclick = () => openSuggPreview(r.id);
@@ -2504,6 +2531,7 @@ function closeSuggPreview() {
 function openSuggestDrawer() {
   document.body.classList.add('sugg-open');
   suggIgnoreFilters = false; // le rail reste la référence à chaque ouverture
+  suggFilterSig = suggFiltersSignature();
   suggItems = [];
   rerollSuggestions('all');
 }
@@ -3430,6 +3458,8 @@ function renderRecipes() {
   // Le panneau détail reflète l'état courant (recette modifiée / supprimée / filtrée)
   ensureDetailSelection(recipes);
   refreshRecipeDetail();
+  // Tiroir Idées ouvert : rejouer le tirage si le rail vient de bouger
+  suggSyncWithFilters();
 }
 
 // Direction 2a : sur grand écran la carte de détail est PERMANENTE — si rien
