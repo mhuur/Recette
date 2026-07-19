@@ -1,10 +1,7 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+<!-- Fond transparent : le dessin est recadré au plus près (viewBox resserré sur le
+     contenu) pour occuper tout le canvas, faute de carré coloré pour le porter. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="50 42 424 424">
   <defs>
-    <radialGradient id="bg" gradientUnits="userSpaceOnUse" cx="256" cy="170" r="360">
-      <stop offset="0" stop-color="#3f9a6a"/>
-      <stop offset="0.55" stop-color="#2f7d55"/>
-      <stop offset="1" stop-color="#235a3d"/>
-    </radialGradient>
     <radialGradient id="flame" gradientUnits="userSpaceOnUse" cx="252" cy="300" r="180">
       <stop offset="0" stop-color="#ffe37a"/>
       <stop offset="0.38" stop-color="#ffc23d"/>
@@ -12,8 +9,6 @@
       <stop offset="1" stop-color="#e23a15"/>
     </radialGradient>
   </defs>
-
-  <rect width="512" height="512" fill="url(#bg)"/>
 
   <g stroke="#241206" stroke-width="9" stroke-linejoin="round" stroke-linecap="round">
     <!-- Flamme : pointe principale inclinée, encoche + pointe saillante à gauche,

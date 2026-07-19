@@ -8,7 +8,7 @@
    Le bandeau « Recharger » reste comme filet (envoie {type:'SKIP_WAITING'}).
    ⚠️ Bumper CACHE_VERSION à chaque déploiement de contenu pour éviter un cache figé. */
 
-const CACHE_VERSION = 'v75';
+const CACHE_VERSION = 'v76';
 const PRECACHE = 'precache-' + CACHE_VERSION;
 const RUNTIME = 'runtime-' + CACHE_VERSION;
 
@@ -19,10 +19,10 @@ const PRECACHE_URLS = [
   './styles.css',
   './icons.js',
   './manifest.webmanifest',
-  './icons/icon-v2-192.png',
-  './icons/icon-v2-512.png',
-  './icons/icon-v2.svg',
-  './icons/icon-v2-apple.png',
+  './icons/icon-v3-192.png',
+  './icons/icon-v3-512.png',
+  './icons/icon-v3.svg',
+  './icons/icon-v3-apple.png',
   './assets/forest-bg.jpg',
 ];
 
