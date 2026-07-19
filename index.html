@@ -2241,6 +2241,25 @@ function suggPool() {
   return suggIgnoreFilters ? state.recipes.slice() : suggRailFiltered();
 }
 
+// Ce qui restreint réellement le tirage, en clair. Diagnostic autant qu'affichage :
+// le compteur du rail ne dit que « N filtres actifs » sans dire lesquels, et il
+// ignore la recherche et « sélection uniquement ». Quand le pool rétrécit sans
+// qu'aucun critère ne soit identifié, on l'affiche aussi — c'est le signe d'un bug.
+function suggActiveCriteria() {
+  const f = state.filters || {}, out = [];
+  const named = ids => (ids || []).map(getIngredientName).filter(Boolean).join(', ');
+  if ((f.includeIngredients || []).length) out.push('ingrédients : ' + named(f.includeIngredients));
+  if ((f.excludeIngredients || []).length) out.push('sans ' + named(f.excludeIngredients));
+  if ((f.mealTypes || []).length) out.push('type : ' + f.mealTypes.join(', '));
+  if ((f.ratingSel || []).length) out.push('note');
+  if ((f.temperatures || []).length) out.push(f.temperatures.filter(Boolean).join('/') || 'chaud/froid');
+  if (f.vegetarianOnly) out.push('végétarien');
+  if (f.pescatarianOnly) out.push('pescarien');
+  if (f.prepMax != null && f.prepMax !== '') out.push('prépa ≤ ' + f.prepMax + ' min');
+  if (f.cookMax != null && f.cookMax !== '') out.push('cuisson ≤ ' + f.cookMax + ' min');
+  return out;
+}
+
 function suggCount() {
   const el = document.getElementById('sugg-count');
   return el ? parseInt(el.value, 10) || 5 : 5;
@@ -2338,9 +2357,13 @@ function renderSuggestions() {
   if (info) {
     let txt = poolSize + ' recette' + (poolSize > 1 ? 's' : '') + ' où piocher';
     if (narrowed) {
-      txt += suggIgnoreFilters
-        ? ' · tout le carnet'
-        : ' sur ' + state.recipes.length + ' · filtres du rail appliqués';
+      if (suggIgnoreFilters) {
+        txt += ' · tout le carnet';
+      } else {
+        const why = suggActiveCriteria();
+        txt += ' sur ' + state.recipes.length + ' · '
+          + (why.length ? why.join(' · ') : 'restriction non identifiée');
+      }
     }
     info.textContent = txt;
   }
