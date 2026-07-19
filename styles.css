@@ -1506,12 +1506,17 @@ body.cart-open .cart-drawer { transform: translateX(0); visibility: visible; }
    TIROIR SUGGESTIONS — même ossature que le tiroir Courses (scrim
    transparent, UI derrière masquée : le fond forêt doit rester visible).
    =================================================================== */
+/* Voile transparent : ne sert QU'à couvrir le fond, jamais à capter les clics.
+   Il ne ferme plus le tiroir, et `pointer-events: none` laisse le rail de filtres
+   utilisable derrière — un z-index sur le rail ne suffisait pas, il est enfermé
+   dans le contexte d'empilement du cadre, sous ce voile en position fixed. */
 .sugg-scrim {
   display: none;
   position: fixed;
   inset: 0;
   background: transparent;
   z-index: 240;
+  pointer-events: none;
 }
 body.sugg-open .sugg-scrim { display: block; }
 body.sugg-open .topbar,
@@ -1546,18 +1551,26 @@ body.sugg-open .sugg-drawer { transform: translateX(0); visibility: visible; }
   flex-direction: column;
   gap: 14px;
 }
+/* Carte d'outils : mêmes codes que .shopping-toolbar du tiroir Courses */
 .sugg-toolbar {
+  background: var(--glass-fill-strong);
+  border: 1px solid var(--glass-border);
+  border-radius: 18px;
+  box-shadow: var(--shadow-glass-sm);
+  padding: 16px;
   display: flex;
-  align-items: center;
+  flex-direction: column;
   gap: 12px;
-  flex-wrap: wrap;
+  align-items: stretch;
 }
+.sugg-side { display: flex; flex-direction: column; gap: 14px; }
+.sugg-main { min-width: 0; }
+.sugg-side-actions { display: flex; flex-direction: column; gap: 8px; }
+.sugg-side-actions .btn { justify-content: center; }
 .sugg-count-ctrl {
   display: flex;
   align-items: center;
-  gap: 9px;
-  flex: 1;
-  min-width: 190px;
+  gap: 10px;
   font-size: 13px;
   color: var(--text-muted);
   font-weight: 600;
@@ -1635,7 +1648,6 @@ body.sugg-open .sugg-drawer { transform: translateX(0); visibility: visible; }
   border-color: var(--green-600);
   color: #fff;
 }
-.sugg-foot { margin-top: auto; padding-top: 4px; }
 .sugg-foot .btn { width: 100%; justify-content: center; }
 .sugg-empty {
   text-align: center;
@@ -1713,16 +1725,23 @@ body.sugg-preview-open .sugg-preview { display: flex; }
     transition: transform var(--dur-base) var(--ease-out), opacity var(--dur-base) var(--ease-out);
   }
   body.sugg-open .sugg-drawer { transform: translateY(-50%); opacity: 1; }
-  .sugg-body { padding: 18px 22px 22px; }
-}
-
-/* Le rail DOCKÉ passe au-dessus du scrim : changer un filtre tiroir ouvert rejoue
-   le tirage (suggSyncWithFilters), au lieu d'obliger à fermer puis rouvrir.
-   Réservé au rail docké — entre 1100 et 1280px c'est un popover flottant, que
-   `position: relative` sortirait de sa place. */
-body.filter-rail-on.sugg-open .filter-sheet-overlay {
-  position: relative;
-  z-index: 245;
+  /* Outils à gauche, liste au centre — comme le tiroir Courses. Les zones
+     replacent le bouton d'ajout sous les outils, alors qu'il suit la liste dans
+     le DOM (ordre voulu en mobile). */
+  .sugg-body {
+    display: grid;
+    grid-template-columns: 300px minmax(0, 1fr);
+    grid-template-areas:
+      "side main"
+      "foot main";
+    grid-template-rows: auto 1fr;
+    gap: 14px 18px;
+    align-items: start;
+    padding: 18px 22px 22px;
+  }
+  .sugg-side { grid-area: side; }
+  .sugg-main { grid-area: main; }
+  .sugg-foot { grid-area: foot; }
 }
 
 /* Carte « recettes sélectionnées » dans le tiroir */

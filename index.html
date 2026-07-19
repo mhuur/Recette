@@ -398,16 +398,26 @@
     <button class="cart-drawer-close" id="sugg-close" type="button" title="Fermer"><span class="tb-ico" data-icon="x"></span></button>
   </div>
   <div class="sugg-body">
-    <div class="sugg-toolbar">
-      <label class="sugg-count-ctrl">
-        <span>Combien&nbsp;?</span>
-        <input type="range" id="sugg-count" min="3" max="10" step="1" value="5">
-        <output id="sugg-count-val">5</output>
-      </label>
-      <button class="btn btn-sm" id="sugg-reroll" type="button"><span class="tb-ico" data-icon="refreshCw"></span>Tout relancer</button>
-      <button class="btn btn-sm sugg-filter-btn" id="sugg-ignore-filters" type="button" hidden></button>
+    <!-- Colonne d'outils (gauche en desktop, empilée en mobile) — même ossature
+         que le tiroir Courses : carte d'outils + liste au centre. -->
+    <div class="sugg-side">
+      <div class="sugg-toolbar">
+        <span class="selected-count">Combien de propositions</span>
+        <div class="sugg-count-ctrl">
+          <input type="range" id="sugg-count" min="3" max="10" step="1" value="5">
+          <output id="sugg-count-val">5</output>
+        </div>
+        <div class="sugg-side-actions">
+          <button class="btn btn-sm" id="sugg-reroll" type="button"><span class="tb-ico" data-icon="refreshCw"></span>Tout relancer</button>
+          <button class="btn btn-sm sugg-filter-btn" id="sugg-ignore-filters" type="button" hidden></button>
+        </div>
+      </div>
     </div>
-    <div id="sugg-list" class="sugg-list"></div>
+    <div class="sugg-main">
+      <div id="sugg-list" class="sugg-list"></div>
+    </div>
+    <!-- Après la liste dans le DOM : en mobile le bouton doit rester en bas.
+         En desktop, la grille le replace sous les outils, à gauche. -->
     <div class="sugg-foot">
       <button class="btn btn-primary" id="sugg-accept" type="button"><span class="tb-ico" data-icon="check"></span>Ajouter à ma sélection</button>
     </div>
