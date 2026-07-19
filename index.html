@@ -891,7 +891,14 @@ const DEFAULT_FIREBASE_CONFIG = {
   appId: "1:1098075014918:web:3049cf8a8255f13e660087"
 };
 let fbApp = null, fbAuth = null, fbDb = null, fbUser = null, fbDocRef = null;
-let fbUnsubscribe = null, fbSaveTimer = null, fbSkipNextSnapshot = false;
+let fbUnsubscribe = null, fbSaveTimer = null;
+// Dernier snapshot distant reçu pendant qu'un push local attendait son tour.
+// Firestore ne redélivre pas un document inchangé : un snapshot ignoré est perdu,
+// donc on le met de côté au lieu de le jeter.
+let fbPendingSnapshot = null;
+// Fenêtre d'attente avant l'envoi. Elle bloque aussi les snapshots entrants :
+// la garder courte, sinon un co-éditeur reste invisible pendant tout ce temps.
+const FB_PUSH_DELAY = 1500;
 let authStateResolved = false;
 
 function parseFirebaseConfig(raw) {
@@ -1047,24 +1054,33 @@ async function onFirebaseSignIn() {
       await pushToCloud();
     }
     // Abonnement temps réel pour les autres appareils
-    fbUnsubscribe = fbDocRef.onSnapshot(snap => {
-      if (fbSkipNextSnapshot) { fbSkipNextSnapshot = false; return; }
-      if (snap.metadata.hasPendingWrites) return;
-      if (fbSaveTimer) return; // modifs locales non encore envoyées
-      if (snap.exists) {
-        applyCloudData(snap.data());
-        setSyncStatus('Synchronisé', 'success', 'cloud');
-      }
-    }, err => {
-      console.error('Snapshot error:', err);
-      setSyncStatus('Erreur de synchro', 'error', 'alertTriangle');
-    });
+    fbUnsubscribe = attachSnapshotListener(fbDocRef);
     setSyncStatus('Synchronisé', 'success', 'cloud');
   } catch (e) {
     console.error(e);
     setSyncStatus(e.message, 'error', 'alertTriangle');
     toast('Erreur synchro : ' + e.message, 'error');
   }
+}
+
+// Écoute temps réel du carnet — même logique pour le propriétaire et le co-éditeur
+// (deux copies divergeaient auparavant). Un snapshot ignoré n'est jamais redélivré
+// par Firestore : pendant qu'un push local attend, on le met de côté au lieu de le
+// perdre. Pas de « skip du prochain snapshot » : `hasPendingWrites` identifie déjà
+// l'écho de nos propres écritures, alors qu'un simple drapeau avalait aussi bien
+// celui d'un autre appareil (co-éditeur invisible).
+function attachSnapshotListener(docRef) {
+  return docRef.onSnapshot(snap => {
+    if (snap.metadata.hasPendingWrites) return; // écho de notre propre écriture
+    if (!snap.exists) return;
+    if (fbSaveTimer) { fbPendingSnapshot = snap.data(); return; }
+    fbPendingSnapshot = null;
+    applyCloudData(snap.data());
+    setSyncStatus('Synchronisé', 'success', 'cloud');
+  }, err => {
+    console.error('Snapshot error:', err);
+    setSyncStatus('Erreur de synchro', 'error', 'alertTriangle');
+  });
 }
 
 function applyCloudData(data) {
@@ -1113,10 +1129,17 @@ function fbSchedulePush() {
   if (!fbDocRef) { setSyncStatus('Non connecté — données locales seulement', 'error', 'alertTriangle'); return; }
   clearTimeout(fbSaveTimer);
   setSyncStatus('Modifs non enregistrées...', 'muted', 'save');
-  fbSaveTimer = setTimeout(() => {
+  fbSaveTimer = setTimeout(async () => {
     fbSaveTimer = null; // IMPORTANT: reset pour débloquer les snapshots cloud
-    pushToCloud();
-  }, 5000);
+    const pending = fbPendingSnapshot;
+    fbPendingSnapshot = null;
+    const pushed = await pushToCloud();
+    // Rien n'a été envoyé (ex. co-éditeur au carnet vide, ou échec réseau) : la
+    // version distante mise de côté n'a été écrasée par rien, on l'applique
+    // plutôt que de la perdre — sans ça l'appareil reste aveugle jusqu'au
+    // prochain changement du document.
+    if (!pushed && pending) applyCloudData(pending);
+  }, FB_PUSH_DELAY);
 }
 
 // Flush du push cloud avant de quitter la page (évite de perdre les modifs non-pushées)
@@ -1149,15 +1172,16 @@ window.addEventListener('beforeunload', () => {
   }
 });
 
+// Renvoie true si le document a bien été écrit (le planificateur s'en sert pour
+// savoir s'il peut jeter le snapshot distant mis de côté).
 async function pushToCloud() {
-  if (!fbDocRef) return;
+  if (!fbDocRef) return false;
   // Anti-effacement : un invité/co-éditeur au carnet vide ne doit jamais écraser
   // le carnet du propriétaire (ex. chargement initial raté).
   if (guestMode && (!state.recipes || state.recipes.length === 0)) {
     console.warn('pushToCloud ignoré : co-éditeur invité au carnet vide');
-    return;
+    return false;
   }
-  fbSkipNextSnapshot = true;
   // Reset aussi ici au cas où pushToCloud est appelé directement (pas via scheduler)
   fbSaveTimer = null;
   try {
@@ -1179,10 +1203,12 @@ async function pushToCloud() {
       lastModified: state.lastModified
     });
     setSyncStatus('Synchronisé', 'success', 'cloud');
+    return true;
   } catch (e) {
     console.error(e);
     setSyncStatus('Échec : ' + e.message, 'error', 'alertTriangle');
     toast('Échec synchro : ' + e.message, 'error');
+    return false;
   }
 }
 
@@ -6745,12 +6771,7 @@ async function loadGuestData(asEditor) {
       fbDocRef = docRef;
       document.body.classList.add('coeditor-mode');
       setSyncStatus('Co-édition', 'success', 'cloud');
-      fbUnsubscribe = docRef.onSnapshot(snap => {
-        if (fbSkipNextSnapshot) { fbSkipNextSnapshot = false; return; }
-        if (snap.metadata.hasPendingWrites) return;
-        if (fbSaveTimer) return; // modifs locales non encore envoyées
-        if (snap.exists) { applyCloudData(snap.data()); setSyncStatus('Synchronisé', 'success', 'cloud'); }
-      }, err => { console.error('Snapshot error:', err); setSyncStatus('Erreur de synchro', 'error', 'alertTriangle'); });
+      fbUnsubscribe = attachSnapshotListener(docRef);
     } else {
       // Lecture seule
       document.body.classList.add('guest-mode');
