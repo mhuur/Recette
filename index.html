@@ -4448,6 +4448,24 @@ function printShoppingList() {
   setTimeout(() => { try { w.print(); } catch (e) {} }, 400);
 }
 
+// Les coches de la liste de courses portent une clé stable (ingrédient|unité), pas
+// un lien vers la recette : sans purge, vider la sélection puis cocher d'autres
+// recettes fait ressortir les mêmes ingrédients déjà cochés — un faux « déjà acheté ».
+// On retire donc les coches dont l'article n'est plus dans la liste.
+// `items` = sortie de getShoppingItems() (articles manuels compris).
+function pruneCheckedShoppingItems(items) {
+  const checked = state.checkedShoppingItems || [];
+  if (!checked.length) return false;
+  // Garde-fou : une sélection non vide qui ne produit aucun article = données pas
+  // encore chargées (boot avant la sync). Purger là effacerait des coches valides.
+  if (state.selectedRecipeIds.length && !items.length) return false;
+  const live = new Set(items.map(it => it.key));
+  const kept = checked.filter(k => live.has(k));
+  if (kept.length === checked.length) return false;
+  state.checkedShoppingItems = kept;
+  return true;
+}
+
 function renderShopping() {
   const container = document.getElementById('shopping-container');
   const countEl = document.getElementById('shopping-selected-count');
@@ -4482,13 +4500,16 @@ function renderShopping() {
     listEl.appendChild(row);
   });
 
+  // Avant le retour anticipé « liste vide » : c'est justement quand la sélection
+  // tombe à zéro qu'il faut oublier les coches précédentes.
+  const items = getShoppingItems();
+  if (pruneCheckedShoppingItems(items)) save();
+
   if (selected.length === 0 && (state.manualShoppingItems || []).length === 0) {
     container.innerHTML = '<div class="empty"><div class="empty-icon" data-icon="shoppingCart" aria-hidden="true"></div><div>Ta liste est vide.<br>Coche des recettes dans la liste, ou ajoute un article ci-dessus.</div></div>';
     injectIcons(container);
     return;
   }
-
-  const items = getShoppingItems();
 
   const groupByType = document.getElementById('group-by-type').checked;
   const collator = new Intl.Collator('fr', { sensitivity: 'base' });
