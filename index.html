@@ -2227,9 +2227,18 @@ let suggItems = [];
 // réduit le carnet à quelques recettes (« tout aux crevettes »).
 let suggIgnoreFilters = false;
 
+// Recettes retenues par le RAIL de filtres seul. La recherche de la barre du haut
+// et « sélection uniquement » sont volontairement ignorées : ce sont des outils de
+// navigation dans la liste, pas des critères de menu, le rail ne les compte pas
+// dans « filtres actifs », et la barre est masquée tiroir ouvert — une recherche
+// oubliée réduisait donc le tirage sans que rien ne l'indique nulle part.
+function suggRailFiltered() {
+  return state.recipes.filter(r => recipeMatches(r, state.filters, { search: true, selected: true }));
+}
+
 // Recettes dans lesquelles le tirage pioche, avant exclusions.
 function suggPool() {
-  return suggIgnoreFilters ? state.recipes.slice() : getFilteredRecipes();
+  return suggIgnoreFilters ? state.recipes.slice() : suggRailFiltered();
 }
 
 function suggCount() {
@@ -2325,7 +2334,7 @@ function renderSuggestions() {
   const poolSize = suggPool().filter(r => !state.selectedRecipeIds.includes(r.id)).length;
   // Un filtre oublié dans le rail peut réduire le carnet à une poignée de recettes
   // (« tout aux crevettes ») : l'annoncer chiffré, et proposer d'en sortir.
-  const narrowed = getFilteredRecipes().length !== state.recipes.length;
+  const narrowed = suggRailFiltered().length !== state.recipes.length;
   if (info) {
     let txt = poolSize + ' recette' + (poolSize > 1 ? 's' : '') + ' où piocher';
     if (narrowed) {
@@ -2482,7 +2491,9 @@ function closeSuggestDrawer() {
 
 document.getElementById('btn-suggest')?.addEventListener('click', openSuggestDrawer);
 document.getElementById('sugg-close')?.addEventListener('click', closeSuggestDrawer);
-document.getElementById('sugg-scrim')?.addEventListener('click', closeSuggestDrawer);
+// Pas de fermeture au clic extérieur, contrairement au tiroir Courses : un clic à
+// côté jetait le tirage en cours (irrécupérable) et renvoyait sur les recettes.
+// On ferme par la croix, Échap ou le bouton retour.
 document.getElementById('sugg-reroll')?.addEventListener('click', () => rerollSuggestions('all'));
 document.getElementById('sugg-ignore-filters')?.addEventListener('click', () => {
   suggIgnoreFilters = !suggIgnoreFilters;
