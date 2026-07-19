@@ -405,12 +405,15 @@
         <output id="sugg-count-val">5</output>
       </label>
       <button class="btn btn-sm" id="sugg-reroll" type="button"><span class="tb-ico" data-icon="refreshCw"></span>Tout relancer</button>
+      <button class="btn btn-sm sugg-filter-btn" id="sugg-ignore-filters" type="button" hidden></button>
     </div>
     <div id="sugg-list" class="sugg-list"></div>
     <div class="sugg-foot">
       <button class="btn btn-primary" id="sugg-accept" type="button"><span class="tb-ico" data-icon="check"></span>Ajouter à ma sélection</button>
     </div>
   </div>
+  <!-- Aperçu d'une recette, par-dessus la liste des idées (le tirage reste intact) -->
+  <div class="sugg-preview" id="sugg-preview"></div>
 </aside>
 
 <!-- Écran de connexion -->
@@ -2219,6 +2222,15 @@ const SUGG_COUNT_KEY = 'sylva_suggest_count_v1';
 const SUGG_RECENCY = [[14, 0.05], [30, 0.25], [60, 0.6], [120, 0.85]];
 // Tirage courant : { id, pinned } — les épinglées survivent aux relances.
 let suggItems = [];
+// Piocher hors des filtres du rail. Remis à faux à chaque ouverture : le rail
+// reste la référence, c'est une échappatoire ponctuelle quand un filtre oublié
+// réduit le carnet à quelques recettes (« tout aux crevettes »).
+let suggIgnoreFilters = false;
+
+// Recettes dans lesquelles le tirage pioche, avant exclusions.
+function suggPool() {
+  return suggIgnoreFilters ? state.recipes.slice() : getFilteredRecipes();
+}
 
 function suggCount() {
   const el = document.getElementById('sugg-count');
@@ -2258,7 +2270,7 @@ function suggestionWeight(r, drawn) {
 
 // Tire `n` recettes dans les recettes filtrées, hors `excludeIds`.
 function pickSuggestions(n, excludeIds, alreadyDrawn) {
-  const pool = getFilteredRecipes().filter(r => !excludeIds.has(r.id));
+  const pool = suggPool().filter(r => !excludeIds.has(r.id));
   const drawn = (alreadyDrawn || []).slice();
   const out = [];
   while (out.length < n && pool.length) {
@@ -2310,14 +2322,24 @@ function renderSuggestions() {
   const list = document.getElementById('sugg-list');
   const info = document.getElementById('sugg-pool-info');
   if (!list) return;
-  const filteredList = getFilteredRecipes();
-  const poolSize = filteredList.filter(r => !state.selectedRecipeIds.includes(r.id)).length;
+  const poolSize = suggPool().filter(r => !state.selectedRecipeIds.includes(r.id)).length;
+  // Un filtre oublié dans le rail peut réduire le carnet à une poignée de recettes
+  // (« tout aux crevettes ») : l'annoncer chiffré, et proposer d'en sortir.
+  const narrowed = getFilteredRecipes().length !== state.recipes.length;
   if (info) {
-    // Signaler les filtres seulement s'ils retirent vraiment des recettes : sans ça
-    // on ne comprend pas pourquoi la moitié du carnet ne sort jamais.
-    const narrowed = filteredList.length !== state.recipes.length;
-    info.textContent = poolSize + ' recette' + (poolSize > 1 ? 's' : '')
-      + (narrowed ? ' (filtres actifs)' : '') + ' où piocher';
+    let txt = poolSize + ' recette' + (poolSize > 1 ? 's' : '') + ' où piocher';
+    if (narrowed) {
+      txt += suggIgnoreFilters
+        ? ' · tout le carnet'
+        : ' sur ' + state.recipes.length + ' · filtres du rail appliqués';
+    }
+    info.textContent = txt;
+  }
+  const ignoreBtn = document.getElementById('sugg-ignore-filters');
+  if (ignoreBtn) {
+    ignoreBtn.hidden = !narrowed;
+    ignoreBtn.innerHTML = ICONS.filter + (suggIgnoreFilters ? 'Reprendre les filtres' : 'Ignorer les filtres');
+    ignoreBtn.classList.toggle('active', suggIgnoreFilters);
   }
   list.innerHTML = '';
   if (!suggItems.length) {
@@ -2342,7 +2364,7 @@ function renderSuggestions() {
     if (!r.lastPickedAt) meta.push('<span class="sugg-tag-new">jamais faite</span>');
     main.innerHTML = '<div class="sugg-card-name">' + escapeHtml(r.name) + '</div>'
       + '<div class="sugg-card-meta">' + meta.join('') + '</div>';
-    main.onclick = () => { closeSuggestDrawer(); openRecipeDetail(r.id); };
+    main.onclick = () => openSuggPreview(r.id);
     card.appendChild(main);
 
     const actions = document.createElement('div');
@@ -2378,12 +2400,83 @@ function markRecipePicked(id) {
   if (r) r.lastPickedAt = Date.now();
 }
 
+/* Aperçu d'une recette SANS quitter les suggestions : le tiroir est un moment de
+   décision, renvoyer vers l'onglet Recettes faisait perdre le tirage en cours.
+   Lecture seule, mêmes classes que le panneau détail pour hériter de son style. */
+function suggPreviewHtml(r) {
+  const rated = r.rating != null && r.rating !== '';
+  let h = '<div class="sugg-preview-head">';
+  h += '<button class="sugg-act" id="sugg-preview-back" type="button" title="Retour aux idées">' + ICONS.arrowLeft + '</button>';
+  h += '<div class="sugg-preview-title">' + escapeHtml(r.name) + '</div>';
+  h += '</div>';
+  h += '<div class="sugg-preview-body">';
+  if (rated) {
+    h += '<div class="recipe-detail-rating"><span class="rating-stars">' + ratingStars(r.rating)
+      + '</span><span class="rating-note">' + r.rating + '/10</span></div>';
+  } else {
+    h += '<div class="recipe-detail-unrated">Non notée</div>';
+  }
+  const mt = (r.mealTypes || []).filter(t => t !== 'Aucun');
+  if (mt.length) {
+    h += '<div class="meal-tags">' + sortMealTypes(mt).map(m => '<span class="meal-tag">' + escapeHtml(m) + '</span>').join('') + '</div>';
+  }
+  const meta = [];
+  if (r.servings) meta.push(r.servings + ' pers.');
+  if (r.prepTime) meta.push('Prépa ' + formatTime(r.prepTime));
+  if (r.cookTime) meta.push('Cuisson ' + formatTime(r.cookTime));
+  if (meta.length) {
+    h += '<div class="recipe-detail-meta">' + meta.map(escapeHtml).join('<span class="meta-dot" aria-hidden="true">·</span>') + '</div>';
+  }
+  const origin = recipeOriginInfo(r);
+  if (origin) {
+    h += '<div class="sugg-preview-origin">' + origin.icon
+      + (origin.url
+          ? '<a href="' + escapeHtml(origin.url) + '" target="_blank" rel="noopener">' + escapeHtml(origin.text) + '</a>'
+          : '<span>' + escapeHtml(origin.text) + '</span>')
+      + '</div>';
+  }
+  if (r.ingredients && r.ingredients.length) {
+    h += '<div class="recipe-section"><div class="recipe-section-title"><span>Ingrédients</span></div><ul class="ingredients-list">'
+      + r.ingredients.map(i => {
+          const qty = i.quantity ? i.quantity + (i.unitId ? ' ' + getUnitName(i.unitId) : '') : '';
+          return '<li><span class="ing-qty">' + escapeHtml(qty) + '</span><span class="ing-name">' + escapeHtml(getIngredientName(i.ingredientId)) + '</span></li>';
+        }).join('')
+      + '</ul></div>';
+  }
+  const steps = (r.instructions || '').split('\n').map(s => s.trim()).filter(Boolean);
+  if (steps.length) {
+    h += '<div class="recipe-section"><div class="recipe-section-title"><span>Préparation</span></div><ol class="recipe-steps">'
+      + steps.map(s => '<li><span>' + escapeHtml(s) + '</span></li>').join('') + '</ol></div>';
+  }
+  if (r.notes) {
+    h += '<div class="recipe-section"><div class="recipe-section-title"><span>Notes</span></div><p class="sugg-preview-notes">'
+      + escapeHtml(r.notes) + '</p></div>';
+  }
+  h += '</div>';
+  return h;
+}
+
+function openSuggPreview(id) {
+  const r = state.recipes.find(x => x.id === id);
+  const box = document.getElementById('sugg-preview');
+  if (!r || !box) return;
+  box.innerHTML = suggPreviewHtml(r);
+  document.getElementById('sugg-preview-back').onclick = closeSuggPreview;
+  document.body.classList.add('sugg-preview-open');
+  box.scrollTop = 0;
+}
+function closeSuggPreview() {
+  document.body.classList.remove('sugg-preview-open');
+}
+
 function openSuggestDrawer() {
   document.body.classList.add('sugg-open');
+  suggIgnoreFilters = false; // le rail reste la référence à chaque ouverture
   suggItems = [];
   rerollSuggestions('all');
 }
 function closeSuggestDrawer() {
+  closeSuggPreview();
   document.body.classList.remove('sugg-open');
 }
 
@@ -2391,9 +2484,16 @@ document.getElementById('btn-suggest')?.addEventListener('click', openSuggestDra
 document.getElementById('sugg-close')?.addEventListener('click', closeSuggestDrawer);
 document.getElementById('sugg-scrim')?.addEventListener('click', closeSuggestDrawer);
 document.getElementById('sugg-reroll')?.addEventListener('click', () => rerollSuggestions('all'));
+document.getElementById('sugg-ignore-filters')?.addEventListener('click', () => {
+  suggIgnoreFilters = !suggIgnoreFilters;
+  suggItems = [];
+  rerollSuggestions('all');
+});
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape' && document.body.classList.contains('sugg-open')
-      && !document.querySelector('.modal-overlay.active')) closeSuggestDrawer();
+  if (e.key !== 'Escape' || document.querySelector('.modal-overlay.active')) return;
+  // Échap ferme d'abord l'aperçu, puis le tiroir.
+  if (document.body.classList.contains('sugg-preview-open')) closeSuggPreview();
+  else if (document.body.classList.contains('sugg-open')) closeSuggestDrawer();
 });
 
 {
@@ -7307,6 +7407,8 @@ const BACK_LAYERS = [
   { isOpen: () => document.body.classList.contains('detail-open'), close: () => closeRecipeDetail() },
   { isOpen: () => document.body.classList.contains('cart-open'),   close: () => closeCartDrawer() },
   { isOpen: () => document.body.classList.contains('sugg-open'),   close: () => closeSuggestDrawer() },
+  // Après le tiroir : le retour ferme l'aperçu d'abord, le tiroir ensuite.
+  { isOpen: () => document.body.classList.contains('sugg-preview-open'), close: () => closeSuggPreview() },
   { isOpen: () => !isFilterRailDocked()
                 && document.getElementById('filter-sheet-overlay')?.classList.contains('active') === true,
     close: () => closeFilterSheet() },
