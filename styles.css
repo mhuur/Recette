@@ -2858,13 +2858,29 @@ select.bug-tab-select option{background:#fff;color:var(--text);font-weight:500;t
 
   main { padding: 0 0 calc(16px + env(safe-area-inset-bottom)); }
 
+  /* ⚠️ `overflow:hidden` (défaut de .recipe-list, pour le radius) ferait de la carte
+     un scrollport : les chips sticky se calleraient sur ELLE, qui ne défile pas, donc
+     zéro effet collant. `clip` clippe sans créer de scrollport — même piège que
+     l'`overflow:hidden` proscrit sur .app-layout. */
+  .recipe-list { overflow: clip; }
   /* Commandes de la liste : posées SUR la liste, là où elles agissent. Elles
-     remplacent l'en-tête de colonnes (tri) et les boutons de la barre du haut. */
+     remplacent l'en-tête de colonnes (tri) et les boutons de la barre du haut.
+     Collantes sous l'app bar : changer de tri au milieu de 382 recettes ne doit pas
+     obliger à remonter. `--topbar-h` est mesurée en JS — la barre change de hauteur
+     quand la recherche se replie, aucune constante ne tiendrait. */
   .list-chips {
+    position: sticky;
+    top: calc(var(--topbar-h, 112px) + 10px);
+    z-index: 20;   /* au-dessus des lignes, sous la topbar (100) */
     display: flex;
     gap: 8px;
     padding: 10px 12px;
     border-bottom: 1px solid var(--border-soft);
+    /* Barre qui RECOUVRE les lignes en défilant : --menu-fill, pas --glass-fill,
+       sinon le texte des recettes reste lisible au travers en style « Contour ». */
+    background: var(--menu-fill);
+    -webkit-backdrop-filter: blur(var(--blur-md));
+    backdrop-filter: blur(var(--blur-md));
     overflow-x: auto;
     scrollbar-width: none;
   }

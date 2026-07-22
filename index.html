@@ -4722,10 +4722,37 @@ window.addEventListener('resize', updateFilterRail);
    geste vers le haut. Jamais repliée si le champ a le focus ou contient du texte :
    escamoter une recherche en cours ferait perdre le fil. Seuil et hystérésis pour
    ne pas clignoter au moindre tremblement du doigt. */
-(function wireSearchCollapse() {
+(function wireTopbarChrome() {
+  const bar = document.querySelector('.topbar');
   const search = document.querySelector('.cmd-search');
-  if (!search) return;
+  if (!bar || !search) return;
   const input = document.getElementById('search-input');
+
+  /* Hauteur réelle de la barre → --topbar-h, sur laquelle se cale le `top` des chips
+     collantes de la liste. Mesurée, jamais constante : la barre maigrit de ~43px
+     quand la recherche se replie. */
+  const measure = () => document.documentElement.style.setProperty(
+    '--topbar-h', Math.round(bar.getBoundingClientRect().height) + 'px');
+  if (window.ResizeObserver) new ResizeObserver(measure).observe(bar);
+  /* ⚠️ Deux filets, car le ResizeObserver ne livre ses observations qu'avant un
+     paint : sans eux les chips restaient collées 43px trop bas, avec un trou sous
+     la barre. `transitionend` couvre le repli animé, la mesure directe dans
+     setCollapsed() couvre le cas sans transition (reduced-motion, headless). */
+  search.addEventListener('transitionend', measure);
+  window.addEventListener('resize', measure);
+  measure();
+
+  /* Replier/déplier retire ou rend ~43px de contenu : le navigateur compense la
+     position de défilement (scroll anchoring) et émet un `scroll` que la logique
+     ci-dessous lirait comme un geste en sens inverse — donc un va-et-vient sous le
+     doigt. On neutralise la lecture le temps que ça se stabilise. */
+  let lockUntil = 0;
+  const setCollapsed = on => {
+    if (document.body.classList.contains('search-collapsed') === on) return;
+    document.body.classList.toggle('search-collapsed', on);
+    measure();
+    lockUntil = performance.now() + 300;
+  };
   /* ⚠️ Le conteneur de défilement de la page est <body>, PAS la fenêtre :
      `html, body { height:100% }` + `overflow-x:hidden` (styles.css) empêchent la
      propagation au viewport. `window.scrollY` reste donc bloqué à 0 et l'événement
@@ -4738,12 +4765,14 @@ window.addEventListener('resize', updateFilterRail);
      drapeau `ticking` à true et tuait le repli pour de bon. Le travail se résume à
      lire scrollTop et basculer une classe, et le navigateur cadence déjà `scroll`. */
   const apply = () => {
-    if (window.innerWidth > 768) { document.body.classList.remove('search-collapsed'); return; }
+    if (window.innerWidth > 768) { setCollapsed(false); return; }
     const y = readY();
+    // Pendant la compensation qui suit un basculement : on suit sans décider.
+    if (performance.now() < lockUntil) { lastY = y; return; }
     const held = document.activeElement === input || (input && input.value.trim() !== '');
-    if (held || y < 48) { document.body.classList.remove('search-collapsed'); lastY = y; return; }
-    if (y - lastY > 8) { document.body.classList.add('search-collapsed'); lastY = y; }
-    else if (lastY - y > 8) { document.body.classList.remove('search-collapsed'); lastY = y; }
+    if (held || y < 48) { setCollapsed(false); lastY = y; return; }
+    if (y - lastY > 8) { setCollapsed(true); lastY = y; }
+    else if (lastY - y > 8) { setCollapsed(false); lastY = y; }
   };
   const onScroll = e => {
     // Les tiroirs et les menus défilent aussi : n'écouter que la page.
@@ -4754,7 +4783,7 @@ window.addEventListener('resize', updateFilterRail);
   };
   document.addEventListener('scroll', onScroll, { capture: true, passive: true });
   window.addEventListener('resize', apply);
-  input?.addEventListener('focus', () => document.body.classList.remove('search-collapsed'));
+  input?.addEventListener('focus', () => setCollapsed(false));
 })();
 function closeFilterSheet() {
   if (isFilterRailDocked()) return; // rail permanent : rien à fermer
