@@ -215,6 +215,10 @@
               </div>
               <div class="sugg-side-actions">
                 <button class="btn btn-sm" id="sugg-reroll" type="button"><span class="tb-ico" data-icon="refreshCw"></span>Tout relancer</button>
+                <!-- Sous 1280px le rail de filtres n'est pas docké et la barre du haut est
+                     masquée par le tiroir : sans ce bouton, aucun moyen de toucher aux
+                     filtres depuis les Idées. Masqué ≥1280px, où le rail est à côté. -->
+                <button class="btn btn-sm sugg-open-filters" id="sugg-open-filters" type="button"><span class="tb-ico" data-icon="filter"></span>Modifier les filtres</button>
                 <button class="btn btn-sm sugg-filter-btn" id="sugg-ignore-filters" type="button" hidden></button>
               </div>
             </div>
@@ -2270,8 +2274,7 @@ function suggSyncWithFilters() {
   if (sig === suggFilterSig) return;
   suggFilterSig = sig;
   suggIgnoreFilters = false; // toucher au rail = vouloir l'appliquer
-  suggItems = [];
-  rerollSuggestions('all');
+  rerollSuggestions('all'); // les épinglées restent : changer un filtre n'est pas les renier
 }
 
 // Ce qui restreint réellement le tirage, en clair. Diagnostic autant qu'affichage :
@@ -2538,11 +2541,20 @@ function closeSuggPreview() {
   document.body.classList.remove('sugg-preview-open');
 }
 
+/* Le tirage SURVIT à la fermeture du tiroir : une recette épinglée est un choix
+   explicite, la jeter parce qu'on est allé voir autre chose était une perte sèche
+   (et sur mobile on ferme le tiroir d'un simple retour). On ne repart donc pas de
+   zéro — `rerollSuggestions('all')` conserve les épinglées et renouvelle le reste.
+   Purge préalable de ce qui n'a plus lieu d'être proposé : recette supprimée, ou
+   déjà passée en sélection entre-temps (suggExcluded l'écarterait du tirage tout
+   en la laissant affichée). Le tirage n'est vidé qu'une fois consommé, cf. le
+   bouton « Ajouter à ma sélection ». */
 function openSuggestDrawer() {
   document.body.classList.add('sugg-open');
   suggIgnoreFilters = false; // le rail reste la référence à chaque ouverture
   suggFilterSig = suggFiltersSignature();
-  suggItems = [];
+  suggItems = suggItems.filter(it => state.recipes.some(r => r.id === it.id)
+    && !state.selectedRecipeIds.includes(it.id));
   rerollSuggestions('all');
 }
 function closeSuggestDrawer() {
@@ -2558,8 +2570,12 @@ document.getElementById('sugg-close')?.addEventListener('click', closeSuggestDra
 document.getElementById('sugg-reroll')?.addEventListener('click', () => rerollSuggestions('all'));
 document.getElementById('sugg-ignore-filters')?.addEventListener('click', () => {
   suggIgnoreFilters = !suggIgnoreFilters;
-  suggItems = [];
-  rerollSuggestions('all');
+  rerollSuggestions('all'); // idem : élargir le tirage ne doit pas coûter les épingles
+});
+// Raccourci vers le rail de filtres, seul accès quand la barre du haut est masquée.
+document.getElementById('sugg-open-filters')?.addEventListener('click', () => {
+  const ov = document.getElementById('filter-sheet-overlay');
+  if (ov.classList.contains('active')) closeFilterSheet(); else openFilterSheet();
 });
 document.addEventListener('keydown', e => {
   if (e.key !== 'Escape' || document.querySelector('.modal-overlay.active')) return;
@@ -2578,11 +2594,15 @@ document.addEventListener('keydown', e => {
     countEl.addEventListener('input', () => {
       if (outEl) outEl.textContent = countEl.value;
       try { localStorage.setItem(SUGG_COUNT_KEY, countEl.value); } catch {}
-      // Ajuste le tirage sans tout rejouer : on complète ou on retire par la fin.
+      // Ajuste le tirage sans tout rejouer : on complète, ou on retire par la fin
+      // en épargnant les épinglées — un simple slice() sacrifiait celles qui se
+      // trouvaient en bas de liste, alors qu'épingler sert justement à les garder.
       const n = suggCount();
       if (suggItems.length > n) {
-        const keep = suggItems.filter(it => it.pinned);
-        suggItems = suggItems.slice(0, Math.max(n, keep.length));
+        const pinned = suggItems.filter(it => it.pinned);
+        const rest = suggItems.filter(it => !it.pinned).slice(0, Math.max(0, n - pinned.length));
+        const kept = new Set(pinned.concat(rest).map(it => it.id));
+        suggItems = suggItems.filter(it => kept.has(it.id)); // ordre d'affichage conservé
         renderSuggestions();
       } else if (suggItems.length < n) {
         const ids = suggItems.map(it => it.id);
@@ -2600,6 +2620,7 @@ document.getElementById('sugg-accept')?.addEventListener('click', () => {
     state.selectedRecipeIds.push(it.id);
     markRecipePicked(it.id);
   });
+  suggItems = []; // tirage consommé : la prochaine ouverture repart d'une page blanche
   save();
   renderRecipes();
   closeSuggestDrawer();
@@ -3318,7 +3339,12 @@ function availableIngredientIds() {
   return set;
 }
 // Régimes déduits des familles d'ingrédients (onglet Données) :
-//   végétarien = ni viande ni poisson · pescarien = pas de viande (poisson OK).
+//   végétarien = ni viande ni poisson · pescarien = poisson EXIGÉ, viande interdite.
+// ⚠️ « Pescarien » ne se contente pas d'autoriser le poisson, il le réclame (demande
+// utilisateur du 2026-07-22) : sans ça une salade de tomates sortait dans une
+// recherche de plat de poisson. Les deux régimes sont donc DISJOINTS, et non plus
+// emboîtés — cocher les deux ne donnerait aucune recette, d'où la normalisation
+// exclusive dans buildFilterBar().
 // Un ingrédient mal classé ou sans famille passe pour compatible : le classement
 // des familles conditionne la justesse de ces deux filtres.
 const MEAT_FAMILIES = ['viande', 'volaille', 'charcuterie'];
@@ -3337,7 +3363,7 @@ function isVegetarianRecipe(r) {
   return !recipeHasFamilies(r, MEAT_FAMILIES) && !recipeHasFamilies(r, FISH_FAMILIES);
 }
 function isPescatarianRecipe(r) {
-  return !recipeHasFamilies(r, MEAT_FAMILIES);
+  return recipeHasFamilies(r, FISH_FAMILIES) && !recipeHasFamilies(r, MEAT_FAMILIES);
 }
 
 function getFilteredRecipes() {
@@ -4389,9 +4415,9 @@ function buildFilterBar() {
     };
   });
 
-  // Filtre Régime (calculé depuis les familles d'ingrédients) : bulles exclusives —
-  // végétarien ⊂ pescarien, cocher les deux revenait à Végétarien seul.
-  // État persisté avant l'exclusivité : les deux cochés = Végétarien (le plus strict).
+  // Filtre Régime (calculé depuis les familles d'ingrédients) : bulles exclusives.
+  // Les deux critères sont disjoints depuis que « pescarien » exige du poisson :
+  // les cocher ensemble ne rendrait aucune recette. On retombe donc sur Végétarien.
   if (state.filters.vegetarianOnly && state.filters.pescatarianOnly) state.filters.pescatarianOnly = false;
   document.querySelectorAll('#filter-diet .chip-toggle').forEach(b => {
     const key = b.dataset.diet === 'vegetarian' ? 'vegetarianOnly' : 'pescatarianOnly';
@@ -4625,7 +4651,11 @@ function positionFilterSheet() {
     // Rail docké : purger les styles inline du popover, sinon ils écrasent la colonne.
     sheet.style.left = ''; sheet.style.top = ''; sheet.style.height = ''; sheet.style.maxHeight = '';
   } else if (window.innerWidth >= 769) {
-    const btn = document.getElementById('btn-toggle-filter');
+    // Tiroir Idées ouvert : la barre du haut est masquée, ancrer le popover sur son
+    // bouton « Modifier les filtres » — sinon il s'ouvrait à l'autre bout de l'écran,
+    // sous un bouton invisible.
+    const anchorId = document.body.classList.contains('sugg-open') ? 'sugg-open-filters' : 'btn-toggle-filter';
+    const btn = document.getElementById(anchorId) || document.getElementById('btn-toggle-filter');
     const r = btn ? btn.getBoundingClientRect() : { left: 16, bottom: 60 };
     const margin = 12;
     const left = Math.max(margin, Math.min(r.left, window.innerWidth - 280 - margin));
@@ -4670,6 +4700,7 @@ document.addEventListener('click', e => {
   if (!overlay || !overlay.classList.contains('active')) return;
   if (e.target.closest('.filter-sheet')) return;
   if (e.target.closest('#btn-toggle-filter')) return;
+  if (e.target.closest('#sugg-open-filters')) return; // sinon le clic qui ouvre referme aussitôt
   if (e.target.closest('.autocomplete-dropdown')) return;
   if (e.target.closest('.filter-menu')) return; // enfant de body, mais « dedans » pour l'utilisateur
   closeFilterSheet();

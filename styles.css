@@ -1729,6 +1729,9 @@ body.sugg-preview-open .sugg-preview { display: flex; }
   .sugg-side { grid-area: side; }
   .sugg-main { grid-area: main; }
   .sugg-foot { grid-area: foot; }
+  /* Le rail de filtres est docké à gauche, visible à côté du tiroir : le raccourci
+     n'a plus lieu d'être. Seuil à garder synchronisé avec isFilterRailDocked(). */
+  .sugg-open-filters { display: none; }
 }
 
 /* Grand écran : la carte se cale sur la seule colonne LISTE et libère la place
