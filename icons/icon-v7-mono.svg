@@ -1,0 +1,24 @@
+<!-- Calque monochrome (manifest `purpose: "monochrome"`) : c'est la SEULE voie par
+     laquelle une PWA peut apparaître sans pastille sur l'écran d'accueil Android, en
+     mode « icônes thématisées ». Android ignore les couleurs et ne lit que l'alpha :
+     on dessine donc une silhouette pleine, et les traits du visage et de la bande de
+     nori sont EVIDÉS pour rester lisibles une fois la forme teintée.
+     Fond obligatoirement transparent — le système fournit le sien. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="90 87 332 332">
+  <mask id="o7-cut">
+    <rect x="0" y="0" width="512" height="512" fill="#000"/>
+    <!-- Blanc = matière conservée -->
+    <path fill="#fff" d="
+      M 228 130 C 238 104 274 104 284 130 C 306 178 372 320 400 356
+      C 416 380 402 402 376 402 L 136 402 C 110 402 96 380 112 356
+      C 140 320 206 178 228 130 Z"/>
+    <!-- Noir = découpé -->
+    <ellipse cx="212" cy="250" rx="14" ry="17" fill="#000"/>
+    <ellipse cx="300" cy="250" rx="14" ry="17" fill="#000"/>
+    <path d="M 236 274 C 243 288 253 288 256 277 C 259 288 269 288 276 274"
+          fill="none" stroke="#000" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+    <rect x="194" y="316" width="124" height="100" rx="15"
+          fill="none" stroke="#000" stroke-width="12"/>
+  </mask>
+  <rect x="0" y="0" width="512" height="512" fill="#1c1c1c" mask="url(#o7-cut)"/>
+</svg>
