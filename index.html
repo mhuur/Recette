@@ -227,7 +227,7 @@
             <div class="sugg-toolbar">
               <span class="selected-count">Combien de propositions</span>
               <div class="sugg-count-ctrl">
-                <input type="range" id="sugg-count" min="3" max="10" step="1" value="5">
+                <input type="range" id="sugg-count" min="1" max="10" step="1" value="5">
                 <output id="sugg-count-val">5</output>
               </div>
               <div class="sugg-side-actions">
@@ -2468,7 +2468,7 @@ function renderSuggestions() {
     const pin = document.createElement('button');
     pin.type = 'button';
     pin.className = 'sugg-act sugg-act-pin';
-    pin.title = it.pinned ? 'Ne plus garder' : 'Garder au prochain tirage';
+    pin.title = it.pinned ? 'Ne plus retenir' : 'Retenir cette recette';
     pin.innerHTML = ICONS.pin;
     pin.onclick = () => { it.pinned = !it.pinned; renderSuggestions(); };
     const swap = document.createElement('button');
@@ -2482,9 +2482,15 @@ function renderSuggestions() {
     card.appendChild(actions);
     list.appendChild(card);
   });
+  /* Épingler vaut « je retiens celle-ci » : dès qu'au moins une carte est épinglée,
+     l'ajout ne porte QUE sur elles. Sans ça il fallait relancer les autres une par
+     une pour ne garder que son choix, ou subir tout le tirage dans la sélection. */
   const accept = document.getElementById('sugg-accept');
   if (accept) {
-    accept.innerHTML = ICONS.check + 'Ajouter ' + suggItems.length + ' recette' + (suggItems.length > 1 ? 's' : '') + ' à ma sélection';
+    const pinned = suggItems.filter(it => it.pinned).length;
+    const n = pinned || suggItems.length;
+    accept.innerHTML = ICONS.check + 'Ajouter ' + n + (pinned ? ' retenue' : ' recette')
+      + (n > 1 ? 's' : '') + ' à ma sélection';
     accept.disabled = !suggItems.length;
   }
 }
@@ -2608,7 +2614,7 @@ document.addEventListener('keydown', e => {
   const outEl = document.getElementById('sugg-count-val');
   if (countEl) {
     const saved = parseInt(localStorage.getItem(SUGG_COUNT_KEY) || '', 10);
-    if (saved >= 3 && saved <= 10) countEl.value = String(saved);
+    if (saved >= 1 && saved <= 10) countEl.value = String(saved);
     if (outEl) outEl.textContent = countEl.value;
     countEl.addEventListener('input', () => {
       if (outEl) outEl.textContent = countEl.value;
@@ -2634,7 +2640,10 @@ document.addEventListener('keydown', e => {
 }
 
 document.getElementById('sugg-accept')?.addEventListener('click', () => {
-  const added = suggItems.filter(it => !state.selectedRecipeIds.includes(it.id));
+  // Des épingles = un choix explicite : elles seules partent en sélection.
+  const pinned = suggItems.filter(it => it.pinned);
+  const added = (pinned.length ? pinned : suggItems)
+    .filter(it => !state.selectedRecipeIds.includes(it.id));
   added.forEach(it => {
     state.selectedRecipeIds.push(it.id);
     markRecipePicked(it.id);
