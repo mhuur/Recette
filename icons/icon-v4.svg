@@ -1,0 +1,120 @@
+<!-- Flamme Calcifer v4 - flamme seule (plus de buches) et fond entierement transparent,
+     y compris apple-touch et maskable. Le viewBox est resserre sur le dessin, trait de
+     contour compris, pour occuper tout le canvas faute de carre colore pour le porter. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="54 18 400 400">
+  <defs>
+    <!-- Coeur incandescent en bas, rouge profond sur les bords hauts -->
+    <radialGradient id="f4-flame" gradientUnits="userSpaceOnUse" cx="246" cy="348" r="215">
+      <stop offset="0" stop-color="#fff6c2"/>
+      <stop offset="0.20" stop-color="#ffdc55"/>
+      <stop offset="0.44" stop-color="#ffa81c"/>
+      <stop offset="0.70" stop-color="#f5610f"/>
+      <stop offset="1" stop-color="#cc1c09"/>
+    </radialGradient>
+
+    <!-- Assombrit la pointe : donne du volume vertical au lieu d'un aplat -->
+    <linearGradient id="f4-shade" gradientUnits="userSpaceOnUse" x1="256" y1="22" x2="256" y2="300">
+      <stop offset="0" stop-color="#a8140a" stop-opacity="0.45"/>
+      <stop offset="0.55" stop-color="#e0400c" stop-opacity="0.12"/>
+      <stop offset="1" stop-color="#ff8a1e" stop-opacity="0"/>
+    </linearGradient>
+
+    <!-- Halo chaud : de l'alpha pur, la transparence est preservee -->
+    <radialGradient id="f4-glow" gradientUnits="userSpaceOnUse" cx="248" cy="256" r="200">
+      <stop offset="0" stop-color="#ff8c1a" stop-opacity="0.26"/>
+      <stop offset="0.55" stop-color="#ff6a12" stop-opacity="0.10"/>
+      <stop offset="1" stop-color="#ff5a0d" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- Lisere lumineux du bord gauche, estompe aux deux bouts -->
+    <linearGradient id="f4-rim" gradientUnits="userSpaceOnUse" x1="180" y1="180" x2="158" y2="340">
+      <stop offset="0" stop-color="#fff3c0" stop-opacity="0"/>
+      <stop offset="0.42" stop-color="#fff6d4" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#fff3c0" stop-opacity="0"/>
+    </linearGradient>
+
+    <linearGradient id="f4-eye" gradientUnits="userSpaceOnUse" x1="256" y1="218" x2="256" y2="290">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#ffeccd"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Halo (sous tout le reste) -->
+  <circle cx="248" cy="256" r="200" fill="url(#f4-glow)"/>
+
+  <g stroke="#6d2408" stroke-width="8" stroke-linejoin="round" stroke-linecap="round">
+    <!-- Flamme : pointe principale crochetee, encoche + langue a gauche,
+         epaule bombee a droite. Silhouette vivante, pas une goutte. -->
+    <path fill="url(#f4-flame)" d="
+      M 276 22
+      C 268 92 244 130 212 166
+      C 220 140 222 118 217 98
+      C 182 136 155 180 146 226
+      C 142 246 143 262 149 278
+      C 134 268 125 250 123 230
+      C 104 302 126 366 182 396
+      C 205 408 231 414 258 414
+      C 331 414 384 358 384 280
+      C 384 240 371 202 348 170
+      C 355 187 357 204 354 219
+      C 336 144 305 88 276 22 Z"/>
+  </g>
+
+  <!-- Ombre de la pointe, posee sur la flamme sans contour propre -->
+  <path fill="url(#f4-shade)" d="
+    M 276 22
+    C 268 92 244 130 212 166
+    C 220 140 222 118 217 98
+    C 182 136 155 180 146 226
+    C 142 246 143 262 149 278
+    C 134 268 125 250 123 230
+    C 104 302 126 366 182 396
+    C 205 408 231 414 258 414
+    C 331 414 384 358 384 280
+    C 384 240 371 202 348 170
+    C 355 187 357 204 354 219
+    C 336 144 305 88 276 22 Z"/>
+
+  <!-- Lisere chaud du bord gauche -->
+  <path fill="none" stroke="url(#f4-rim)" stroke-width="13" stroke-linecap="round"
+        d="M 200 196 C 176 234 161 276 160 316"/>
+
+  <!-- Joues -->
+  <ellipse cx="170" cy="303" rx="18" ry="11" fill="#ff5233" opacity="0.32"/>
+  <ellipse cx="345" cy="303" rx="18" ry="11" fill="#ff5233" opacity="0.32"/>
+
+  <g stroke="#6d2408" stroke-width="8" stroke-linejoin="round" stroke-linecap="round">
+    <!-- Yeux -->
+    <ellipse cx="214" cy="254" rx="30" ry="35" fill="url(#f4-eye)"/>
+    <ellipse cx="302" cy="254" rx="30" ry="35" fill="url(#f4-eye)"/>
+
+    <!-- Bouche ouverte -->
+    <path fill="#a81b26" d="
+      M 205 314
+      C 236 300 280 300 311 314
+      C 307 356 284 373 258 373
+      C 232 373 209 356 205 314 Z"/>
+  </g>
+
+  <!-- Interieur de bouche : dent puis langue, sans contour -->
+  <path fill="#fffdf5" d="M 214 316 C 240 306 276 306 302 316 L 300 325 C 276 316 240 316 216 325 Z"/>
+  <path fill="#ff6f7d" d="M 224 347 C 234 337 282 337 292 347 C 290 365 276 373 258 373 C 240 373 226 365 224 347 Z"/>
+
+  <!-- Pupilles et reflets -->
+  <circle cx="217" cy="258" r="14" fill="#20120a"/>
+  <circle cx="299" cy="258" r="14" fill="#20120a"/>
+  <circle cx="223" cy="250" r="6" fill="#fffdf5"/>
+  <circle cx="305" cy="250" r="6" fill="#fffdf5"/>
+  <circle cx="211" cy="266" r="3" fill="#fffdf5" opacity="0.85"/>
+  <circle cx="293" cy="266" r="3" fill="#fffdf5" opacity="0.85"/>
+
+  <!-- Braises : pointe recourbee pour lire « flammeche », pas « goutte d'eau » -->
+  <g stroke="#6d2408" stroke-linejoin="round" stroke-linecap="round">
+    <path stroke-width="7" fill="#ff9a26"
+          d="M 100 186 c 14 14 20 22 20 32 a 14 14 0 0 1 -28 0 c 0 -8 6 -12 8 -20 c 1 -5 1 -8 0 -12 Z"/>
+    <path stroke-width="7" fill="#ffb02e"
+          d="M 396 140 c 15 15 21 23 21 34 a 15 15 0 0 1 -30 0 c 0 -9 6 -13 8 -21 c 1 -5 1 -9 1 -13 Z"/>
+    <path stroke-width="6" fill="#ffc247"
+          d="M 146 108 c 10 10 14 16 14 22 a 10 10 0 0 1 -20 0 c 0 -6 4 -8 5 -14 c 1 -3 1 -6 1 -8 Z"/>
+  </g>
+</svg>
