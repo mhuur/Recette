@@ -48,17 +48,9 @@
     <span class="search-ico" data-icon="search" aria-hidden="true"></span>
     <input type="text" id="search-input" placeholder="Rechercher une recette, un ingrédient…" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" data-form-type="other">
   </div>
-  <button class="cmd-btn cmd-recipes-only" id="btn-toggle-filter" type="button" title="Filtres"><span class="tb-ico" data-icon="filter"></span><span class="cmd-btn-label">Filtres</span><span class="filter-count-badge" id="filter-count-badge" style="display:none;">0</span></button>
+  <button class="cmd-btn cmd-recipes-only js-toggle-filter" id="btn-toggle-filter" type="button" title="Filtres"><span class="tb-ico" data-icon="filter"></span><span class="cmd-btn-label">Filtres</span><span class="filter-count-badge js-filter-count" id="filter-count-badge" style="display:none;">0</span></button>
   <div class="cmd-sort cmd-recipes-only">
-    <button class="cmd-btn" id="sort-btn" type="button" title="Trier"><span class="tb-ico" data-icon="arrowUpDown"></span><span class="cmd-btn-label" id="sort-label">Trier</span></button>
-    <div class="sort-popup" id="sort-popup">
-      <div class="sort-option active-sort" data-sort="name-asc">Nom A → Z</div>
-      <div class="sort-option" data-sort="name-desc">Nom Z → A</div>
-      <div class="sort-option" data-sort="rating-desc">Note ↓</div>
-      <div class="sort-option" data-sort="rating-asc">Note ↑</div>
-      <div class="sort-option" data-sort="time-asc">Temps ↑</div>
-      <div class="sort-option" data-sort="time-desc">Temps ↓</div>
-    </div>
+    <button class="cmd-btn js-sort-btn" id="sort-btn" type="button" title="Trier"><span class="tb-ico" data-icon="arrowUpDown"></span><span class="cmd-btn-label js-sort-label" id="sort-label">Trier</span></button>
   </div>
   <!-- Tri et « sélection uniquement » vivent dans l'en-tête de colonnes ; ils ne
        restent ici qu'en mobile, où cet en-tête est masqué (cf. styles.css). -->
@@ -75,8 +67,11 @@
     <button class="cmd-add cmd-recipes-only" id="btn-new-recipe-inline" type="button"><span class="tb-ico" data-icon="plus"></span><span class="cmd-btn-label">Ajouter</span></button>
     <div class="sidebar-user" id="sidebar-user">
       <div class="user-avatar-wrapper" id="user-avatar-wrapper">
-        <button class="sidebar-user-trigger" id="sidebar-user-trigger" type="button" aria-label="Mon compte">
+        <!-- Mobile : le même déclencheur devient le « ⋮ » de l'app bar. Un seul menu,
+             donc rien à ajouter dans BACK_LAYERS ni dans l'observer du bouton retour. -->
+        <button class="sidebar-user-trigger" id="sidebar-user-trigger" type="button" aria-label="Menu">
           <span class="sidebar-user-avatar" id="sidebar-user-avatar"></span>
+          <span class="tb-ico topbar-more-ico" data-icon="moreVertical" aria-hidden="true"></span>
         </button>
         <div class="user-menu" id="user-menu" role="menu">
           <div class="user-menu-header">
@@ -84,6 +79,8 @@
             <div class="user-menu-email" id="user-menu-email">—</div>
             <div class="sidebar-sync" id="sidebar-sync-status" data-icon="cloud"></div>
           </div>
+          <!-- Mobile seulement : le bouton Claude quitte l'app bar pour ce menu. -->
+          <button class="user-menu-item um-mobile-only" role="menuitem" id="menu-claude-import"><span class="um-ico" data-icon="sparkles"></span><span>Créer avec Claude</span></button>
           <button class="user-menu-item" role="menuitem" data-go="data"><span class="um-ico" data-icon="database"></span><span>Données</span></button>
           <button class="user-menu-item" role="menuitem" data-go="settings"><span class="um-ico" data-icon="settings"></span><span>Réglages</span></button>
           <div class="user-menu-sep"></div>
@@ -175,6 +172,23 @@
       <div class="recipes-main">
         <!-- Liste dense (2a) : en-tête de colonnes + lignes en grille -->
         <div class="recipe-list">
+          <!-- Commandes de la liste, MOBILE uniquement (masquées ≥769px) : elles doublent
+               l'en-tête de colonnes (tri) et la barre du haut (filtres, sélection), qui
+               sont masqués ici. Posées sur la liste, pas dans l'app bar : ce sont des
+               commandes de la liste, elles doivent rester près de ce qu'elles pilotent.
+               Handlers partagés par CLASSE, jamais par id (cf. .js-selection-only). -->
+          <div class="list-chips">
+            <button type="button" class="list-chip js-toggle-filter">
+              <span class="tb-ico" data-icon="filter" aria-hidden="true"></span><span>Filtres</span>
+              <span class="filter-count-badge js-filter-count" style="display:none;">0</span>
+            </button>
+            <button type="button" class="list-chip js-sort-btn">
+              <span class="tb-ico" data-icon="arrowUpDown" aria-hidden="true"></span><span class="js-sort-label">A→Z</span>
+            </button>
+            <button type="button" class="list-chip js-selection-only" title="Afficher uniquement la sélection" aria-pressed="false">
+              <span class="tb-ico" data-icon="check" aria-hidden="true"></span><span>Sélection</span>
+            </button>
+          </div>
           <!-- En-tête cliquable : 1er clic = croissant, 2e = décroissant. La 1re cellule
                porte le filtre « sélection uniquement », au-dessus des cases. -->
           <div class="recipe-list-head">
@@ -384,6 +398,18 @@
 
   </section>
 </main>
+</div>
+
+<!-- Popup de tri : enfant de body, positionné en fixed sur celui de ses deux
+     déclencheurs qui a été cliqué (barre du haut en desktop, chip en mobile).
+     Dans .cmd-sort il aurait disparu avec elle quand la barre se compacte. -->
+<div class="sort-popup" id="sort-popup">
+  <div class="sort-option active-sort" data-sort="name-asc">Nom A → Z</div>
+  <div class="sort-option" data-sort="name-desc">Nom Z → A</div>
+  <div class="sort-option" data-sort="rating-desc">Note ↓</div>
+  <div class="sort-option" data-sort="rating-asc">Note ↑</div>
+  <div class="sort-option" data-sort="time-asc">Temps ↑</div>
+  <div class="sort-option" data-sort="time-desc">Temps ↓</div>
 </div>
 
 <!-- Tiroir Courses (maquette Sylva : la liste de courses est un tiroir latéral) -->
@@ -4444,8 +4470,8 @@ document.getElementById('search-input').addEventListener('input', e => {
 const sortLabels = { 'name-asc':'A→Z', 'name-desc':'Z→A', 'rating-desc':'Note↓', 'rating-asc':'Note↑', 'time-asc':'Temps↑', 'time-desc':'Temps↓' };
 function setSortValue(v) {
   state.filters.sort = v;
-  const lbl = document.getElementById('sort-label');
-  if (lbl) lbl.textContent = sortLabels[v] || v;
+  // Deux libellés à tenir à jour : barre du haut (desktop) et chip (mobile).
+  document.querySelectorAll('.js-sort-label').forEach(l => { l.textContent = sortLabels[v] || v; });
   document.querySelectorAll('#sort-popup .sort-option').forEach(o => {
     o.classList.toggle('active-sort', o.dataset.sort === v);
   });
@@ -4481,9 +4507,18 @@ document.querySelectorAll('.recipe-list-head .rlh-sort').forEach(b => {
     setSortValue(state.filters.sort === pair[0] ? pair[1] : pair[0]);
   });
 });
-document.getElementById('sort-btn').addEventListener('click', e => {
-  e.stopPropagation();
-  document.getElementById('sort-popup').classList.toggle('active');
+/* Deux déclencheurs de tri : la barre du haut (desktop) et la chip de la liste
+   (mobile). Le popup étant enfant de body, il s'ancre sur celui qui a été cliqué. */
+document.querySelectorAll('.js-sort-btn').forEach(btn => {
+  btn.addEventListener('click', e => {
+    e.stopPropagation();
+    const pop = document.getElementById('sort-popup');
+    if (pop.classList.contains('active')) { pop.classList.remove('active'); return; }
+    const r = btn.getBoundingClientRect(), margin = 10, w = 156;
+    pop.style.left = Math.max(margin, Math.min(r.left, window.innerWidth - w - margin)) + 'px';
+    pop.style.top = (r.bottom + 6) + 'px';
+    pop.classList.add('active');
+  });
 });
 document.getElementById('sort-popup').addEventListener('click', e => {
   const opt = e.target.closest('.sort-option');
@@ -4681,21 +4716,64 @@ function updateFilterRail() {
   if (overlay && overlay.classList.contains('active')) positionFilterSheet();
 }
 window.addEventListener('resize', updateFilterRail);
+
+/* Recherche repliable (mobile) : la barre est sticky, ses ~40px de champ restaient
+   pris pendant toute la lecture. On la replie en descendant, on la rend au premier
+   geste vers le haut. Jamais repliée si le champ a le focus ou contient du texte :
+   escamoter une recherche en cours ferait perdre le fil. Seuil et hystérésis pour
+   ne pas clignoter au moindre tremblement du doigt. */
+(function wireSearchCollapse() {
+  const search = document.querySelector('.cmd-search');
+  if (!search) return;
+  const input = document.getElementById('search-input');
+  /* ⚠️ Le conteneur de défilement de la page est <body>, PAS la fenêtre :
+     `html, body { height:100% }` + `overflow-x:hidden` (styles.css) empêchent la
+     propagation au viewport. `window.scrollY` reste donc bloqué à 0 et l'événement
+     `scroll` de body ne remonte pas jusqu'à window. D'où la lecture des trois
+     positions possibles, et l'écoute en phase de CAPTURE sur document. */
+  const readY = () => Math.max(window.scrollY || 0,
+    document.documentElement.scrollTop || 0, document.body.scrollTop || 0);
+  let lastY = 0;
+  /* Pas de throttle par requestAnimationFrame ici : un seul rAF perdu laissait le
+     drapeau `ticking` à true et tuait le repli pour de bon. Le travail se résume à
+     lire scrollTop et basculer une classe, et le navigateur cadence déjà `scroll`. */
+  const apply = () => {
+    if (window.innerWidth > 768) { document.body.classList.remove('search-collapsed'); return; }
+    const y = readY();
+    const held = document.activeElement === input || (input && input.value.trim() !== '');
+    if (held || y < 48) { document.body.classList.remove('search-collapsed'); lastY = y; return; }
+    if (y - lastY > 8) { document.body.classList.add('search-collapsed'); lastY = y; }
+    else if (lastY - y > 8) { document.body.classList.remove('search-collapsed'); lastY = y; }
+  };
+  const onScroll = e => {
+    // Les tiroirs et les menus défilent aussi : n'écouter que la page.
+    const t = e && e.target;
+    if (t && t !== document && t !== document.body && t !== document.documentElement
+        && t.id !== 'recipes-container') return;
+    apply();
+  };
+  document.addEventListener('scroll', onScroll, { capture: true, passive: true });
+  window.addEventListener('resize', apply);
+  input?.addEventListener('focus', () => document.body.classList.remove('search-collapsed'));
+})();
 function closeFilterSheet() {
   if (isFilterRailDocked()) return; // rail permanent : rien à fermer
   document.getElementById('filter-sheet-overlay').classList.remove('active');
 }
-document.getElementById('btn-toggle-filter').onclick = () => {
-  const ov = document.getElementById('filter-sheet-overlay');
-  if (ov.classList.contains('active')) closeFilterSheet(); else openFilterSheet();
-};
+// Deux déclencheurs : barre du haut (desktop) et chip de la liste (mobile).
+document.querySelectorAll('.js-toggle-filter').forEach(b => {
+  b.onclick = () => {
+    const ov = document.getElementById('filter-sheet-overlay');
+    if (ov.classList.contains('active')) closeFilterSheet(); else openFilterSheet();
+  };
+});
 // Desktop : clic hors du popover → fermeture (l'overlay est pointer-events:none)
 document.addEventListener('click', e => {
   if (window.innerWidth < 769 || isFilterRailDocked()) return;
   const overlay = document.getElementById('filter-sheet-overlay');
   if (!overlay || !overlay.classList.contains('active')) return;
   if (e.target.closest('.filter-sheet')) return;
-  if (e.target.closest('#btn-toggle-filter')) return;
+  if (e.target.closest('.js-toggle-filter')) return;
   if (e.target.closest('#sugg-filters-btn')) return; // sinon le clic qui ouvre referme aussitôt
   if (e.target.closest('.autocomplete-dropdown')) return;
   if (e.target.closest('.filter-menu')) return; // enfant de body, mais « dedans » pour l'utilisateur
@@ -4741,13 +4819,12 @@ function updateFilterBadge() {
   if (f.cookMax !== null && f.cookMax !== undefined) count++;
   if (f.includeIngredients && f.includeIngredients.length) count += f.includeIngredients.length;
   if (f.excludeIngredients && f.excludeIngredients.length) count += f.excludeIngredients.length;
-  const badge = document.getElementById('filter-count-badge');
-  if (badge) {
+  // Deux porteurs du compteur : barre du haut (desktop) et chip (mobile).
+  document.querySelectorAll('.js-filter-count').forEach(badge => {
     badge.textContent = count;
     badge.style.display = count > 0 ? '' : 'none';
-  }
-  const btn = document.getElementById('btn-toggle-filter');
-  if (btn) btn.classList.toggle('neon-on', count > 0);
+  });
+  document.querySelectorAll('.js-toggle-filter').forEach(b => b.classList.toggle('neon-on', count > 0));
   // Pied du rail docké : « N filtre(s) actif(s) »
   const railCount = document.getElementById('filter-active-count');
   if (railCount) {
@@ -5548,6 +5625,11 @@ function importClaudeRecipe() {
 }
 
 document.getElementById('btn-claude-import').onclick = openClaudeModal;
+// Même action depuis le menu ⋮ (mobile), où le bouton de la barre n'est pas monté.
+document.getElementById('menu-claude-import').onclick = () => {
+  document.getElementById('user-avatar-wrapper')?.classList.remove('open');
+  openClaudeModal();
+};
 document.getElementById('btn-claude-copy').onclick = copyClaudePrompt;
 document.getElementById('btn-claude-open').onclick = () => {
   const prompt = buildClaudePrompt();

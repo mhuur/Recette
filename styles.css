@@ -1295,11 +1295,16 @@ body:has(.modal-overlay.active) .cart-scrim { visibility: hidden; }
   text-align: center;
 }
 
-/* Sort popup */
+/* Commandes de la liste, mobile uniquement (montées en HTML, masquées ici) :
+   en desktop le tri vit dans l'en-tête de colonnes et les filtres dans la barre. */
+.list-chips { display: none; }
+.topbar-more-ico { display: none; }
+.um-mobile-only { display: none; }
+
+/* Sort popup — enfant de body, placé en JS sous le déclencheur cliqué (barre du
+   haut en desktop, chip de la liste en mobile). */
 .sort-popup {
-  position: absolute;
-  top: calc(100% + 6px);
-  left: 0;
+  position: fixed;
   background: var(--menu-fill);
   backdrop-filter: blur(var(--blur-md));
   -webkit-backdrop-filter: blur(var(--blur-md));
@@ -2800,7 +2805,9 @@ select.bug-tab-select option{background:#fff;color:var(--text);font-weight:500;t
     border-radius: 18px;
   }
 
-  /* Barre de commande mobile : recherche sur sa propre ligne, actions en icônes */
+  /* Barre de commande mobile : une ligne d'actions + la recherche sous elle.
+     Les commandes de la LISTE (filtres, tri, sélection) n'y sont plus : elles
+     vivent dans .list-chips, posées sur la liste. */
   .topbar {
     top: 4px;
     flex-wrap: wrap;
@@ -2812,14 +2819,82 @@ select.bug-tab-select option{background:#fff;color:var(--text);font-weight:500;t
   .cmd-btn-label, .topbar-cart-label, .cmd-brand-count { display: none; }
   .cmd-sep { display: none; }
   .cmd-brand-name { font-size: 15px; }
+  /* Le carré vert au chapeau ne dit rien que le titre ne dise déjà. */
+  .cmd-brand-mark { display: none; }
+  /* La loupe redit le placeholder, et lui volait la place qui le tronquait. */
+  .cmd-search .search-ico { display: none; }
+  /* Passés dans .list-chips / le menu ⋮ : ne pas les monter deux fois. */
+  #btn-toggle-filter,
+  #btn-toggle-selection-only,
+  #btn-claude-import,
+  .cmd-sort { display: none; }
   .cmd-add { padding: 8px 12px; margin-left: auto; }
   .topbar-back { padding: 7px 14px 7px 10px; font-size: 13px; }
   .topbar-cart-btn { padding: 8px 12px; }
   .sidebar-user-trigger { width: 38px; height: 38px; }
-  .sidebar-user-avatar { width: 30px; height: 30px; }
+  /* L'avatar cède la place au « ⋮ » : le compte est une destination rare. */
+  .sidebar-user-avatar { display: none; }
+  .topbar-more-ico { display: flex; color: var(--text-muted); }
+  .topbar-more-ico svg { width: 20px; height: 20px; }
+
+  /* Recherche repliée pendant le défilement (cf. wireSearchCollapse) : la marge
+     négative annule le gap de 8px de la barre, sinon la ligne vide subsiste. */
+  .cmd-search {
+    overflow: hidden;
+    transition: height var(--dur-base) var(--ease-out),
+                opacity var(--dur-fast) var(--ease-out),
+                padding var(--dur-base) var(--ease-out),
+                margin var(--dur-base) var(--ease-out);
+  }
+  body.search-collapsed .cmd-search {
+    height: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    margin-top: -8px;
+    opacity: 0;
+    border-width: 0;
+  }
   .user-menu { position: fixed; top: calc(env(safe-area-inset-top) + 54px); right: 10px; left: auto; width: min(264px, calc(100vw - 20px)); }
 
   main { padding: 0 0 calc(16px + env(safe-area-inset-bottom)); }
+
+  /* Commandes de la liste : posées SUR la liste, là où elles agissent. Elles
+     remplacent l'en-tête de colonnes (tri) et les boutons de la barre du haut. */
+  .list-chips {
+    display: flex;
+    gap: 8px;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border-soft);
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .list-chips::-webkit-scrollbar { display: none; }
+  .list-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+    padding: 7px 13px;
+    border-radius: 999px;
+    border: 1px solid var(--glass-border);
+    background: rgba(255, 255, 255, .55);
+    color: var(--text);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .list-chip svg { width: 14px; height: 14px; color: var(--text-muted); }
+  .list-chip.active,
+  .list-chip.neon-on {
+    background: var(--green-100);
+    border-color: var(--green-200);
+    color: var(--green-700);
+  }
+  .list-chip.active svg,
+  .list-chip.neon-on svg { color: var(--green-700); }
+  .list-chip .filter-count-badge { margin-left: 2px; }
+  .um-mobile-only { display: flex; }
 
   /* Recettes : colonnes secondaires masquées — grille resserrée */
   .recipe-list-head { display: none; }
