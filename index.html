@@ -201,9 +201,9 @@
             <div class="cart-drawer-title">Idées de recettes</div>
             <div class="cart-drawer-sub" id="sugg-pool-info">—</div>
           </div>
-          <!-- Actions secondaires en menu déroulant, comme la plupart des apps : deux
-               boutons pleine largeur repoussaient la première recette hors de l'écran. -->
-          <button class="cart-drawer-close sugg-head-btn" id="sugg-filters-btn" type="button" title="Filtres du tirage" aria-haspopup="menu" aria-expanded="false"><span class="tb-ico" data-icon="filter"></span></button>
+          <!-- Accès aux filtres dans l'en-tête, comme la plupart des apps : un bouton
+               pleine largeur dans la carte d'outils repoussait la 1re recette hors écran. -->
+          <button class="cart-drawer-close sugg-head-btn" id="sugg-filters-btn" type="button" title="Modifier les filtres"><span class="tb-ico" data-icon="filter"></span></button>
           <button class="cart-drawer-close" id="sugg-close" type="button" title="Fermer"><span class="tb-ico" data-icon="x"></span></button>
         </div>
         <div class="sugg-body">
@@ -384,13 +384,6 @@
 
   </section>
 </main>
-</div>
-
-<!-- Menu du tiroir Idées. Enfant de body, comme les autres menus flottants : dans le
-     cadre il resterait prisonnier de son contexte d'empilement, donc sous le tiroir. -->
-<div class="sugg-menu" id="sugg-menu" role="menu">
-  <button class="user-menu-item" id="sugg-open-filters" role="menuitem" type="button"><span class="um-ico" data-icon="filter"></span><span>Modifier les filtres</span></button>
-  <button class="user-menu-item" id="sugg-ignore-filters" role="menuitem" type="button" hidden></button>
 </div>
 
 <!-- Tiroir Courses (maquette Sylva : la liste de courses est un tiroir latéral) -->
@@ -2244,8 +2237,6 @@ let suggItems = [];
 // Piocher hors des filtres du rail. Remis à faux à chaque ouverture : le rail
 // reste la référence, c'est une échappatoire ponctuelle quand un filtre oublié
 // réduit le carnet à quelques recettes (« tout aux crevettes »).
-let suggIgnoreFilters = false;
-
 // Recettes retenues par le RAIL de filtres seul. La recherche de la barre du haut
 // et « sélection uniquement » sont volontairement ignorées : ce sont des outils de
 // navigation dans la liste, pas des critères de menu, le rail ne les compte pas
@@ -2255,9 +2246,11 @@ function suggRailFiltered() {
   return state.recipes.filter(r => recipeMatches(r, state.filters, { search: true, selected: true }));
 }
 
-// Recettes dans lesquelles le tirage pioche, avant exclusions.
+// Recettes dans lesquelles le tirage pioche, avant exclusions. Le rail fait foi :
+// « ignorer les filtres » a été retiré le 2026-07-22 — un doublon apparent de
+// « Tout effacer », alors que le sous-titre nomme déjà ce qui restreint le tirage.
 function suggPool() {
-  return suggIgnoreFilters ? state.recipes.slice() : suggRailFiltered();
+  return suggRailFiltered();
 }
 
 // Empreinte des filtres du rail : sert à ne relancer le tirage que quand ils
@@ -2278,7 +2271,6 @@ function suggSyncWithFilters() {
   const sig = suggFiltersSignature();
   if (sig === suggFilterSig) return;
   suggFilterSig = sig;
-  suggIgnoreFilters = false; // toucher au rail = vouloir l'appliquer
   rerollSuggestions('all'); // les épinglées restent : changer un filtre n'est pas les renier
 }
 
@@ -2387,44 +2379,14 @@ function rerollSuggestions(mode) {
   renderSuggestions();
 }
 
-/* Menu des filtres du tiroir. Les deux entrées n'ont pas les mêmes conditions :
-   « Modifier les filtres » ne sert que si le rail n'est pas docké (≥1280px il est
-   déjà visible à côté), « Ignorer les filtres » que si les filtres restreignent
-   vraiment le tirage. Aucune des deux → le bouton disparaît, plutôt que d'ouvrir
-   un menu vide. Appelée par renderSuggestions() ET par updateFilterRail(), le
+/* Accès aux filtres depuis le tiroir : utile seulement quand le rail n'est PAS
+   docké (≥1280px il est déjà visible à côté). Sous ce seuil la `.topbar` est en
+   visibility:hidden, donc `#btn-toggle-filter` injoignable : c'est le seul chemin
+   vers les filtres. Appelée par renderSuggestions() ET par updateFilterRail(), le
    dock du rail changeant au redimensionnement sans repasser par un rendu. */
-function syncSuggFilterMenu(narrowed) {
-  if (narrowed == null) narrowed = suggRailFiltered().length !== state.recipes.length;
-  const editBtn = document.getElementById('sugg-open-filters');
-  const ignoreBtn = document.getElementById('sugg-ignore-filters');
-  const trigger = document.getElementById('sugg-filters-btn');
-  if (editBtn) editBtn.hidden = isFilterRailDocked();
-  if (ignoreBtn) {
-    ignoreBtn.hidden = !narrowed;
-    ignoreBtn.innerHTML = '<span class="um-ico">' + (suggIgnoreFilters ? ICONS.filter : ICONS.eyeOff) + '</span>'
-      + '<span>' + (suggIgnoreFilters ? 'Reprendre les filtres' : 'Ignorer les filtres') + '</span>';
-    ignoreBtn.classList.toggle('active', suggIgnoreFilters);
-  }
-  if (trigger) {
-    const usable = (editBtn && !editBtn.hidden) || (ignoreBtn && !ignoreBtn.hidden);
-    trigger.hidden = !usable;
-    trigger.classList.toggle('on', suggIgnoreFilters);
-    if (!usable) closeSuggMenu();
-  }
-}
-function closeSuggMenu() {
-  document.getElementById('sugg-menu')?.classList.remove('open');
-  document.getElementById('sugg-filters-btn')?.setAttribute('aria-expanded', 'false');
-}
-function openSuggMenu() {
-  const menu = document.getElementById('sugg-menu');
+function syncSuggFilterBtn() {
   const btn = document.getElementById('sugg-filters-btn');
-  if (!menu || !btn) return;
-  const r = btn.getBoundingClientRect(), margin = 10, w = 236;
-  menu.style.left = Math.max(margin, Math.min(r.right - w, window.innerWidth - w - margin)) + 'px';
-  menu.style.top = (r.bottom + 8) + 'px';
-  menu.classList.add('open');
-  btn.setAttribute('aria-expanded', 'true');
+  if (btn) btn.hidden = isFilterRailDocked();
 }
 
 function renderSuggestions() {
@@ -2433,22 +2395,18 @@ function renderSuggestions() {
   if (!list) return;
   const poolSize = suggPool().filter(r => !state.selectedRecipeIds.includes(r.id)).length;
   // Un filtre oublié dans le rail peut réduire le carnet à une poignée de recettes
-  // (« tout aux crevettes ») : l'annoncer chiffré, et proposer d'en sortir.
+  // (« tout aux crevettes ») : l'annoncer chiffré, et nommer ce qui restreint.
   const narrowed = suggRailFiltered().length !== state.recipes.length;
   if (info) {
     let txt = poolSize + ' recette' + (poolSize > 1 ? 's' : '') + ' où piocher';
     if (narrowed) {
-      if (suggIgnoreFilters) {
-        txt += ' · tout le carnet';
-      } else {
-        const why = suggActiveCriteria();
-        txt += ' sur ' + state.recipes.length + ' · '
-          + (why.length ? why.join(' · ') : 'restriction non identifiée');
-      }
+      const why = suggActiveCriteria();
+      txt += ' sur ' + state.recipes.length + ' · '
+        + (why.length ? why.join(' · ') : 'restriction non identifiée');
     }
     info.textContent = txt;
   }
-  syncSuggFilterMenu(narrowed);
+  syncSuggFilterBtn();
   list.innerHTML = '';
   if (!suggItems.length) {
     list.innerHTML = '<div class="sugg-empty">Aucune recette à proposer.<br>Élargis les filtres ou vide la sélection.</div>';
@@ -2591,7 +2549,6 @@ function closeSuggPreview() {
    bouton « Ajouter à ma sélection ». */
 function openSuggestDrawer() {
   document.body.classList.add('sugg-open');
-  suggIgnoreFilters = false; // le rail reste la référence à chaque ouverture
   suggFilterSig = suggFiltersSignature();
   suggItems = suggItems.filter(it => state.recipes.some(r => r.id === it.id)
     && !state.selectedRecipeIds.includes(it.id));
@@ -2599,7 +2556,6 @@ function openSuggestDrawer() {
 }
 function closeSuggestDrawer() {
   closeSuggPreview();
-  closeSuggMenu(); // appendu à body : il survivrait à la fermeture du tiroir
   document.body.classList.remove('sugg-open');
 }
 
@@ -2609,32 +2565,15 @@ document.getElementById('sugg-close')?.addEventListener('click', closeSuggestDra
 // côté jetait le tirage en cours (irrécupérable) et renvoyait sur les recettes.
 // On ferme par la croix, Échap ou le bouton retour.
 document.getElementById('sugg-reroll')?.addEventListener('click', () => rerollSuggestions('all'));
-document.getElementById('sugg-ignore-filters')?.addEventListener('click', () => {
-  suggIgnoreFilters = !suggIgnoreFilters;
-  closeSuggMenu();
-  rerollSuggestions('all'); // idem : élargir le tirage ne doit pas coûter les épingles
-});
-// Raccourci vers le rail de filtres, seul accès quand la barre du haut est masquée.
-document.getElementById('sugg-open-filters')?.addEventListener('click', () => {
-  closeSuggMenu();
+// Seul accès aux filtres tiroir ouvert : la barre du haut est masquée sous 1280px.
+document.getElementById('sugg-filters-btn')?.addEventListener('click', () => {
   const ov = document.getElementById('filter-sheet-overlay');
   if (ov.classList.contains('active')) closeFilterSheet(); else openFilterSheet();
 });
-document.getElementById('sugg-filters-btn')?.addEventListener('click', () => {
-  const menu = document.getElementById('sugg-menu');
-  if (menu?.classList.contains('open')) closeSuggMenu(); else openSuggMenu();
-});
-// Menu appendu à body : il ne se ferme pas tout seul au clic ailleurs.
-document.addEventListener('click', e => {
-  if (!document.getElementById('sugg-menu')?.classList.contains('open')) return;
-  if (e.target.closest('#sugg-menu') || e.target.closest('#sugg-filters-btn')) return;
-  closeSuggMenu();
-});
 document.addEventListener('keydown', e => {
   if (e.key !== 'Escape' || document.querySelector('.modal-overlay.active')) return;
-  // Échap dépile : menu, puis aperçu, puis tiroir.
-  if (document.getElementById('sugg-menu')?.classList.contains('open')) closeSuggMenu();
-  else if (document.body.classList.contains('sugg-preview-open')) closeSuggPreview();
+  // Échap ferme d'abord l'aperçu, puis le tiroir.
+  if (document.body.classList.contains('sugg-preview-open')) closeSuggPreview();
   else if (document.body.classList.contains('sugg-open')) closeSuggestDrawer();
 });
 
@@ -4732,7 +4671,7 @@ function updateFilterRail() {
   document.body.classList.toggle('filter-rail-on', docked);
   // « Modifier les filtres » n'a de sens que rail non docké : le seuil change au
   // redimensionnement sans qu'un rendu des suggestions ne repasse par là.
-  if (document.body.classList.contains('sugg-open')) { closeSuggMenu(); syncSuggFilterMenu(); }
+  syncSuggFilterBtn();
   const overlay = document.getElementById('filter-sheet-overlay');
   if (docked) {
     overlay?.classList.remove('active'); // reste d'un popover ouvert avant l'agrandissement
@@ -4757,7 +4696,7 @@ document.addEventListener('click', e => {
   if (!overlay || !overlay.classList.contains('active')) return;
   if (e.target.closest('.filter-sheet')) return;
   if (e.target.closest('#btn-toggle-filter')) return;
-  if (e.target.closest('#sugg-open-filters') || e.target.closest('#sugg-filters-btn')) return; // sinon le clic qui ouvre referme aussitôt
+  if (e.target.closest('#sugg-filters-btn')) return; // sinon le clic qui ouvre referme aussitôt
   if (e.target.closest('.autocomplete-dropdown')) return;
   if (e.target.closest('.filter-menu')) return; // enfant de body, mais « dedans » pour l'utilisateur
   closeFilterSheet();
@@ -7577,12 +7516,10 @@ const BACK_LAYERS = [
   { isOpen: () => !!document.querySelector('.modal-overlay.active'), close: () => closeAllModals() },
   { isOpen: () => document.getElementById('sort-popup')?.classList.contains('active') === true
                 || document.getElementById('user-avatar-wrapper')?.classList.contains('open') === true
-                || document.getElementById('sugg-menu')?.classList.contains('open') === true
                 || anyFilterMenuOpen(),
     close: () => {
       document.getElementById('sort-popup')?.classList.remove('active');
       document.getElementById('user-avatar-wrapper')?.classList.remove('open');
-      closeSuggMenu();
       closeAllFilterMenus();
     } },
 ];
@@ -7626,7 +7563,7 @@ function initBackGuard() {
   const obs = new MutationObserver(syncBackGuard);
   // body : classes cart-open/detail-open + menu contextuel appendé à la volée
   obs.observe(document.body, { attributes: true, attributeFilter: ['class'], childList: true });
-  document.querySelectorAll('.modal-overlay, #filter-sheet-overlay, #sort-popup, .filter-menu, #sugg-menu, #user-avatar-wrapper, .tab')
+  document.querySelectorAll('.modal-overlay, #filter-sheet-overlay, #sort-popup, .filter-menu, #user-avatar-wrapper, .tab')
     .forEach(el => obs.observe(el, { attributes: true, attributeFilter: ['class'] }));
 }
 
