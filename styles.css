@@ -1549,6 +1549,35 @@ body.sugg-open .sugg-drawer { transform: translateX(0); visibility: visible; }
   gap: 12px;
   align-items: stretch;
 }
+/* Actions filtres : bouton rond dans l'en-tête + menu déroulant. Deux boutons
+   pleine largeur dans la carte d'outils repoussaient la 1re recette hors écran. */
+.sugg-head-btn { position: relative; }
+.sugg-head-btn.on {
+  background: var(--green-100);
+  border-color: var(--green-200);
+  color: var(--green-700);
+}
+.sugg-head-btn[hidden] { display: none; }
+/* Menu flottant : masque ce qu'il recouvre → --menu-fill, jamais --glass-fill. */
+.sugg-menu {
+  display: none;
+  position: fixed;
+  z-index: 1400;
+  width: 236px;
+  padding: 6px;
+  flex-direction: column;
+  background: var(--menu-fill);
+  -webkit-backdrop-filter: blur(var(--blur-md));
+  backdrop-filter: blur(var(--blur-md));
+  border: 1px solid var(--glass-border);
+  border-radius: 14px;
+  box-shadow: var(--shadow-glass);
+  animation: sylvaPop var(--dur-fast) var(--ease-out);
+}
+.sugg-menu.open { display: flex; }
+.sugg-menu .user-menu-item { border-radius: 10px; padding: 11px 12px; }
+.sugg-menu .user-menu-item[hidden] { display: none; }
+.sugg-menu .user-menu-item.active .um-ico { color: var(--green-700); }
 .sugg-side { display: flex; flex-direction: column; gap: 14px; }
 .sugg-main { min-width: 0; }
 .sugg-side-actions { display: flex; flex-direction: column; gap: 8px; }
@@ -1729,9 +1758,6 @@ body.sugg-preview-open .sugg-preview { display: flex; }
   .sugg-side { grid-area: side; }
   .sugg-main { grid-area: main; }
   .sugg-foot { grid-area: foot; }
-  /* Le rail de filtres est docké à gauche, visible à côté du tiroir : le raccourci
-     n'a plus lieu d'être. Seuil à garder synchronisé avec isFilterRailDocked(). */
-  .sugg-open-filters { display: none; }
 }
 
 /* Grand écran : la carte se cale sur la seule colonne LISTE et libère la place
