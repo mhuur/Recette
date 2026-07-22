@@ -1,0 +1,69 @@
+<!-- Maki kawaii v6 — style « sticker » : contour noir épais, aplats francs, personnage
+     avec bras et pieds. Fichier SANS fond : favicon + source des PNG `any`. Les
+     déclinaisons apple-touch et maskable sont composées sur une pastille crème pleine
+     (une icône adaptative Android exige un fond opaque, sinon le lanceur peint un
+     carré blanc). viewBox resserré sur le dessin, trait de contour compris. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="76 96 360 360">
+  <defs>
+    <linearGradient id="m6-nori" gradientUnits="userSpaceOnUse" x1="130" y1="150" x2="382" y2="412">
+      <stop offset="0" stop-color="#3c6650"/>
+      <stop offset="0.55" stop-color="#2c4b3a"/>
+      <stop offset="1" stop-color="#1f382a"/>
+    </linearGradient>
+    <linearGradient id="m6-rice" gradientUnits="userSpaceOnUse" x1="256" y1="108" x2="256" y2="192">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#f2ebda"/>
+    </linearGradient>
+    <linearGradient id="m6-fish" gradientUnits="userSpaceOnUse" x1="234" y1="126" x2="234" y2="170">
+      <stop offset="0" stop-color="#ff9350"/>
+      <stop offset="1" stop-color="#ee5f2c"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Tout le personnage partage le même contour : trait épais, jointures rondes. -->
+  <g stroke="#241a16" stroke-width="12" stroke-linejoin="round" stroke-linecap="round">
+    <!-- Bras et pieds DERRIÈRE le corps : leurs jonctions disparaissent dessous. -->
+    <rect x="88" y="306" width="66" height="30" rx="15" fill="url(#m6-nori)"
+          transform="rotate(25 121 321)"/>
+    <rect x="358" y="306" width="66" height="30" rx="15" fill="url(#m6-nori)"
+          transform="rotate(-25 391 321)"/>
+    <ellipse cx="212" cy="424" rx="35" ry="19" fill="url(#m6-nori)"/>
+    <ellipse cx="300" cy="424" rx="35" ry="19" fill="url(#m6-nori)"/>
+
+    <!-- Rouleau vu de côté : ellipse du dessus, flancs droits, base arrondie. -->
+    <path fill="url(#m6-nori)" d="
+      M 130 150
+      A 126 42 0 0 1 382 150
+      L 382 370
+      A 126 42 0 0 1 130 370
+      Z"/>
+    <!-- Dessus : le riz -->
+    <ellipse cx="256" cy="150" rx="126" ry="42" fill="url(#m6-rice)"/>
+    <!-- Garniture : saumon + avocat, la lecture « sushi » tient à ces deux taches -->
+    <ellipse cx="232" cy="148" rx="35" ry="23" fill="url(#m6-fish)"/>
+    <circle cx="296" cy="152" r="23" fill="#8fbf49"/>
+  </g>
+
+  <!-- Reflets sans contour propre -->
+  <ellipse cx="222" cy="140" rx="20" ry="9" fill="#ffc79c" opacity="0.75"/>
+  <circle cx="290" cy="146" r="9" fill="#c3e08a" opacity="0.85"/>
+
+  <!-- Visage, posé sur le flanc de nori -->
+  <ellipse cx="180" cy="300" rx="22" ry="12" fill="#ff7a45" opacity="0.9"/>
+  <ellipse cx="332" cy="300" rx="22" ry="12" fill="#ff7a45" opacity="0.9"/>
+  <g fill="#241a16">
+    <ellipse cx="212" cy="272" rx="17" ry="21"/>
+    <ellipse cx="300" cy="272" rx="17" ry="21"/>
+  </g>
+  <g fill="#ffffff">
+    <circle cx="218" cy="264" r="6"/>
+    <circle cx="306" cy="264" r="6"/>
+  </g>
+  <!-- Bouche ouverte : contour propre, plus fin que la silhouette -->
+  <path fill="#a82f2c" stroke="#241a16" stroke-width="9" stroke-linejoin="round" d="
+    M 226 306
+    C 240 300 272 300 286 306
+    C 284 332 272 344 256 344
+    C 240 344 228 332 226 306 Z"/>
+  <path fill="#ff8a8a" d="M 238 328 C 244 322 268 322 274 328 C 272 340 264 344 256 344 C 248 344 240 340 238 328 Z"/>
+</svg>
