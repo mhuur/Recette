@@ -2507,12 +2507,19 @@ function markRecipePicked(id) {
    Lecture seule, mêmes classes que le panneau détail pour hériter de son style. */
 function suggPreviewHtml(r) {
   const rated = r.rating != null && r.rating !== '';
+  const canEdit = canRateRecipes(); // invité = lecture seule (édition ET note)
   let h = '<div class="sugg-preview-head">';
   h += '<button class="sugg-act" id="sugg-preview-back" type="button" title="Retour aux idées">' + ICONS.arrowLeft + '</button>';
   h += '<div class="sugg-preview-title">' + escapeHtml(r.name) + '</div>';
+  if (canEdit) h += '<button class="btn btn-sm sugg-preview-edit" id="sugg-preview-edit" type="button" title="Modifier la recette">' + ICONS.pencil + 'Modifier</button>';
   h += '</div>';
   h += '<div class="sugg-preview-body">';
-  if (rated) {
+  // Note cliquable (même geste que la liste : ouvre le sélecteur d'étoiles).
+  if (canEdit) {
+    h += rated
+      ? '<button class="recipe-detail-rating" id="sugg-preview-rate" type="button" title="Modifier la note"><span class="rating-stars">' + ratingStars(r.rating) + '</span><span class="rating-note">' + r.rating + '/10</span></button>'
+      : '<button class="recipe-detail-rating sugg-preview-rate-empty" id="sugg-preview-rate" type="button"><span class="rating-stars">' + ICONS.star + '</span><span class="rating-note">Noter</span></button>';
+  } else if (rated) {
     h += '<div class="recipe-detail-rating"><span class="rating-stars">' + ratingStars(r.rating)
       + '</span><span class="rating-note">' + r.rating + '/10</span></div>';
   } else {
@@ -2558,17 +2565,47 @@ function suggPreviewHtml(r) {
   return h;
 }
 
+// Recette actuellement en aperçu : sert à rafraîchir le panneau après une édition
+// ou une note faites par-dessus (la modale se ferme, l'aperçu doit refléter le neuf).
+let _suggPreviewId = null;
+function wireSuggPreview(r) {
+  const back = document.getElementById('sugg-preview-back');
+  if (back) back.onclick = closeSuggPreview;
+  // Édition et note réutilisent les modales de l'app : elles s'ouvrent PAR-DESSUS le
+  // tiroir (qui passe en visibility:hidden via body:has(.modal-overlay.active)), puis
+  // renderRecipes() → refreshSuggForData() remet l'aperçu et les cartes à jour.
+  const edit = document.getElementById('sugg-preview-edit');
+  if (edit) edit.onclick = () => openRecipeModal(r);
+  const rate = document.getElementById('sugg-preview-rate');
+  if (rate) rate.onclick = () => openRatingDialog(r);
+}
 function openSuggPreview(id) {
   const r = state.recipes.find(x => x.id === id);
   const box = document.getElementById('sugg-preview');
   if (!r || !box) return;
+  _suggPreviewId = id;
   box.innerHTML = suggPreviewHtml(r);
-  document.getElementById('sugg-preview-back').onclick = closeSuggPreview;
+  wireSuggPreview(r);
   document.body.classList.add('sugg-preview-open');
   box.scrollTop = 0;
 }
 function closeSuggPreview() {
   document.body.classList.remove('sugg-preview-open');
+  _suggPreviewId = null;
+}
+// Après une modif de données (édition, note, sync cloud), refléter le neuf dans le
+// tiroir s'il est ouvert : cartes du tirage + aperçu. Appelée en fin de renderRecipes().
+function refreshSuggForData() {
+  if (!document.body.classList.contains('sugg-open')) return;
+  // Une recette supprimée pendant l'édition sort du tirage.
+  suggItems = suggItems.filter(it => state.recipes.some(r => r.id === it.id));
+  renderSuggestions();
+  if (document.body.classList.contains('sugg-preview-open')) {
+    const r = state.recipes.find(x => x.id === _suggPreviewId);
+    const box = document.getElementById('sugg-preview');
+    if (r && box) { box.innerHTML = suggPreviewHtml(r); wireSuggPreview(r); }
+    else closeSuggPreview(); // recette supprimée : plus rien à prévisualiser
+  }
 }
 
 /* Le tirage SURVIT à la fermeture du tiroir : une recette épinglée est un choix
@@ -3522,8 +3559,10 @@ function renderRecipes() {
   // Le panneau détail reflète l'état courant (recette modifiée / supprimée / filtrée)
   ensureDetailSelection(recipes);
   refreshRecipeDetail();
-  // Tiroir Idées ouvert : rejouer le tirage si le rail vient de bouger
+  // Tiroir Idées ouvert : rejouer le tirage si le rail vient de bouger, puis refléter
+  // toute donnée modifiée (note/édition faites depuis l'aperçu, sync co-éditeur).
   suggSyncWithFilters();
+  refreshSuggForData();
 }
 
 // Direction 2a : sur grand écran la carte de détail est PERMANENTE — si rien

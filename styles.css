@@ -1673,8 +1673,18 @@ body.sugg-preview-open .sugg-preview { display: flex; }
   font-weight: 700;
   letter-spacing: var(--ls-tight);
   color: var(--text-strong);
+  flex: 1;
   min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
+/* Bouton « Modifier » de l'aperçu : à droite du titre, dans l'en-tête. */
+.sugg-preview-edit { flex-shrink: 0; }
+.sugg-preview-edit svg { width: 15px; height: 15px; }
+/* Note « à noter » : même bouton que la note existante, teinte neutre. */
+.sugg-preview-rate-empty .rating-stars svg { color: var(--text-dim); }
+.sugg-preview-rate-empty .rating-note { color: var(--text-muted); font-weight: 600; }
 .sugg-preview-body {
   flex: 1;
   min-height: 0;
