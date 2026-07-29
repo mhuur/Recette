@@ -768,6 +768,11 @@ label {
   min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   transition: color var(--dur-fast);
 }
+/* Cellule « Recette » : deux tris côte à côte (nom + ajout récent), une seule
+   cellule de grille — la grille reste celle partagée avec .recipe-row. */
+.rlh-name { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.rlh-recent { flex: 0 0 auto; gap: 2px; }
+.rlh-recent svg { width: 13px; height: 13px; }
 .rlh-sort:hover { color: var(--green-700); }
 .rlh-sort.on { color: var(--green-700); }
 .rlh-arrow { font-family: var(--font-sans); font-size: 11px; line-height: 1; }

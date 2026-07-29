@@ -193,7 +193,12 @@
                porte le filtre « sélection uniquement », au-dessus des cases. -->
           <div class="recipe-list-head">
             <button type="button" class="rlh-sel js-selection-only" title="Afficher uniquement la sélection" aria-pressed="false"><span class="tb-ico" data-icon="check"></span></button>
-            <button type="button" class="rlh-sort" data-sort-col="name">Recette<span class="rlh-arrow" aria-hidden="true"></span></button>
+            <!-- La cellule « Recette » porte deux tris : le nom, et l'ajout récent
+                 (pas de 6e colonne : la grille est partagée avec .recipe-row). -->
+            <div class="rlh-name">
+              <button type="button" class="rlh-sort" data-sort-col="name">Recette<span class="rlh-arrow" aria-hidden="true"></span></button>
+              <button type="button" class="rlh-sort rlh-recent" data-sort-col="date" title="Trier par date d'ajout (les plus récentes d'abord)" aria-label="Trier par date d'ajout"><span class="tb-ico" data-icon="sparkles" aria-hidden="true"></span><span class="rlh-arrow" aria-hidden="true"></span></button>
+            </div>
             <button type="button" class="rlh-sort" data-sort-col="rating">Note<span class="rlh-arrow" aria-hidden="true"></span></button>
             <button type="button" class="rlh-sort" data-sort-col="servings">Pers.<span class="rlh-arrow" aria-hidden="true"></span></button>
             <button type="button" class="rlh-sort" data-sort-col="time">Temps<span class="rlh-arrow" aria-hidden="true"></span></button>
@@ -410,6 +415,8 @@
   <div class="sort-option" data-sort="rating-asc">Note ↑</div>
   <div class="sort-option" data-sort="time-asc">Temps ↑</div>
   <div class="sort-option" data-sort="time-desc">Temps ↓</div>
+  <div class="sort-option" data-sort="date-desc">Ajout récent</div>
+  <div class="sort-option" data-sort="date-asc">Ajout ancien</div>
 </div>
 
 <!-- Tiroir Courses (maquette Sylva : la liste de courses est un tiroir latéral) -->
@@ -1671,6 +1678,28 @@ function createStarPicker(container, opts = {}) {
 /* ========================================================================
    COMPOSANT AUTOCOMPLETE
    ======================================================================== */
+
+/* Zone RÉELLEMENT visible. Le clavier virtuel (mobile) rétrécit le « visual
+   viewport » sans toucher à window.innerHeight : un menu placé d'après innerHeight
+   se retrouve donc caché SOUS le clavier. getBoundingClientRect(), position:fixed
+   et visualViewport.offsetTop partagent le repère du layout viewport, donc les
+   comparaisons ci-dessous sont homogènes. */
+function visibleViewport() {
+  const vv = window.visualViewport;
+  if (!vv) return { top: 0, bottom: window.innerHeight, height: window.innerHeight };
+  return { top: vv.offsetTop, bottom: vv.offsetTop + vv.height, height: vv.height };
+}
+/* Un seul menu d'autocomplétion est ouvert à la fois : on garde ici SON
+   repositionneur, plutôt que d'abonner visualViewport à chaque instance créée
+   (une par ligne d'ingrédient, à chaque ouverture de modale). Indispensable :
+   le clavier monte APRÈS le focus, donc après le premier positionnement. */
+let _acReposition = null;
+if (window.visualViewport) {
+  ['resize', 'scroll'].forEach(evt => {
+    window.visualViewport.addEventListener(evt, () => { if (_acReposition) _acReposition(); });
+  });
+}
+
 function createAutocomplete(wrapper, options) {
   const { placeholder, getItems, onSelect, onCreate, initialText = '' } = options;
   wrapper.innerHTML = '';
@@ -1701,31 +1730,35 @@ function createAutocomplete(wrapper, options) {
     dropdown.style.zIndex = '1000';
     dropdown.style.overflowY = 'auto';
     document.body.appendChild(dropdown);
+    _acReposition = positionDropdown;
   }
 
   function hideDropdown() {
     if (dropdown) { dropdown.remove(); dropdown = null; }
+    if (_acReposition === positionDropdown) _acReposition = null;
     highlighted = -1;
   }
 
   function positionDropdown() {
     if (!dropdown) return;
     const rect = input.getBoundingClientRect();
-    const vw = window.innerWidth, vh = window.innerHeight, margin = 8;
+    const vp = visibleViewport();
+    const vw = window.innerWidth, vh = vp.height, margin = 8;
     const width = Math.max(rect.width, 180);
     let left = rect.left;
     if (left + width > vw - margin) left = vw - margin - width;
     if (left < margin) left = margin;
     dropdown.style.width = width + 'px';
     dropdown.style.left = left + 'px';
-    // Sous le champ par défaut ; bascule au-dessus si pas la place (anti hors-champ)
-    const spaceBelow = vh - rect.bottom - margin, spaceAbove = rect.top - margin;
+    // Sous le champ par défaut ; bascule au-dessus si pas la place (clavier mobile,
+    // bas de fenêtre) — les bornes viennent de la zone visible, pas de innerHeight.
+    const spaceBelow = vp.bottom - rect.bottom - margin, spaceAbove = rect.top - vp.top - margin;
     if (spaceBelow >= 160 || spaceBelow >= spaceAbove) {
       dropdown.style.maxHeight = Math.max(120, Math.min(Math.round(vh * 0.6),spaceBelow)) + 'px';
       dropdown.style.top = (rect.bottom + 2) + 'px';
     } else {
       dropdown.style.maxHeight = Math.max(120, Math.min(Math.round(vh * 0.6),spaceAbove)) + 'px';
-      dropdown.style.top = Math.max(margin, rect.top - 2 - dropdown.offsetHeight) + 'px';
+      dropdown.style.top = Math.max(vp.top + margin, rect.top - 2 - dropdown.offsetHeight) + 'px';
     }
   }
 
@@ -1872,12 +1905,14 @@ function createChipsInput(wrapper, options) {
       dropdown.remove();
       dropdown = null;
     }
+    if (_acReposition === positionDropdown) _acReposition = null;
   }
 
   function positionDropdown() {
     if (!dropdown) return;
     const rect = input.getBoundingClientRect();
-    const vw = window.innerWidth, vh = window.innerHeight;
+    const vp = visibleViewport(); // zone visible hors clavier virtuel
+    const vw = window.innerWidth, vh = vp.height;
     const margin = 8;
     if (dropdownPosition === 'right') {
       // À droite de l'anchor — bascule à gauche si ça déborderait
@@ -1888,8 +1923,8 @@ function createChipsInput(wrapper, options) {
       if (left + w > vw - margin) left = Math.max(margin, arect.left - w - 8);
       dropdown.style.width = w + 'px';
       dropdown.style.left = left + 'px';
-      dropdown.style.maxHeight = Math.max(120, Math.min(Math.round(vh * 0.6),vh - arect.top - margin)) + 'px';
-      dropdown.style.top = Math.max(margin, Math.min(arect.top, vh - margin - dropdown.offsetHeight)) + 'px';
+      dropdown.style.maxHeight = Math.max(120, Math.min(Math.round(vh * 0.6), vp.bottom - arect.top - margin)) + 'px';
+      dropdown.style.top = Math.max(vp.top + margin, Math.min(arect.top, vp.bottom - margin - dropdown.offsetHeight)) + 'px';
       return;
     }
     // Largeur + clamp horizontal dans le viewport
@@ -1899,16 +1934,17 @@ function createChipsInput(wrapper, options) {
     if (left < margin) left = margin;
     dropdown.style.width = width + 'px';
     dropdown.style.left = left + 'px';
-    // Vertical : sous le champ par défaut, bascule au-dessus si pas la place (anti hors-champ)
-    const spaceBelow = vh - rect.bottom - margin;
-    const spaceAbove = rect.top - margin;
+    // Vertical : sous le champ par défaut, bascule au-dessus si pas la place
+    // (clavier mobile, bas de fenêtre) — bornes prises sur la zone visible.
+    const spaceBelow = vp.bottom - rect.bottom - margin;
+    const spaceAbove = rect.top - vp.top - margin;
     if (spaceBelow >= 160 || spaceBelow >= spaceAbove) {
       dropdown.style.maxHeight = Math.max(120, Math.min(Math.round(vh * 0.6),spaceBelow)) + 'px';
       dropdown.style.top = (rect.bottom + 2) + 'px';
     } else {
       const maxH = Math.max(120, Math.min(Math.round(vh * 0.6),spaceAbove));
       dropdown.style.maxHeight = maxH + 'px';
-      dropdown.style.top = Math.max(margin, rect.top - 2 - dropdown.offsetHeight) + 'px';
+      dropdown.style.top = Math.max(vp.top + margin, rect.top - 2 - dropdown.offsetHeight) + 'px';
     }
   }
 
@@ -1947,6 +1983,7 @@ function createChipsInput(wrapper, options) {
     }, { passive: false });
     buildDropdownItems(filtered, q);
     positionDropdown(); // après le build : la hauteur réelle est connue (flip correct)
+    _acReposition = positionDropdown; // suivre le clavier virtuel (visualViewport)
     // Fermer au clic/tap en dehors (fiable desktop + tactile)
     document.addEventListener('pointerdown', onOutsidePointer, true);
   }
@@ -3445,6 +3482,9 @@ function getFilteredRecipes() {
     case 'time-desc': list.sort((a,b) => ((b.prepTime||0)+(b.cookTime||0)) - ((a.prepTime||0)+(a.cookTime||0))); break;
     case 'servings-asc': list.sort((a,b) => (a.servings || 0) - (b.servings || 0)); break;
     case 'servings-desc': list.sort((a,b) => (b.servings || 0) - (a.servings || 0)); break;
+    // Ajout récent : createdAt absent = recette d'avant le champ, donc la plus ancienne.
+    case 'date-desc': list.sort((a,b) => (b.createdAt || 0) - (a.createdAt || 0)); break;
+    case 'date-asc': list.sort((a,b) => (a.createdAt || 0) - (b.createdAt || 0)); break;
   }
   return list;
 }
@@ -4515,7 +4555,7 @@ document.getElementById('search-input').addEventListener('input', e => {
   renderRecipes();
 });
 // Sort popup
-const sortLabels = { 'name-asc':'A→Z', 'name-desc':'Z→A', 'rating-desc':'Note↓', 'rating-asc':'Note↑', 'time-asc':'Temps↑', 'time-desc':'Temps↓' };
+const sortLabels = { 'name-asc':'A→Z', 'name-desc':'Z→A', 'rating-desc':'Note↓', 'rating-asc':'Note↑', 'time-asc':'Temps↑', 'time-desc':'Temps↓', 'date-desc':'Récentes', 'date-asc':'Anciennes' };
 function setSortValue(v) {
   state.filters.sort = v;
   // Deux libellés à tenir à jour : barre du haut (desktop) et chip (mobile).
@@ -4534,17 +4574,21 @@ const SORT_COLUMNS = {
   name:     ['name-asc', 'name-desc'],
   rating:   ['rating-asc', 'rating-desc'],
   servings: ['servings-asc', 'servings-desc'],
-  time:     ['time-asc', 'time-desc']
+  time:     ['time-asc', 'time-desc'],
+  // Date d'ajout : le 1er clic doit donner les dernières recettes ajoutées,
+  // donc la paire commence par le décroissant (d'où la flèche lue du suffixe).
+  date:     ['date-desc', 'date-asc']
 };
 function syncSortHead() {
   const cur = state.filters.sort;
   document.querySelectorAll('.recipe-list-head .rlh-sort').forEach(b => {
     const pair = SORT_COLUMNS[b.dataset.sortCol] || [];
-    const i = pair.indexOf(cur);
-    b.classList.toggle('on', i !== -1);
-    b.setAttribute('aria-sort', i === 0 ? 'ascending' : i === 1 ? 'descending' : 'none');
+    const on = pair.indexOf(cur) !== -1;
+    const asc = cur.endsWith('-asc');
+    b.classList.toggle('on', on);
+    b.setAttribute('aria-sort', !on ? 'none' : asc ? 'ascending' : 'descending');
     const arrow = b.querySelector('.rlh-arrow');
-    if (arrow) arrow.textContent = i === 0 ? '↑' : i === 1 ? '↓' : '';
+    if (arrow) arrow.textContent = !on ? '' : asc ? '↑' : '↓';
   });
 }
 document.querySelectorAll('.recipe-list-head .rlh-sort').forEach(b => {
