@@ -1,0 +1,165 @@
+<!-- Maki kawaii v7 — style « peinture douce » (référence photo, 2026-08-23) : plus de
+     contour noir épais ni de bras/pieds, ombrage doux, grain (feTurbulence), riz bosselé
+     (feDisplacementMap), gros yeux brillants, joues à spirale. Nori dans les verts forêt
+     Sylva (variante retenue face au nori charbon). Fichier SANS fond : favicon + source
+     des PNG « any ». Déclinaisons apple-touch (88 %) et maskable (74 %) composées sur
+     pastille crème pleine #f8f4ec (Android exige un fond opaque). viewBox resserré. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="80 72 352 352">
+  <defs>
+    <linearGradient id="nori" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#4d6a52"/>
+      <stop offset="0.4" stop-color="#33503c"/>
+      <stop offset="0.75" stop-color="#22392a"/>
+      <stop offset="1" stop-color="#16281c"/>
+    </linearGradient>
+    <linearGradient id="noriRim" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#3c5a45"/>
+      <stop offset="1" stop-color="#25402f"/>
+    </linearGradient>
+    <linearGradient id="riz" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fdfaf1"/>
+      <stop offset="1" stop-color="#eee2c8"/>
+    </linearGradient>
+    <radialGradient id="saumon" cx="0.38" cy="0.32" r="0.9">
+      <stop offset="0" stop-color="#f7b3a6"/>
+      <stop offset="0.7" stop-color="#ec948a"/>
+      <stop offset="1" stop-color="#e2837a"/>
+    </radialGradient>
+    <radialGradient id="avocat" cx="0.42" cy="0.35" r="0.95">
+      <stop offset="0" stop-color="#d3e878"/>
+      <stop offset="0.6" stop-color="#b7d554"/>
+      <stop offset="1" stop-color="#93b83e"/>
+    </radialGradient>
+    <radialGradient id="oeil" cx="0.42" cy="0.36" r="0.85">
+      <stop offset="0" stop-color="#7a4a2c"/>
+      <stop offset="0.55" stop-color="#3a2013"/>
+      <stop offset="1" stop-color="#170b06"/>
+    </radialGradient>
+    <clipPath id="clipMaki">
+      <path d="M 88 150 L 88 326 C 88 362 100 376 130 388 C 168 402 220 408 256 408 C 292 408 344 402 382 388 C 412 376 424 362 424 326 L 424 150 A 168 60 0 0 1 88 150 Z"/>
+    </clipPath>
+    <clipPath id="clipRiz">
+      <ellipse cx="256" cy="146" rx="146" ry="48"/>
+    </clipPath>
+    <filter id="doux" x="-80%" y="-80%" width="260%" height="260%"><feGaussianBlur stdDeviation="8"/></filter>
+    <filter id="douxLarge" x="-80%" y="-80%" width="260%" height="260%"><feGaussianBlur stdDeviation="14"/></filter>
+    <filter id="bosselage" x="-15%" y="-15%" width="130%" height="130%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.045" numOctaves="3" seed="4" result="t"/>
+      <feDisplacementMap in="SourceGraphic" in2="t" scale="9"/>
+    </filter>
+    <filter id="bosselageLeger" x="-10%" y="-10%" width="120%" height="120%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.05" numOctaves="2" seed="9" result="t"/>
+      <feDisplacementMap in="SourceGraphic" in2="t" scale="5"/>
+    </filter>
+    <filter id="grainClair">
+      <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" seed="11"/>
+      <feColorMatrix type="matrix" values="0 0 0 0 1  0 0 0 0 0.98  0 0 0 0 0.92  0.7 0.7 0.7 0 -1.15"/>
+      <feComposite operator="in" in2="SourceGraphic"/>
+    </filter>
+    <filter id="grainSombre">
+      <feTurbulence type="fractalNoise" baseFrequency="0.7" numOctaves="2" seed="23"/>
+      <feColorMatrix type="matrix" values="0 0 0 0 0.04  0 0 0 0 0.02  0 0 0 0 0.01  0.7 0.7 0.7 0 -1.05"/>
+      <feComposite operator="in" in2="SourceGraphic"/>
+    </filter>
+  </defs>
+
+  <!-- Corps : rouleau de nori, ombrage vertical doux -->
+  <path fill="url(#nori)" d="M 88 150 L 88 326 C 88 362 100 376 130 388 C 168 402 220 408 256 408 C 292 408 344 402 382 388 C 412 376 424 362 424 326 L 424 150 A 168 60 0 0 1 88 150 Z"/>
+
+  <g clip-path="url(#clipMaki)">
+    <!-- Ombre portée sous le bord supérieur -->
+    <ellipse cx="256" cy="216" rx="152" ry="26" fill="#000000" opacity="0.28" filter="url(#doux)"/>
+    <!-- Lumières de bord -->
+    <ellipse cx="106" cy="262" rx="16" ry="112" fill="#ffffff" opacity="0.08" filter="url(#doux)"/>
+    <ellipse cx="408" cy="268" rx="12" ry="100" fill="#ffffff" opacity="0.045" filter="url(#doux)"/>
+    <!-- Coeur d'ombre en bas + lumière renvoyée par le sol -->
+    <ellipse cx="256" cy="372" rx="150" ry="46" fill="#0a0503" opacity="0.32" filter="url(#douxLarge)"/>
+    <ellipse cx="256" cy="404" rx="128" ry="18" fill="#4f7a5c" opacity="0.28" filter="url(#doux)"/>
+    <!-- Lumière frontale sur le visage : rend le sourire lisible sur le nori sombre -->
+    <ellipse cx="256" cy="312" rx="132" ry="78" fill="#5d7a63" opacity="0.3" filter="url(#douxLarge)"/>
+  </g>
+
+  <!-- Dessus du rouleau : anneau de nori éclairé -->
+  <ellipse cx="256" cy="150" rx="168" ry="60" fill="url(#noriRim)"/>
+
+  <!-- Riz : galette bosselée + grains -->
+  <g filter="url(#bosselage)">
+    <ellipse cx="256" cy="146" rx="146" ry="48" fill="url(#riz)"/>
+    <ellipse cx="256" cy="146" rx="143" ry="45" fill="none" stroke="#cbbc98" stroke-width="5" opacity="0.4"/>
+    <!-- ombres des grains -->
+    <g fill="#d9caa6" opacity="0.55">
+      <ellipse cx="120" cy="134" rx="11" ry="6"/><ellipse cx="150" cy="118" rx="12" ry="6"/>
+      <ellipse cx="190" cy="107" rx="11" ry="6"/><ellipse cx="240" cy="102" rx="12" ry="6"/>
+      <ellipse cx="295" cy="105" rx="11" ry="6"/><ellipse cx="340" cy="115" rx="12" ry="6"/>
+      <ellipse cx="374" cy="130" rx="10" ry="6"/><ellipse cx="388" cy="148" rx="9" ry="6"/>
+      <ellipse cx="122" cy="162" rx="10" ry="6"/><ellipse cx="152" cy="180" rx="11" ry="6"/>
+      <ellipse cx="202" cy="192" rx="11" ry="6"/><ellipse cx="258" cy="198" rx="12" ry="6"/>
+      <ellipse cx="312" cy="194" rx="11" ry="6"/><ellipse cx="357" cy="182" rx="10" ry="6"/>
+      <ellipse cx="217" cy="207" rx="10" ry="6"/><ellipse cx="282" cy="210" rx="10" ry="6"/>
+    </g>
+    <!-- grains -->
+    <g>
+      <ellipse cx="118" cy="132" rx="11" ry="6" fill="#fffdf6" transform="rotate(-18 118 132)"/>
+      <ellipse cx="148" cy="116" rx="12" ry="6" fill="#f2e8d2" transform="rotate(-12 148 116)"/>
+      <ellipse cx="188" cy="105" rx="11" ry="6" fill="#fffdf6" transform="rotate(-6 188 105)"/>
+      <ellipse cx="238" cy="100" rx="12" ry="6" fill="#f6edda" transform="rotate(0 238 100)"/>
+      <ellipse cx="293" cy="103" rx="11" ry="6" fill="#fffdf6" transform="rotate(6 293 103)"/>
+      <ellipse cx="338" cy="113" rx="12" ry="6" fill="#f2e8d2" transform="rotate(12 338 113)"/>
+      <ellipse cx="372" cy="128" rx="10" ry="6" fill="#fffdf6" transform="rotate(20 372 128)"/>
+      <ellipse cx="386" cy="146" rx="9" ry="6" fill="#f6edda" transform="rotate(38 386 146)"/>
+      <ellipse cx="120" cy="160" rx="10" ry="6" fill="#f2e8d2" transform="rotate(24 120 160)"/>
+      <ellipse cx="150" cy="178" rx="11" ry="6" fill="#fffdf6" transform="rotate(16 150 178)"/>
+      <ellipse cx="200" cy="190" rx="11" ry="6" fill="#f6edda" transform="rotate(8 200 190)"/>
+      <ellipse cx="256" cy="196" rx="12" ry="6" fill="#fffdf6" transform="rotate(0 256 196)"/>
+      <ellipse cx="310" cy="192" rx="11" ry="6" fill="#f2e8d2" transform="rotate(-8 310 192)"/>
+      <ellipse cx="355" cy="180" rx="10" ry="6" fill="#fffdf6" transform="rotate(-16 355 180)"/>
+      <ellipse cx="215" cy="205" rx="10" ry="6" fill="#f6edda" transform="rotate(4 215 205)"/>
+      <ellipse cx="280" cy="208" rx="10" ry="6" fill="#fffdf6" transform="rotate(-4 280 208)"/>
+    </g>
+  </g>
+
+  <!-- Ombre des garnitures sur le riz -->
+  <ellipse cx="256" cy="170" rx="118" ry="26" fill="#a89467" opacity="0.45" filter="url(#doux)" clip-path="url(#clipRiz)"/>
+
+  <!-- Garnitures : saumon + avocat -->
+  <g filter="url(#bosselageLeger)">
+    <g transform="rotate(-8 210 138)">
+      <path fill="url(#saumon)" d="M 140 142 C 142 114 170 100 212 100 C 254 100 280 116 282 138 C 280 160 252 174 210 174 C 168 174 140 162 140 142 Z"/>
+      <g fill="none" stroke="#f9d3c9" stroke-width="5" stroke-linecap="round" opacity="0.75">
+        <path d="M 172 122 C 190 115 230 115 252 125"/>
+        <path d="M 164 140 C 190 132 236 132 260 142"/>
+        <path d="M 178 156 C 198 150 232 150 250 156"/>
+      </g>
+      <ellipse cx="196" cy="118" rx="26" ry="10" fill="#ffffff" opacity="0.45" transform="rotate(-10 196 118)"/>
+    </g>
+    <g transform="rotate(9 316 146)">
+      <path fill="url(#avocat)" stroke="#86ab35" stroke-width="3" opacity="0.98" d="M 258 148 C 260 124 284 110 318 110 C 352 110 372 126 374 146 C 372 166 350 180 316 180 C 286 180 258 168 258 148 Z"/>
+      <ellipse cx="316" cy="145" rx="42" ry="25" fill="#cfe57a" opacity="0.7"/>
+      <ellipse cx="300" cy="126" rx="18" ry="8" fill="#ffffff" opacity="0.5" transform="rotate(-8 300 126)"/>
+    </g>
+  </g>
+
+  <!-- Grain / texture -->
+  <g clip-path="url(#clipMaki)">
+    <rect x="0" y="0" width="512" height="512" fill="#ffffff" filter="url(#grainClair)" opacity="0.5"/>
+    <rect x="0" y="200" width="512" height="312" fill="#000000" filter="url(#grainSombre)" opacity="0.55"/>
+  </g>
+
+  <!-- Visage -->
+  <g>
+    <circle cx="194" cy="302" r="36" fill="url(#oeil)" stroke="#503020" stroke-width="2" stroke-opacity="0.35"/>
+    <circle cx="318" cy="302" r="36" fill="url(#oeil)" stroke="#503020" stroke-width="2" stroke-opacity="0.35"/>
+    <circle cx="184" cy="290" r="11" fill="#ffffff" opacity="0.96"/>
+    <circle cx="203" cy="315" r="5" fill="#ffffff" opacity="0.8"/>
+    <circle cx="308" cy="290" r="11" fill="#ffffff" opacity="0.96"/>
+    <circle cx="327" cy="315" r="5" fill="#ffffff" opacity="0.8"/>
+    <circle cx="146" cy="340" r="21" fill="#ef9db2" opacity="0.5" filter="url(#doux)"/>
+    <circle cx="366" cy="340" r="21" fill="#ef9db2" opacity="0.5" filter="url(#doux)"/>
+    <path transform="translate(146 340)" d="M -7 2 C -6 -6 4 -9 8 -3 C 11 2 7 8 1 8 C -4 8 -6 3 -3 0 C -1 -2 3 -1 3 2" fill="none" stroke="#d98ca4" stroke-width="3" stroke-linecap="round" opacity="0.5"/>
+    <path transform="translate(366 340)" d="M -7 2 C -6 -6 4 -9 8 -3 C 11 2 7 8 1 8 C -4 8 -6 3 -3 0 C -1 -2 3 -1 3 2" fill="none" stroke="#d98ca4" stroke-width="3" stroke-linecap="round" opacity="0.5"/>
+    <path d="M 242 332 Q 256 344 270 332" fill="none" stroke="#170c07" stroke-width="7" stroke-linecap="round"/>
+  </g>
+
+  <!-- Bord adouci -->
+  <path fill="none" stroke="#0d0704" stroke-width="2" opacity="0.3" d="M 88 150 L 88 326 C 88 362 100 376 130 388 C 168 402 220 408 256 408 C 292 408 344 402 382 388 C 412 376 424 362 424 326 L 424 150 A 168 60 0 0 1 88 150 Z"/>
+</svg>
