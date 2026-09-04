@@ -104,11 +104,18 @@
           <div class="filter-sheet-header">
             <span class="filter-sheet-title"><span class="filter-sheet-title-ico" data-icon="filter" aria-hidden="true"></span>Filtres</span>
             <div style="display:flex;gap:8px;align-items:center;">
+              <button class="btn btn-ghost btn-sm js-save-preset" type="button" style="display:none">Enregistrer</button>
               <button class="btn btn-ghost btn-sm" id="btn-reset-filters">Tout effacer</button>
               <button class="filter-sheet-close" id="filter-sheet-close" title="Fermer"><span class="tb-ico" data-icon="x"></span></button>
             </div>
           </div>
           <div class="filter-sheet-body">
+            <!-- Modèles : jeux de critères enregistrés (renderFilterPresets). Masquée tant
+                 qu'il n'y en a aucun ; l'enregistrement vit à côté de « Tout effacer ». -->
+            <div class="filter-sheet-section" id="filter-presets-section" style="display:none">
+              <div class="filter-sheet-label">Modèles</div>
+              <div class="chip-row" id="filter-presets"></div>
+            </div>
             <!-- Ingrédients : premier filtre. Bouton + menu flottant (même patron que
                  Type de plat) : la section fait une ligne, donc hauteur constante. -->
             <div class="filter-sheet-section">
@@ -166,6 +173,7 @@
             <span id="filter-active-count">Aucun filtre actif</span>
             <span aria-hidden="true">·</span>
             <button type="button" id="btn-reset-filters-rail">Tout effacer</button>
+            <span class="preset-save-foot" style="display:none"><span aria-hidden="true">·</span><button type="button" class="js-save-preset">Enregistrer</button></span>
           </div>
         </div>
       </div>
@@ -901,6 +909,7 @@ let state = {
   trash: [],
   notes: '',
   bugs: { items: [], lastNum: 0 },
+  filterPresets: [], // modèles de filtres { id, name, filters } — synchronisés
   filters: {
     search: '',
     sort: 'name-asc',
@@ -1185,6 +1194,7 @@ function applyCloudData(data) {
   state.trash = data.trash || [];
   state.notes = data.notes || '';
   state.bugs = (data.bugs && Array.isArray(data.bugs.items)) ? data.bugs : { items: [], lastNum: 0 };
+  state.filterPresets = Array.isArray(data.filterPresets) ? data.filterPresets : [];
   state.lastModified = data.lastModified || Date.now();
   state.filters = currentFilters;
   // Migration des ingrédients
@@ -1243,6 +1253,7 @@ window.addEventListener('beforeunload', () => {
         trash: state.trash,
         notes: state.notes || '',
         bugs: state.bugs || { items: [], lastNum: 0 },
+        filterPresets: state.filterPresets || [],
         lastModified: state.lastModified
       });
     } catch (e) {}
@@ -1277,6 +1288,7 @@ async function pushToCloud() {
       trash: state.trash,
       notes: state.notes || '',
       bugs: state.bugs || { items: [], lastNum: 0 },
+      filterPresets: state.filterPresets || [],
       lastModified: state.lastModified
     });
     setSyncStatus('Synchronisé', 'success', 'cloud');
@@ -1573,6 +1585,7 @@ function load() {
       if (!Array.isArray(state.manualShoppingItems)) state.manualShoppingItems = [];
       if (!Array.isArray(state.trash)) state.trash = [];
       if (!state.bugs || !Array.isArray(state.bugs.items)) state.bugs = { items: [], lastNum: 0 };
+      if (!Array.isArray(state.filterPresets)) state.filterPresets = [];
       migrateRecipes();
     } else {
       // Initialisation par défaut
@@ -2341,8 +2354,8 @@ function suggSyncWithFilters() {
 // le compteur du rail ne dit que « N filtres actifs » sans dire lesquels, et il
 // ignore la recherche et « sélection uniquement ». Quand le pool rétrécit sans
 // qu'aucun critère ne soit identifié, on l'affiche aussi — c'est le signe d'un bug.
-function suggActiveCriteria() {
-  const f = state.filters || {}, out = [];
+function suggActiveCriteria(filters) {
+  const f = filters || state.filters || {}, out = [];
   const named = ids => (ids || []).map(getIngredientName).filter(Boolean).join(', ');
   if ((f.includeIngredients || []).length) out.push('ingrédients : ' + named(f.includeIngredients));
   if ((f.excludeIngredients || []).length) out.push('sans ' + named(f.excludeIngredients));
@@ -4287,9 +4300,10 @@ function closeAllModals() {
 
 /* Modal générique de renommage */
 let pendingRenameCallback = null;
-function openRenameModal(title, currentValue, onSave) {
+function openRenameModal(title, currentValue, onSave, label) {
   pendingRenameCallback = onSave;
   document.getElementById('rename-modal-title').textContent = title;
+  document.getElementById('rename-modal-label').textContent = label || 'Nouveau nom';
   const inp = document.getElementById('rename-modal-input');
   inp.value = currentValue || '';
   document.getElementById('rename-modal').classList.add('active');
@@ -4548,6 +4562,7 @@ function buildFilterBar() {
 
   // Les deux menus flottants se rafraîchissent avec les facettes (libellé + grisés)
   FILTER_MENUS.forEach(m => { facetRefreshers.push(m.refresh); m.refresh(); });
+  renderFilterPresets();
 }
 
 document.getElementById('search-input').addEventListener('input', e => {
@@ -4898,6 +4913,7 @@ document.addEventListener('click', e => {
   if (e.target.closest('#sugg-filters-btn')) return; // sinon le clic qui ouvre referme aussitôt
   if (e.target.closest('.autocomplete-dropdown')) return;
   if (e.target.closest('.filter-menu')) return; // enfant de body, mais « dedans » pour l'utilisateur
+  if (e.target.closest('.modal-overlay')) return; // modale ouverte depuis le popover (nom d'un modèle, confirmation)
   closeFilterSheet();
 });
 document.getElementById('filter-sheet-close').onclick = closeFilterSheet;
@@ -4927,8 +4943,94 @@ function resetAllFilters() {
 document.getElementById('btn-reset-filters').onclick = resetAllFilters;
 document.getElementById('btn-reset-filters-rail').onclick = resetAllFilters; // pied du rail docké
 
+/* ---- Modèles de filtres ----
+   Un jeu de critères du rail enregistré sous un nom, réappliqué d'un clic.
+   Recherche, tri et « sélection uniquement » n'en font pas partie : le rail ne
+   les compte pas comme filtres. Vivent dans state.filterPresets (synchronisés,
+   comme les types de plat) alors que state.filters reste local à l'appareil. */
+const PRESET_DEFAULTS = { ratingSel: [], prepMax: null, cookMax: null, mealTypes: [], temperatures: [],
+  vegetarianOnly: false, pescatarianOnly: false, includeIngredients: [], excludeIngredients: [], ingredientsMode: 'any' };
+// Copie normalisée des seuls critères du rail (tableaux dupliqués, valeurs manquantes → défaut).
+function presetCriteria(f) {
+  const out = {};
+  for (const k in PRESET_DEFAULTS) {
+    const d = PRESET_DEFAULTS[k], v = f ? f[k] : undefined;
+    out[k] = Array.isArray(d) ? (Array.isArray(v) ? v.slice() : []) : (v == null || v === '' ? d : v);
+  }
+  return out;
+}
+// Empreinte insensible à l'ordre : « tomate + oignon » = « oignon + tomate ».
+function presetSignature(f) {
+  const c = presetCriteria(f);
+  if (!c.includeIngredients.length) c.ingredientsMode = 'any'; // sans requis, le mode ne change rien
+  return JSON.stringify(Object.keys(PRESET_DEFAULTS).map(k => Array.isArray(c[k]) ? c[k].slice().sort() : c[k]));
+}
+function currentPresetId() {
+  const sig = presetSignature(state.filters);
+  const p = (state.filterPresets || []).find(x => presetSignature(x.filters) === sig);
+  return p ? p.id : null;
+}
+// null = retirer les critères (recherche et tri conservés), sinon appliquer le modèle.
+function applyFilterPreset(p) {
+  Object.assign(state.filters, presetCriteria(p ? p.filters : null));
+  saveLocal();
+  buildFilterBar();
+  renderRecipes();
+}
+function saveFilterPreset() {
+  if (!activeFilterCount()) return;
+  openRenameModal('Enregistrer les filtres', suggActiveCriteria().join(' · '), name => {
+    const presets = state.filterPresets || (state.filterPresets = []);
+    const dup = presets.find(p => normalizeText(p.name) === normalizeText(name));
+    if (dup) dup.filters = presetCriteria(state.filters); // même nom = on le remplace
+    else presets.push({ id: uid(), name, filters: presetCriteria(state.filters) });
+    save();
+    renderFilterPresets();
+    toast('Modèle « ' + name + ' » ' + (dup ? 'mis à jour' : 'enregistré'), 'success');
+  }, 'Nom du modèle');
+}
+function deleteFilterPreset(p) {
+  showConfirm('Supprimer le modèle', '« ' + p.name + ' » sera supprimé. Les filtres en cours restent appliqués.', 'Supprimer', () => {
+    state.filterPresets = (state.filterPresets || []).filter(x => x.id !== p.id);
+    save();
+    renderFilterPresets();
+  });
+}
+// Chips de la section « Modèles » + visibilité des boutons « Enregistrer » (les deux
+// porteurs : en-tête du popover et pied du rail). Appelée en fin de buildFilterBar().
+function renderFilterPresets() {
+  const wrap = document.getElementById('filter-presets-section');
+  const row = document.getElementById('filter-presets');
+  if (!wrap || !row) return;
+  const presets = state.filterPresets || [];
+  const curId = currentPresetId();
+  wrap.style.display = presets.length ? '' : 'none';
+  row.innerHTML = presets.map(p => {
+    const on = p.id === curId;
+    return '<button type="button" class="chip-toggle preset-chip' + (on ? ' on' : '') + '" data-id="' + escapeHtml(p.id) + '"'
+      + ' aria-pressed="' + on + '" title="' + escapeHtml(suggActiveCriteria(presetCriteria(p.filters)).join(' · ')) + '">'
+      + '<span class="preset-name">' + escapeHtml(p.name) + '</span>'
+      + '<span class="preset-del" role="button" aria-label="Supprimer le modèle" title="Supprimer le modèle">' + ICONS.x + '</span></button>';
+  }).join('');
+  row.querySelectorAll('.preset-chip').forEach(b => {
+    b.onclick = e => {
+      const p = presets.find(x => x.id === b.dataset.id);
+      if (!p) return;
+      if (e.target.closest('.preset-del')) { deleteFilterPreset(p); return; }
+      applyFilterPreset(p.id === curId ? null : p); // recliquer le modèle actif le retire
+    };
+  });
+  // Rien à enregistrer sans filtre, ni quand les filtres en cours sont déjà un modèle.
+  const canSave = activeFilterCount() > 0 && !curId;
+  document.querySelectorAll('.js-save-preset').forEach(b => {
+    const foot = b.closest('.preset-save-foot');
+    (foot || b).style.display = canSave ? '' : 'none';
+  });
+}
+document.querySelectorAll('.js-save-preset').forEach(b => { b.onclick = saveFilterPreset; });
+
 // Count active filters and update badge
-function updateFilterBadge() {
+function activeFilterCount() {
   const f = state.filters;
   let count = 0;
   count += (f.ratingSel || []).length;
@@ -4940,6 +5042,10 @@ function updateFilterBadge() {
   if (f.cookMax !== null && f.cookMax !== undefined) count++;
   if (f.includeIngredients && f.includeIngredients.length) count += f.includeIngredients.length;
   if (f.excludeIngredients && f.excludeIngredients.length) count += f.excludeIngredients.length;
+  return count;
+}
+function updateFilterBadge() {
+  const count = activeFilterCount();
   // Deux porteurs du compteur : barre du haut (desktop) et chip (mobile).
   document.querySelectorAll('.js-filter-count').forEach(badge => {
     badge.textContent = count;
@@ -6341,6 +6447,9 @@ function renderDataTab() {
         if (Array.isArray(state.filters?.mealTypes)) {
           state.filters.mealTypes = state.filters.mealTypes.map(x => (x === m ? name : x));
         }
+        (state.filterPresets || []).forEach(p => {
+          if (Array.isArray(p.filters?.mealTypes)) p.filters.mealTypes = p.filters.mealTypes.map(x => (x === m ? name : x));
+        });
         save();
         rerenderAll();
       });
