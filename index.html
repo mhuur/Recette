@@ -319,6 +319,7 @@
       <button type="button" class="settings-subtab active" data-pane="apparence" role="tab" aria-selected="true"><span class="tb-ico" data-icon="image"></span>Apparence</button>
       <button type="button" class="settings-subtab" data-pane="partage" id="settings-subtab-partage" role="tab" aria-selected="false" hidden><span class="tb-ico" data-icon="link2"></span>Partage<span class="subtab-dot" id="settings-share-dot" style="display:none;"></span></button>
       <button type="button" class="settings-subtab" data-pane="notes" role="tab" aria-selected="false"><span class="tb-ico" data-icon="bug"></span>Remarques<span class="count-badge hide-if-zero" id="settings-notes-count" data-value="0" style="display:none;">0</span></button>
+      <button type="button" class="settings-subtab" data-pane="avance" role="tab" aria-selected="false"><span class="tb-ico" data-icon="settings"></span>Avancé</button>
     </nav>
 
     <!-- Apparence — fond forêt (maquette Sylva) -->
@@ -406,6 +407,16 @@
     <div class="data-section" id="notes-remarques-section">
       <h3><span class="tb-ico" data-icon="bug"></span>Notes &amp; remarques <span id="debug-count" class="count-badge hide-if-zero" data-value="0">0</span></h3>
       <div id="debug-container"></div>
+    </div>
+    </div>
+
+    <!-- Avancé : gestion des modèles de filtres. L'application, elle, se fait
+         depuis le panneau Filtres (chips de la section « Modèles »). -->
+    <div class="settings-pane" data-pane="avance" role="tabpanel">
+    <div class="data-section">
+      <h3><span class="tb-ico" data-icon="filter"></span>Modèles de filtres</h3>
+      <p style="font-size:13px; color:var(--text-muted);">Un modèle réunit des filtres du panneau (ingrédients, type de plat, note, temps…) pour les réappliquer d'un clic. Pour en créer un : choisir des filtres, puis « Enregistrer » à côté de « Tout effacer ».</p>
+      <div class="data-list" id="filter-presets-list"></div>
     </div>
     </div>
 
@@ -4931,6 +4942,7 @@ document.addEventListener('keydown', e => {
 });
 
 function resetAllFilters() {
+  presetEditId = null;
   state.filters = { search: '', sort: 'name-asc', ratingSel: [], prepMax: null, cookMax: null, mealTypes: [], temperatures: [], vegetarianOnly: false, pescatarianOnly: false, includeIngredients: [], excludeIngredients: [], ingredientsMode: 'any', includeFamilies: [], excludeFamilies: [], selectedOnly: false };
   document.getElementById('search-input').value = '';
   setSortValue('name-asc');
@@ -4947,7 +4959,9 @@ document.getElementById('btn-reset-filters-rail').onclick = resetAllFilters; // 
    Un jeu de critères du rail enregistré sous un nom, réappliqué d'un clic.
    Recherche, tri et « sélection uniquement » n'en font pas partie : le rail ne
    les compte pas comme filtres. Vivent dans state.filterPresets (synchronisés,
-   comme les types de plat) alors que state.filters reste local à l'appareil. */
+   comme les types de plat) alors que state.filters reste local à l'appareil.
+   Application = chips du panneau Filtres ; gestion (renommer, modifier les
+   filtres, supprimer) = Réglages › Avancé. */
 const PRESET_DEFAULTS = { ratingSel: [], prepMax: null, cookMax: null, mealTypes: [], temperatures: [],
   vegetarianOnly: false, pescatarianOnly: false, includeIngredients: [], excludeIngredients: [], ingredientsMode: 'any' };
 // Copie normalisée des seuls critères du rail (tableaux dupliqués, valeurs manquantes → défaut).
@@ -4970,15 +4984,39 @@ function currentPresetId() {
   const p = (state.filterPresets || []).find(x => presetSignature(x.filters) === sig);
   return p ? p.id : null;
 }
+function presetDescription(p) {
+  return suggActiveCriteria(presetCriteria(p.filters)).join(' · ') || 'aucun critère';
+}
+// Modèle en cours de modification (Réglages › « Modifier les filtres ») : le panneau
+// Filtres devient son éditeur et « Enregistrer » se change en « Mettre à jour ».
+let presetEditId = null;
 // null = retirer les critères (recherche et tri conservés), sinon appliquer le modèle.
 function applyFilterPreset(p) {
+  presetEditId = null; // appliquer un autre modèle, ou tout retirer, clôt la modification
   Object.assign(state.filters, presetCriteria(p ? p.filters : null));
   saveLocal();
   buildFilterBar();
   renderRecipes();
 }
+function startPresetEdit(p) {
+  applyFilterPreset(p);
+  presetEditId = p.id;
+  renderFilterPresets();
+  switchTab('recipes');
+  if (!isFilterRailDocked()) openFilterSheet();
+  toast('Modifie les filtres, puis « Mettre à jour »');
+}
 function saveFilterPreset() {
   if (!activeFilterCount()) return;
+  const editing = (state.filterPresets || []).find(p => p.id === presetEditId);
+  if (editing) {
+    editing.filters = presetCriteria(state.filters);
+    presetEditId = null;
+    save();
+    renderFilterPresets();
+    toast('Modèle « ' + editing.name + ' » mis à jour', 'success');
+    return;
+  }
   openRenameModal('Enregistrer les filtres', suggActiveCriteria().join(' · '), name => {
     const presets = state.filterPresets || (state.filterPresets = []);
     const dup = presets.find(p => normalizeText(p.name) === normalizeText(name));
@@ -4989,42 +5027,88 @@ function saveFilterPreset() {
     toast('Modèle « ' + name + ' » ' + (dup ? 'mis à jour' : 'enregistré'), 'success');
   }, 'Nom du modèle');
 }
+function renameFilterPreset(p) {
+  openRenameModal('Renommer le modèle', p.name, name => {
+    if ((state.filterPresets || []).some(x => x.id !== p.id && normalizeText(x.name) === normalizeText(name))) {
+      toast('« ' + name + ' » existe déjà', 'error');
+      return;
+    }
+    p.name = name;
+    save();
+    renderFilterPresets();
+  }, 'Nom du modèle');
+}
 function deleteFilterPreset(p) {
   showConfirm('Supprimer le modèle', '« ' + p.name + ' » sera supprimé. Les filtres en cours restent appliqués.', 'Supprimer', () => {
     state.filterPresets = (state.filterPresets || []).filter(x => x.id !== p.id);
+    if (presetEditId === p.id) presetEditId = null;
     save();
     renderFilterPresets();
   });
 }
-// Chips de la section « Modèles » + visibilité des boutons « Enregistrer » (les deux
-// porteurs : en-tête du popover et pied du rail). Appelée en fin de buildFilterBar().
+// Chips de la section « Modèles » du panneau Filtres, boutons « Enregistrer » /
+// « Mettre à jour » (deux porteurs : en-tête du popover et pied du rail), puis la
+// liste de Réglages › Avancé. Appelée en fin de buildFilterBar().
 function renderFilterPresets() {
   const wrap = document.getElementById('filter-presets-section');
   const row = document.getElementById('filter-presets');
   if (!wrap || !row) return;
   const presets = state.filterPresets || [];
   const curId = currentPresetId();
+  const editing = presets.find(p => p.id === presetEditId) || null;
+  if (!editing) presetEditId = null;
   wrap.style.display = presets.length ? '' : 'none';
   row.innerHTML = presets.map(p => {
     const on = p.id === curId;
     return '<button type="button" class="chip-toggle preset-chip' + (on ? ' on' : '') + '" data-id="' + escapeHtml(p.id) + '"'
-      + ' aria-pressed="' + on + '" title="' + escapeHtml(suggActiveCriteria(presetCriteria(p.filters)).join(' · ')) + '">'
-      + '<span class="preset-name">' + escapeHtml(p.name) + '</span>'
-      + '<span class="preset-del" role="button" aria-label="Supprimer le modèle" title="Supprimer le modèle">' + ICONS.x + '</span></button>';
+      + ' aria-pressed="' + on + '" title="' + escapeHtml(presetDescription(p)) + '">' + escapeHtml(p.name) + '</button>';
   }).join('');
   row.querySelectorAll('.preset-chip').forEach(b => {
-    b.onclick = e => {
+    b.onclick = () => {
       const p = presets.find(x => x.id === b.dataset.id);
-      if (!p) return;
-      if (e.target.closest('.preset-del')) { deleteFilterPreset(p); return; }
-      applyFilterPreset(p.id === curId ? null : p); // recliquer le modèle actif le retire
+      if (p) applyFilterPreset(p.id === curId ? null : p); // recliquer le modèle actif le retire
     };
   });
-  // Rien à enregistrer sans filtre, ni quand les filtres en cours sont déjà un modèle.
-  const canSave = activeFilterCount() > 0 && !curId;
+  // Rien à enregistrer sans filtre, ni quand les filtres en cours sont déjà un modèle
+  // (sauf en cours de modification : c'est précisément l'état à mettre à jour).
+  const canSave = activeFilterCount() > 0 && (editing ? true : !curId);
   document.querySelectorAll('.js-save-preset').forEach(b => {
     const foot = b.closest('.preset-save-foot');
     (foot || b).style.display = canSave ? '' : 'none';
+    b.textContent = editing ? 'Mettre à jour' : 'Enregistrer';
+    b.title = editing ? 'Mettre à jour « ' + editing.name + ' »' : '';
+  });
+  renderFilterPresetsSettings();
+}
+// Réglages › Avancé : une ligne par modèle — renommer, modifier les filtres, supprimer.
+function renderFilterPresetsSettings() {
+  const list = document.getElementById('filter-presets-list');
+  if (!list) return;
+  const presets = state.filterPresets || [];
+  list.innerHTML = presets.length ? ''
+    : '<div style="font-size:13px; color:var(--text-muted); padding:4px 0;">Aucun modèle pour l\'instant.</div>';
+  presets.forEach(p => {
+    const el = document.createElement('div');
+    el.className = 'data-list-item';
+    el.innerHTML = '<span style="min-width:0;"><b>' + escapeHtml(p.name) + '</b>'
+      + '<div class="preset-desc">' + escapeHtml(presetDescription(p)) + '</div></span>';
+    const actions = document.createElement('span');
+    actions.className = 'data-list-item-actions';
+    const mk = (html, title, cls, fn) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'btn btn-xs' + (cls ? ' ' + cls : '');
+      b.innerHTML = html;
+      b.title = title;
+      b.setAttribute('aria-label', title);
+      b.onclick = fn;
+      return b;
+    };
+    actions.appendChild(mk(ICONS.pencil, 'Renommer', '', () => renameFilterPreset(p)));
+    actions.appendChild(mk(ICONS.filter + '<span>Modifier</span>', 'Modifier les filtres du modèle', '', () => startPresetEdit(p)));
+    actions.appendChild(mk(ICONS.trash2, 'Supprimer', 'btn-danger', () => deleteFilterPreset(p)));
+    el.appendChild(actions);
+    list.appendChild(el);
   });
 }
 document.querySelectorAll('.js-save-preset').forEach(b => { b.onclick = saveFilterPreset; });

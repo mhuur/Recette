@@ -2245,14 +2245,11 @@ body.sugg-preview-open .sugg-preview { display: flex; }
 }
 .temp-chip:hover, .chip-toggle:hover { border-color: var(--mist-300); color: var(--text-strong); }
 .temp-chip.on, .chip-toggle.on { background: var(--green-600); border-color: var(--green-600); color: #fff; }
-/* Modèles de filtres : chip nommée + croix de suppression intégrée */
-.preset-chip { display: inline-flex; align-items: center; gap: 4px; padding-right: 5px; max-width: 100%; }
-.preset-chip .preset-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
-.preset-chip .preset-del { display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; border-radius: 50%; opacity: .55; flex: none; }
-.preset-chip .preset-del svg { width: 12px; height: 12px; }
-.preset-chip .preset-del:hover { opacity: 1; background: rgba(0, 0, 0, .08); }
-.preset-chip.on .preset-del:hover { background: rgba(255, 255, 255, .25); }
+/* Modèles de filtres : chips d'application (panneau Filtres) et lignes de gestion (Réglages › Avancé) */
+.preset-chip { max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
 .filter-rail-foot .preset-save-foot { display: inline-flex; align-items: center; gap: 5px; }
+.preset-desc { font-size: 12px; color: var(--text-muted); margin-top: 2px; white-space: normal; }
+.data-list-item-actions .btn-xs svg + * { margin-left: 4px; }
 /* La modale a ses propres champs compacts : le picker s'y insère comme un input */
 .form-compact-item.temp-item { gap: 6px; }
 /* Note minimum : boutons carrés-arrondis « 6+ 7+ 8+ 9+ » */
@@ -3139,7 +3136,7 @@ body.guest-mode .fab { display: none !important; }
 body.guest-mode .toolbar-add-group { display: none !important; }
 body.guest-mode .topbar-cart-btn { display: none !important; }
 body.guest-mode .recipe-row input[type="checkbox"] { display: none !important; }
-body.guest-mode .js-save-preset, body.guest-mode .preset-save-foot, body.guest-mode .preset-del { display: none !important; }
+body.guest-mode .js-save-preset, body.guest-mode .preset-save-foot { display: none !important; }
 body.guest-mode .user-menu-item[data-go="data"],
 body.guest-mode .user-menu-item[data-go="settings"] { display: none !important; }
 body.guest-mode .recipe-detail-cta,
