@@ -105,7 +105,7 @@
             <span class="filter-sheet-title"><span class="filter-sheet-title-ico" data-icon="filter" aria-hidden="true"></span>Filtres</span>
             <div style="display:flex;gap:8px;align-items:center;">
               <button class="btn btn-ghost btn-sm js-save-preset" type="button" style="display:none">Enregistrer</button>
-              <button class="btn btn-ghost btn-sm" id="btn-reset-filters">Tout effacer</button>
+              <button class="filter-clear-btn" id="btn-reset-filters" type="button"><span class="tb-ico" data-icon="rotateCcw" aria-hidden="true"></span><span class="js-clear-label">Tout effacer</span></button>
               <button class="filter-sheet-close" id="filter-sheet-close" title="Fermer"><span class="tb-ico" data-icon="x"></span></button>
             </div>
           </div>
@@ -171,8 +171,7 @@
           <!-- Pied du rail docké (2a) : remplace la croix et le CTA du popover -->
           <div class="filter-rail-foot">
             <span id="filter-active-count">Aucun filtre actif</span>
-            <span aria-hidden="true">·</span>
-            <button type="button" id="btn-reset-filters-rail">Tout effacer</button>
+            <button type="button" class="filter-clear-btn" id="btn-reset-filters-rail"><span class="tb-ico" data-icon="rotateCcw" aria-hidden="true"></span><span class="js-clear-label">Tout effacer</span></button>
             <span class="preset-save-foot" style="display:none"><span aria-hidden="true">·</span><button type="button" class="js-save-preset">Enregistrer</button></span>
           </div>
         </div>
@@ -1681,13 +1680,49 @@ function createStarPicker(container, opts = {}) {
     b.type = 'button';
     b.title = v + '/10';
     b.setAttribute('aria-label', 'Noter ' + v + ' sur 10');
-    b.onmouseenter = () => paint(v);
+    b.onmouseenter = () => { if (!dragging) paint(v); };
     b.onfocus = () => paint(v);
-    b.onclick = e => { e.stopPropagation(); value = v; paint(v); onPick(v); };
+    // Le clic ne sert plus qu'au clavier : au pointeur c'est pointerup qui
+    // valide, et le drapeau empêche de compter la même note deux fois.
+    b.onclick = () => { if (pointerPicked) return; value = v; paint(v); onPick(v); };
     hitEl.appendChild(b);
   }
+
+  /* Glissement du doigt. Viser une des 10 zones (20px dans la modale de note,
+     11px dans le formulaire) est pénible au doigt : on suit le pointeur sur
+     toute la largeur, on peint en direct, on valide au relâchement.
+     La zone porte touch-action:none, sinon le défilement vole le geste. */
+  let dragging = false, pointerPicked = false;
+  const valueAtX = x => {
+    const r = hitEl.getBoundingClientRect();
+    return Math.max(1, Math.min(10, Math.ceil(((x - r.left) / r.width) * 10)));
+  };
+  hitEl.addEventListener('pointerdown', e => {
+    dragging = true;
+    pointerPicked = false;
+    try { hitEl.setPointerCapture(e.pointerId); } catch (err) {}
+    paint(valueAtX(e.clientX));
+  });
+  hitEl.addEventListener('pointermove', e => {
+    if (!dragging) return;
+    e.preventDefault();
+    paint(valueAtX(e.clientX));
+  });
+  hitEl.addEventListener('pointerup', e => {
+    if (!dragging) return;
+    dragging = false;
+    pointerPicked = true;
+    value = valueAtX(e.clientX);
+    paint(value);
+    onPick(value);
+  });
+  hitEl.addEventListener('pointercancel', () => { dragging = false; paint(value); });
+  // Le clic qui suit le geste est neutralisé ici, et remet le drapeau à zéro —
+  // la capture du pointeur peut le rediriger vers hitEl plutôt que vers le bouton.
+  hitEl.addEventListener('click', e => { e.stopPropagation(); pointerPicked = false; });
+
   // Quitter la zone (souris ou clavier) restaure la valeur réelle, pas l'aperçu survolé.
-  container.onmouseleave = () => paint(value);
+  container.onmouseleave = () => { if (!dragging) paint(value); };
   hitEl.addEventListener('focusout', () => setTimeout(() => {
     if (!hitEl.contains(document.activeElement)) paint(value);
   }, 0));
@@ -5136,6 +5171,11 @@ function updateFilterBadge() {
     badge.style.display = count > 0 ? '' : 'none';
   });
   document.querySelectorAll('.js-toggle-filter').forEach(b => b.classList.toggle('neon-on', count > 0));
+  // « Tout effacer » annonce ce qu'il va retirer. textContent sur le libellé
+  // seul : l'icône est un frère, elle n'est pas détruite.
+  document.querySelectorAll('.js-clear-label').forEach(el => {
+    el.textContent = count > 0 ? 'Effacer ' + count : 'Tout effacer';
+  });
   // Pied du rail docké : « N filtre(s) actif(s) »
   const railCount = document.getElementById('filter-active-count');
   if (railCount) {

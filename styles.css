@@ -273,6 +273,21 @@ h1, h2 {
 .cmd-btn:hover { color: var(--green-700); }
 .cmd-btn svg { width: 15px; height: 15px; }
 .cmd-btn[aria-pressed="true"] { color: var(--green-600); }
+/* Filtres actifs : pilule pleine, même signal que .tb-toggle.neon-on.
+   updateFilterBadge() pose neon-on dès qu'un critère est posé ; sans règle
+   ici le bouton restait identique à l'état vide (seule la pastille changeait). */
+.cmd-btn.neon-on {
+  background: var(--green-600);
+  border: 1px solid var(--green-600);
+  border-radius: 999px;
+  padding: 6px 12px;
+  color: #fff;
+  font-weight: 700;
+  box-shadow: var(--shadow-sm);
+}
+.cmd-btn.neon-on:hover { background: var(--green-700); border-color: var(--green-700); color: #fff; }
+/* Sur fond vert plein la pastille verte disparaîtrait. */
+.cmd-btn.neon-on .filter-count-badge { background: rgba(255, 255, 255, .26); }
 .cmd-icon-only .cmd-btn-label { display: none; }
 .cmd-sort { position: relative; flex-shrink: 0; }
 .cmd-sep { width: 1px; height: 22px; background: var(--mist-200); flex-shrink: 0; }
@@ -2038,7 +2053,8 @@ body.sugg-preview-open .sugg-preview { display: flex; }
 .star-picker { position: relative; display: inline-flex; line-height: 0; }
 .star-picker-stars { display: inline-flex; gap: 0; color: var(--sun-600); }
 .star-picker-stars svg { width: var(--sp-size, 34px); height: var(--sp-size, 34px); }
-.star-picker-hit { position: absolute; inset: 0; display: flex; }
+/* touch-action:none : sans ça le défilement vole le geste dès le 2e pixel. */
+.star-picker-hit { position: absolute; inset: 0; display: flex; touch-action: none; -webkit-user-select: none; user-select: none; }
 .star-picker-hit button {
   flex: 1; background: none; border: 0; padding: 0; margin: 0;
   cursor: pointer; border-radius: 3px;
@@ -2123,7 +2139,7 @@ body.sugg-preview-open .sugg-preview { display: flex; }
   display: none;
   margin-top: auto;
   align-items: center;
-  gap: 5px;
+  gap: 8px;
   border-top: 1px solid var(--mist-200);
   padding-top: 12px;
   font-size: 12px;
@@ -2135,6 +2151,26 @@ body.sugg-preview-open .sugg-preview { display: flex; }
   color: var(--green-600); cursor: pointer;
 }
 .filter-rail-foot button:hover { text-decoration: underline; }
+/* « Tout effacer » : bouton teinté plutôt que lien — au milieu de deux autres
+   libellés verts de 12px il passait inaperçu. Deux porteurs, même dessin :
+   en-tête du popover / de la feuille mobile, et pied du rail docké. */
+.filter-clear-btn,
+.filter-rail-foot .filter-clear-btn {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: var(--green-100);
+  border: 1px solid var(--green-200);
+  border-radius: 999px;
+  padding: 5px 10px;
+  font: inherit; font-size: 12px; font-weight: 700;
+  color: var(--green-700);
+  white-space: nowrap;
+  cursor: pointer;
+}
+.filter-clear-btn:hover,
+.filter-rail-foot .filter-clear-btn:hover {
+  background: var(--green-200); border-color: var(--green-300); text-decoration: none;
+}
+.filter-clear-btn svg { width: 13px; height: 13px; }
 .filter-sheet-title-ico { display: inline-flex; color: var(--green-600); margin-right: 8px; }
 .filter-sheet-title-ico svg { width: 16px; height: 16px; }
 .filter-sheet-label-legacy {
@@ -2927,14 +2963,22 @@ select.bug-tab-select option{background:#fff;color:var(--text);font-weight:500;t
     cursor: pointer;
   }
   .list-chip svg { width: 14px; height: 14px; color: var(--text-muted); }
-  .list-chip.active,
-  .list-chip.neon-on {
+  .list-chip.active {
     background: var(--green-100);
     border-color: var(--green-200);
     color: var(--green-700);
   }
-  .list-chip.active svg,
-  .list-chip.neon-on svg { color: var(--green-700); }
+  .list-chip.active svg { color: var(--green-700); }
+  /* Filtres actifs : pilule pleine, comme .cmd-btn.neon-on en desktop.
+     Le vert clair de « Sélection » se distinguait mal sur la barre blanche. */
+  .list-chip.neon-on {
+    background: var(--green-600);
+    border-color: var(--green-600);
+    color: #fff;
+    font-weight: 700;
+  }
+  .list-chip.neon-on svg { color: #fff; }
+  .list-chip.neon-on .filter-count-badge { background: rgba(255, 255, 255, .26); }
   .list-chip .filter-count-badge { margin-left: 2px; }
   .um-mobile-only { display: flex; }
 
