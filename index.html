@@ -105,7 +105,7 @@
             <span class="filter-sheet-title"><span class="filter-sheet-title-ico" data-icon="filter" aria-hidden="true"></span>Filtres</span>
             <div style="display:flex;gap:8px;align-items:center;">
               <button class="btn btn-ghost btn-sm js-save-preset" type="button" style="display:none">Enregistrer</button>
-              <button class="filter-clear-btn" id="btn-reset-filters" type="button"><span class="tb-ico" data-icon="rotateCcw" aria-hidden="true"></span><span class="js-clear-label">Tout effacer</span></button>
+              <button class="filter-clear-btn js-clear-filters" id="btn-reset-filters" type="button"><span class="tb-ico" data-icon="rotateCcw" aria-hidden="true"></span><span class="js-clear-label">Tout effacer</span></button>
               <button class="filter-sheet-close" id="filter-sheet-close" title="Fermer"><span class="tb-ico" data-icon="x"></span></button>
             </div>
           </div>
@@ -171,7 +171,7 @@
           <!-- Pied du rail docké (2a) : remplace la croix et le CTA du popover -->
           <div class="filter-rail-foot">
             <span id="filter-active-count">Aucun filtre actif</span>
-            <button type="button" class="filter-clear-btn" id="btn-reset-filters-rail"><span class="tb-ico" data-icon="rotateCcw" aria-hidden="true"></span><span class="js-clear-label">Tout effacer</span></button>
+            <button type="button" class="filter-clear-btn js-clear-filters" id="btn-reset-filters-rail"><span class="tb-ico" data-icon="rotateCcw" aria-hidden="true"></span><span class="js-clear-label">Tout effacer</span></button>
             <span class="preset-save-foot" style="display:none"><span aria-hidden="true">·</span><button type="button" class="js-save-preset">Enregistrer</button></span>
           </div>
         </div>
@@ -188,6 +188,12 @@
             <button type="button" class="list-chip js-toggle-filter">
               <span class="tb-ico" data-icon="filter" aria-hidden="true"></span><span>Filtres</span>
               <span class="filter-count-badge js-filter-count" style="display:none;">0</span>
+            </button>
+            <!-- Effacer : 3e porteur de resetAllFilters (avec l'en-tête du panneau et
+                 le pied du rail), monté seulement si un filtre est posé. Sans lui,
+                 effacer en mobile obligeait à ouvrir la feuille et à viser un lien. -->
+            <button type="button" class="list-chip list-chip-clear js-clear-filters js-clear-chip" style="display:none;">
+              <span class="tb-ico" data-icon="rotateCcw" aria-hidden="true"></span><span>Effacer</span>
             </button>
             <button type="button" class="list-chip js-sort-btn">
               <span class="tb-ico" data-icon="arrowUpDown" aria-hidden="true"></span><span class="js-sort-label">A→Z</span>
@@ -4987,8 +4993,9 @@ function resetAllFilters() {
   buildFilterBar();
   renderRecipes();
 }
-document.getElementById('btn-reset-filters').onclick = resetAllFilters;
-document.getElementById('btn-reset-filters-rail').onclick = resetAllFilters; // pied du rail docké
+// Trois porteurs (en-tête du panneau, pied du rail docké, puce mobile) : par
+// classe, jamais par id — cf. .js-selection-only.
+document.querySelectorAll('.js-clear-filters').forEach(b => { b.onclick = resetAllFilters; });
 
 /* ---- Modèles de filtres ----
    Un jeu de critères du rail enregistré sous un nom, réappliqué d'un clic.
@@ -5175,6 +5182,10 @@ function updateFilterBadge() {
   // seul : l'icône est un frère, elle n'est pas détruite.
   document.querySelectorAll('.js-clear-label').forEach(el => {
     el.textContent = count > 0 ? 'Effacer ' + count : 'Tout effacer';
+  });
+  // La puce mobile, elle, n'a de sens que s'il y a quelque chose à effacer.
+  document.querySelectorAll('.js-clear-chip').forEach(el => {
+    el.style.display = count > 0 ? '' : 'none';
   });
   // Pied du rail docké : « N filtre(s) actif(s) »
   const railCount = document.getElementById('filter-active-count');

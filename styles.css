@@ -2979,6 +2979,15 @@ select.bug-tab-select option{background:#fff;color:var(--text);font-weight:500;t
   }
   .list-chip.neon-on svg { color: #fff; }
   .list-chip.neon-on .filter-count-badge { background: rgba(255, 255, 255, .26); }
+  /* « Effacer » : contour vert, pas pilule pleine — c'est une action, pas un
+     état, et elle ne doit pas rivaliser avec la puce Filtres qui la précède. */
+  .list-chip-clear {
+    background: rgba(255, 255, 255, .85);
+    border-color: var(--green-200);
+    color: var(--green-700);
+    font-weight: 700;
+  }
+  .list-chip-clear svg { color: var(--green-700); }
   .list-chip .filter-count-badge { margin-left: 2px; }
   .um-mobile-only { display: flex; }
 
