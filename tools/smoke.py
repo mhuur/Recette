@@ -64,6 +64,7 @@ setTimeout(function () {
     c.cssLoaded = /forest-bg/.test(bb.backgroundImage) && /Manrope/.test(bs.fontFamily);
     c.appRendered  = !!document.querySelector('#recipes-container');
     c.starPicker   = typeof createStarPicker === 'function';
+    c.filterPresets = typeof renderFilterPresets === 'function' && typeof renderFilterPresetsSettings === 'function';
     c.ratingStars  = (ratingStars(10).match(/<svg/g) || []).length;
     c.renderTabs   = ['renderRecipes','renderDataTab','renderDebug','renderShopping']
                        .filter(function (f) { return typeof window[f] === 'function'; }).length;
@@ -170,6 +171,8 @@ def main():
         problems.append(f"{c.get('renderTabs')}/4 fonctions render* definies")
     if not c.get("starPicker"):
         problems.append("createStarPicker absent")
+    if not c.get("filterPresets"):
+        problems.append("renderFilterPresets / renderFilterPresetsSettings absentes")
 
     if problems:
         for p in problems:

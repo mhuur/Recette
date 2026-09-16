@@ -6889,6 +6889,7 @@ document.getElementById('btn-add-family').onclick = () => {
       ingredientTypes: state.ingredientTypes,
       ingredientFamilies: state.ingredientFamilies,
       mealTypes: state.mealTypes,
+      filterPresets: state.filterPresets || [],
       notes: state.notes || ''
     };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -6919,6 +6920,7 @@ document.getElementById('btn-add-family').onclick = () => {
           state.ingredientTypes = data.ingredientTypes || [];
           state.ingredientFamilies = data.ingredientFamilies || state.ingredientFamilies || [];
           state.mealTypes = data.mealTypes || [...DEFAULT_MEAL_TYPES];
+          state.filterPresets = Array.isArray(data.filterPresets) ? data.filterPresets : (state.filterPresets || []);
           state.selectedRecipeIds = [];
           state.checkedShoppingItems = [];
           save();
