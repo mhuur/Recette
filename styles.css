@@ -2462,7 +2462,7 @@ body.filter-rail-on .time-presets-group { gap: 12px; }
   display: flex;
   align-items: center;
   justify-content: space-between;
-  flex-wrap: wrap; row-gap: 8px; /* « Mettre à jour · Enregistrer nouveau · Effacer N · × » ne tient pas sur 360px */
+  flex-wrap: wrap; row-gap: 8px; /* « Enregistrer · Enregistrer sous · Effacer N · × » ne tient pas sur 360px */
   padding: 14px 16px 12px;
   border-bottom: 1px solid var(--border-soft);
   flex-shrink: 0;
@@ -2555,6 +2555,8 @@ body.filter-rail-on .time-presets-group { gap: 12px; }
   .filter-sheet-close,
   .filter-sheet-footer,
   .filter-sheet-header #btn-reset-filters,
+  .filter-sheet-header .js-save-preset,
+  .filter-sheet-header .js-save-preset-new,
   #btn-toggle-filter { display: none; }
 
   /* --- Colonnes figées, seules les LIGNES de recettes défilent ---
