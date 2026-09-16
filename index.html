@@ -314,6 +314,15 @@
         <button class="btn btn-sm btn-danger" id="btn-empty-trash">Vider la corbeille</button>
       </div>
     </div>
+    <div class="data-section">
+      <h3><span class="tb-ico" data-icon="save"></span>Sauvegarde</h3>
+      <p style="font-size:13px; color:var(--text-muted);">Export complet du carnet en <b>.json</b> (recettes, ingrédients, unités, types, familles). L'import <b>remplace</b> toutes les données par le contenu du fichier.</p>
+      <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <button class="btn btn-sm" id="btn-export-json"><span class="tb-ico" data-icon="download"></span>Exporter en JSON</button>
+        <button class="btn btn-sm" id="btn-import-json"><span class="tb-ico" data-icon="uploadCloud"></span>Importer un JSON</button>
+        <input type="file" id="import-json-file" accept="application/json,.json" style="display:none;">
+      </div>
+    </div>
   </section>
 
   <!-- Onglet Paramètres -->
@@ -6868,17 +6877,19 @@ document.getElementById('btn-add-family').onclick = () => {
       try {
         const data = JSON.parse(ev.target.result);
         if (!data.recipes) throw new Error('Format invalide');
-        if (!confirm('Remplacer toutes tes données actuelles par le contenu du fichier ?')) return;
-        state.recipes = data.recipes || [];
-        state.ingredients = data.ingredients || [];
-        state.units = data.units || [];
-        state.ingredientTypes = data.ingredientTypes || [];
-        state.mealTypes = data.mealTypes || [...DEFAULT_MEAL_TYPES];
-        state.selectedRecipeIds = [];
-        state.checkedShoppingItems = [];
-        save();
-        rerenderAll();
-        toast('Import réussi : ' + state.recipes.length + ' recettes', 'success');
+        showConfirm('Importer ce fichier ?', 'Remplacer toutes tes données actuelles par le contenu du fichier (' + (data.recipes.length) + ' recettes) ?', 'Remplacer', () => {
+          state.recipes = data.recipes || [];
+          state.ingredients = data.ingredients || [];
+          state.units = data.units || [];
+          state.ingredientTypes = data.ingredientTypes || [];
+          state.ingredientFamilies = data.ingredientFamilies || state.ingredientFamilies || [];
+          state.mealTypes = data.mealTypes || [...DEFAULT_MEAL_TYPES];
+          state.selectedRecipeIds = [];
+          state.checkedShoppingItems = [];
+          save();
+          rerenderAll();
+          toast('Import réussi : ' + state.recipes.length + ' recettes', 'success');
+        });
       } catch (err) {
         toast('Erreur d\'import : ' + err.message, 'error');
       }
