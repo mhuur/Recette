@@ -1,0 +1,2732 @@
+{
+"https://fruits-legumes.org/calamansi/": {
+"name": "Calamansi",
+"type": "fruit",
+"cat": "agrume",
+"fam": "rutacees",
+"mois": [
+"janvier",
+"fevrier",
+"mars",
+"avril",
+"mai",
+"juin",
+"juillet",
+"aout",
+"septembre",
+"octobre",
+"novembre",
+"decembre"
+],
+"pic": [
+"septembre",
+"octobre"
+]
+},
+"https://fruits-legumes.org/citron/": {
+"name": "Citron",
+"type": "fruit",
+"cat": "agrume",
+"fam": "rutacees",
+"mois": [
+"janvier",
+"fevrier",
+"mars",
+"avril",
+"mai",
+"juin",
+"juillet",
+"aout",
+"septembre",
+"octobre",
+"novembre",
+"decembre"
+],
+"pic": [
+"janvier",
+"fevrier"
+]
+},
+"https://fruits-legumes.org/clementine/": {
+"name": "Clémentine",
+"type": "fruit",
+"cat": "agrume",
+"fam": "rutacees",
+"mois": [
+"janvier",
+"fevrier",
+"novembre",
+"decembre"
+],
+"pic": [
+"janvier",
+"decembre"
+]
+},
+"https://fruits-legumes.org/combava/": {
+"name": "Combava",
+"type": "fruit",
+"cat": "agrume",
+"fam": "rutacees",
+"mois": [
+"janvier",
+"fevrier",
+"mars",
+"avril",
+"mai",
+"juin",
+"juillet",
+"aout",
+"septembre",
+"octobre",
+"novembre",
+"decembre"
+],
+"pic": [
+"octobre",
+"novembre"
+]
+},
+"https://fruits-legumes.org/kumquat/": {
+"name": "Kumquat",
+"type": "fruit",
+"cat": "agrume",
+"fam": "rutacees",
+"mois": [
+"novembre",
+"decembre"
+],
+"pic": [
+"decembre"
+]
+},
+"https://fruits-legumes.org/mandarine/": {
+"name": "Mandarine",
+"type": "fruit",
+"cat": "agrume",
+"fam": "rutacees",
+"mois": [
+"janvier",
+"fevrier",
+"mars",
+"octobre",
+"novembre",
+"decembre"
+],
+"pic": [
+"janvier",
+"decembre"
+]
+},
+"https://fruits-legumes.org/orange/": {
+"name": "Orange",
+"type": "fruit",
+"cat": "agrume",
+"fam": "rutacees",
+"mois": [
+"janvier",
+"fevrier",
+"novembre",
+"decembre"
+],
+"pic": [
+"janvier",
+"fevrier"
+]
+},
+"https://fruits-legumes.org/orange-sanguine/": {
+"name": "Orange sanguine",
+"type": "fruit",
+"cat": "agrume",
+"fam": "rutacees",
+"mois": [
+"janvier",
+"fevrier",
+"mars",
+"decembre"
+],
+"pic": [
+"fevrier",
+"mars"
+]
+},
+"https://fruits-legumes.org/pamplemousse/": {
+"name": "Pamplemousse",
+"type": "fruit",
+"cat": "agrume",
+"fam": "rutacees",
+"mois": [
+"janvier",
+"fevrier",
+"mars",
+"decembre"
+],
+"pic": [
+"fevrier",
+"mars"
+]
+},
+"https://fruits-legumes.org/airelle/": {
+"name": "Airelle",
+"type": "fruit",
+"cat": "baie",
+"fam": "ericacees",
+"mois": [
+"juillet",
+"aout"
+],
+"pic": [
+"juillet",
+"aout"
+]
+},
+"https://fruits-legumes.org/argousier/": {
+"name": "Argousier",
+"type": "fruit",
+"cat": "baie",
+"fam": "eleagnacees",
+"mois": [
+"aout",
+"septembre",
+"octobre"
+],
+"pic": [
+"septembre"
+]
+},
+"https://fruits-legumes.org/aronia/": {
+"name": "Aronia",
+"type": "fruit",
+"cat": "baie",
+"fam": "rosacees",
+"mois": [
+"aout",
+"septembre",
+"octobre"
+],
+"pic": [
+"septembre"
+]
+},
+"https://fruits-legumes.org/baie-de-goji/": {
+"name": "Baie de goji",
+"type": "fruit",
+"cat": "baie",
+"fam": "solanacees",
+"mois": [
+"janvier",
+"fevrier",
+"mars",
+"avril",
+"mai",
+"juin",
+"juillet",
+"aout",
+"septembre",
+"octobre",
+"novembre",
+"decembre"
+],
+"pic": [
+"septembre",
+"octobre"
+]
+},
+"https://fruits-legumes.org/cassis/": {
+"name": "Cassis",
+"type": "fruit",
+"cat": "baie",
+"fam": "grossulariacees",
+"mois": [
+"juillet",
+"aout"
+],
+"pic": [
+"juillet",
+"aout"
+]
+},
+"https://fruits-legumes.org/cornouille/": {
+"name": "Cornouille",
+"type": "fruit",
+"cat": "baie",
+"fam": "cornacees",
+"mois": [
+"aout",
+"septembre",
+"octobre"
+],
+"pic": [
+"septembre"
+]
+},
+"https://fruits-legumes.org/cranberry/": {
+"name": "Cranberry",
+"type": "fruit",
+"cat": "baie",
+"fam": "ericacees",
+"mois": [
+"octobre",
+"novembre",
+"decembre",
+"janvier"
+],
+"pic": [
+"octobre",
+"novembre"
+]
+},
+"https://fruits-legumes.org/fraise/": {
+"name": "Fraise",
+"type": "fruit",
+"cat": "baie",
+"fam": "rosacees",
+"mois": [
+"mai",
+"juin",
+"juillet",
+"aout"
+],
+"pic": [
+"juin",
+"juillet"
+]
+},
+"https://fruits-legumes.org/fraise-des-bois/": {
+"name": "Fraise des bois",
+"type": "fruit",
+"cat": "baie",
+"fam": "rosacees",
+"mois": [
+"mai",
+"juin",
+"juillet",
+"aout"
+],
+"pic": [
+"juin",
+"juillet"
+]
+},
+"https://fruits-legumes.org/framboise/": {
+"name": "Framboise",
+"type": "fruit",
+"cat": "baie",
+"fam": "rosacees",
+"mois": [
+"juin",
+"juillet",
+"aout",
+"septembre"
+],
+"pic": [
+"juillet",
+"aout"
+]
+},
+"https://fruits-legumes.org/grenade/": {
+"name": "Grenade",
+"type": "fruit",
+"cat": "baie",
+"fam": "lythracees",
+"mois": [
+"janvier",
+"fevrier",
+"novembre",
+"decembre"
+],
+"pic": [
+"novembre",
+"decembre"
+]
+},
+"https://fruits-legumes.org/groseille/": {
+"name": "Groseille",
+"type": "fruit",
+"cat": "baie",
+"fam": "grossulariacees",
+"mois": [
+"juin",
+"juillet"
+],
+"pic": [
+"juillet"
+]
+},
+"https://fruits-legumes.org/groseille-a-maquereau/": {
+"name": "Groseille à maquereau",
+"type": "fruit",
+"cat": "baie",
+"fam": "grossulariacees",
+"mois": [
+"juin",
+"juillet",
+"aout"
+],
+"pic": [
+"juillet"
+]
+},
+"https://fruits-legumes.org/kiwai/": {
+"name": "Kiwaï",
+"type": "fruit",
+"cat": "baie",
+"fam": "actinidiacees",
+"mois": [
+"septembre",
+"octobre"
+],
+"pic": [
+"septembre",
+"octobre"
+]
+},
+"https://fruits-legumes.org/mure/": {
+"name": "Mûre",
+"type": "fruit",
+"cat": "baie",
+"fam": "rosacees",
+"mois": [
+"juillet",
+"aout",
+"septembre"
+],
+"pic": [
+"aout",
+"septembre"
+]
+},
+"https://fruits-legumes.org/myrtille/": {
+"name": "Myrtille",
+"type": "fruit",
+"cat": "baie",
+"fam": "ericacees",
+"mois": [
+"juillet",
+"aout",
+"septembre"
+],
+"pic": [
+"juillet",
+"aout"
+]
+},
+"https://fruits-legumes.org/physalis/": {
+"name": "Physalis",
+"type": "fruit",
+"cat": "baie",
+"fam": "solanacees",
+"mois": [
+"janvier",
+"fevrier",
+"mars",
+"avril",
+"mai",
+"juin",
+"juillet",
+"aout",
+"septembre",
+"octobre",
+"novembre",
+"decembre"
+],
+"pic": [
+"septembre",
+"octobre"
+]
+},
+"https://fruits-legumes.org/raisin/": {
+"name": "Raisin",
+"type": "fruit",
+"cat": "baie",
+"fam": "vitacees",
+"mois": [
+"septembre",
+"octobre"
+],
+"pic": [
+"septembre",
+"octobre"
+]
+},
+"https://fruits-legumes.org/sureau/": {
+"name": "Sureau",
+"type": "fruit",
+"cat": "baie",
+"fam": "adoxacees",
+"mois": [
+"aout",
+"septembre"
+],
+"pic": [
+"septembre"
+]
+},
+"https://fruits-legumes.org/abricot/": {
+"name": "Abricot",
+"type": "fruit",
+"cat": "fruit a noyau",
+"fam": "rosacees",
+"mois": [
+"juillet",
+"aout"
+],
+"pic": [
+"juillet"
+]
+},
+"https://fruits-legumes.org/cerise/": {
+"name": "Cerise",
+"type": "fruit",
+"cat": "fruit a noyau",
+"fam": "rosacees",
+"mois": [
+"juin",
+"juillet",
+"aout"
+],
+"pic": [
+"juin",
+"juillet"
+]
+},
+"https://fruits-legumes.org/jujube/": {
+"name": "Jujube",
+"type": "fruit",
+"cat": "fruit a noyau",
+"fam": "rhamnacees",
+"mois": [
+"septembre",
+"octobre"
+],
+"pic": [
+"octobre"
+]
+},
+"https://fruits-legumes.org/mirabelle/": {
+"name": "Mirabelle",
+"type": "fruit",
+"cat": "fruit a noyau",
+"fam": "rosacees",
+"mois": [
+"aout",
+"septembre"
+],
+"pic": [
+"aout",
+"septembre"
+]
+},
+"https://fruits-legumes.org/nectarine/": {
+"name": "Nectarine",
+"type": "fruit",
+"cat": "fruit a noyau",
+"fam": "rosacees",
+"mois": [
+"juin",
+"juillet",
+"aout",
+"septembre"
+],
+"pic": [
+"juillet",
+"aout"
+]
+},
+"https://fruits-legumes.org/peche/": {
+"name": "Pêche",
+"type": "fruit",
+"cat": "fruit a noyau",
+"fam": "rosacees",
+"mois": [
+"juin",
+"juillet",
+"aout",
+"septembre"
+],
+"pic": [
+"juillet",
+"aout"
+]
+},
+"https://fruits-legumes.org/prune/": {
+"name": "Prune",
+"type": "fruit",
+"cat": "fruit a noyau",
+"fam": "rosacees",
+"mois": [
+"aout",
+"septembre",
+"octobre"
+],
+"pic": [
+"aout",
+"septembre"
+]
+},
+"https://fruits-legumes.org/quetsche/": {
+"name": "Quetsche",
+"type": "fruit",
+"cat": "fruit a noyau",
+"fam": "rosacees",
+"mois": [
+"aout",
+"septembre",
+"octobre"
+],
+"pic": [
+"septembre"
+]
+},
+"https://fruits-legumes.org/reine-claude/": {
+"name": "Reine-claude",
+"type": "fruit",
+"cat": "fruit a noyau",
+"fam": "rosacees",
+"mois": [
+"aout",
+"septembre"
+],
+"pic": [
+"aout"
+]
+},
+"https://fruits-legumes.org/coing/": {
+"name": "Coing",
+"type": "fruit",
+"cat": "fruit a pepins",
+"fam": "rosacees",
+"mois": [
+"septembre",
+"octobre"
+],
+"pic": [
+"octobre"
+]
+},
+"https://fruits-legumes.org/figue-fraiche/": {
+"name": "Figue fraîche",
+"type": "fruit",
+"cat": "fruit a pepins",
+"fam": "moracees",
+"mois": [
+"aout",
+"septembre",
+"octobre"
+],
+"pic": [
+"septembre"
+]
+},
+"https://fruits-legumes.org/nashi/": {
+"name": "Nashi",
+"type": "fruit",
+"cat": "fruit a pepins",
+"fam": "rosacees",
+"mois": [
+"aout",
+"septembre",
+"octobre"
+],
+"pic": [
+"septembre"
+]
+},
+"https://fruits-legumes.org/poire/": {
+"name": "Poire",
+"type": "fruit",
+"cat": "fruit a pepins",
+"fam": "rosacees",
+"mois": [
+"janvier",
+"aout",
+"septembre",
+"octobre",
+"novembre",
+"decembre"
+],
+"pic": [
+"septembre",
+"octobre"
+]
+},
+"https://fruits-legumes.org/pomme/": {
+"name": "Pomme",
+"type": "fruit",
+"cat": "fruit a pepins",
+"fam": "rosacees",
+"mois": [
+"janvier",
+"fevrier",
+"mars",
+"octobre",
+"novembre",
+"decembre"
+],
+"pic": [
+"octobre",
+"novembre"
+]
+},
+"https://fruits-legumes.org/amande/": {
+"name": "Amande",
+"type": "fruit",
+"cat": "fruit a coque",
+"fam": "rosacees",
+"mois": [
+"aout",
+"septembre"
+],
+"pic": [
+"septembre"
+]
+},
+"https://fruits-legumes.org/cacahuete/": {
+"name": "Cacahuète",
+"type": "fruit",
+"cat": "fruit a coque",
+"fam": "fabacees",
+"mois": [
+"janvier",
+"fevrier",
+"mars",
+"avril",
+"mai",
+"juin",
+"juillet",
+"aout",
+"septembre",
+"octobre",
+"novembre",
+"decembre"
+],
+"pic": [
+"septembre",
+"octobre"
+]
+},
+"https://fruits-legumes.org/chataigne/": {
+"name": "Châtaigne",
+"type": "fruit",
+"cat": "fruit a coque",
+"fam": "fagacees",
+"mois": [
+"septembre",
+"octobre",
+"novembre",
+"decembre"
+],
+"pic": [
+"octobre",
+"novembre"
+]
+},
+"https://fruits-legumes.org/marron/": {
+"name": "Marron",
+"type": "fruit",
+"cat": "fruit a coque",
+"fam": "fagacees",
+"mois": [
+"aout",
+"septembre",
+"octobre",
+"novembre",
+"decembre"
+],
+"pic": [
+"octobre",
+"novembre"
+]
+},
+"https://fruits-legumes.org/noisette/": {
+"name": "Noisette",
+"type": "fruit",
+"cat": "fruit a coque",
+"fam": "betulacees",
+"mois": [
+"aout",
+"septembre",
+"octobre"
+],
+"pic": [
+"septembre",
+"octobre"
+]
+},
+"https://fruits-legumes.org/noix/": {
+"name": "Noix",
+"type": "fruit",
+"cat": "fruit a coque",
+"fam": "juglandacees",
+"mois": [
+"septembre",
+"octobre",
+"novembre"
+],
+"pic": [
+"octobre"
+]
+},
+"https://fruits-legumes.org/noix-de-pecan/": {
+"name": "Noix de pécan",
+"type": "fruit",
+"cat": "fruit a coque",
+"fam": "juglandacees",
+"mois": [
+"janvier",
+"fevrier",
+"mars",
+"avril",
+"mai",
+"juin",
+"juillet",
+"aout",
+"septembre",
+"octobre",
+"novembre",
+"decembre"
+],
+"pic": [
+"octobre",
+"novembre"
+]
+},
+"https://fruits-legumes.org/petit-cola/": {
+"name": "Petit cola",
+"type": "fruit",
+"cat": "fruit a coque",
+"fam": "clusiacees",
+"mois": [
+"janvier",
+"fevrier",
+"mars",
+"avril",
+"mai",
+"juin",
+"juillet",
+"aout",
+"septembre",
+"octobre",
+"novembre",
+"decembre"
+],
+"pic": [
+"aout",
+"septembre"
+]
+},
+"https://fruits-legumes.org/pistache/": {
+"name": "Pistache",
+"type": "fruit",
+"cat": "fruit a coque",
+"fam": "anacardiacees",
+"mois": [
+"janvier",
+"fevrier",
+"mars",
+"avril",
+"mai",
+"juin",
+"juillet",
+"aout",
+"septembre",
+"octobre",
+"novembre",
+"decembre"
+],
+"pic": [
+"septembre",
+"octobre"
+]
+},
+"https://fruits-legumes.org/ananas/": {
+"name": "Ananas",
+"type": "fruit",
+"cat": "fruit exotique",
+"fam": "bromeliacees",
+"mois": [
+"janvier",
+"fevrier",
+"mars",
+"novembre",
+"decembre"
+],
+"pic": [
+"janvier",
+"decembre"
+]
+},
+"https://fruits-legumes.org/avocat/": {
+"name": "Avocat",
+"type": "fruit",
+"cat": "fruit exotique",
+"fam": "lauracees",
+"mois": [
+"janvier",
+"fevrier",
+"mars",
+"avril",
+"mai",
+"septembre",
+"octobre",
+"novembre",
+"decembre"
+],
+"pic": [
+"novembre",
+"decembre"
+]
+},
+"https://fruits-legumes.org/banane/": {
+"name": "Banane",
+"type": "fruit",
+"cat": "fruit exotique",
+"fam": "musacees",
+"mois": [
+"janvier",
+"fevrier",
+"mars",
+"avril",
+"mai",
+"juin",
+"juillet",
+"aout",
+"septembre",
+"octobre",
+"novembre",
+"decembre"
+],
+"pic": [
+"janvier",
+"fevrier"
+]
+},
+"https://fruits-legumes.org/banane-plantain/": {
+"name": "Banane plantain",
+"type": "fruit",
+"cat": "fruit exotique",
+"fam": "musacees",
+"mois": [
+"janvier",
+"fevrier",
+"mars",
+"avril",
+"mai",
+"juin",
+"juillet",
+"aout",
+"septembre",
+"octobre",
+"novembre",
+"decembre"
+],
+"pic": [
+"octobre",
+"novembre"
+]
+},
+"https://fruits-legumes.org/barbadine/": {
+"name": "Barbadine",
+"type": "fruit",
+"cat": "fruit exotique",
+"fam": "passifloracees",
+"mois": [
+"juillet",
+"aout",
+"septembre",
+"octobre",
+"novembre",
+"decembre"
+],
+"pic": [
+"septembre",
+"octobre"
+]
+},
+"https://fruits-legumes.org/cachiman/": {
+"name": "Cachiman",
+"type": "fruit",
+"cat": "fruit exotique",
+"fam": "annonacees",
+"mois": [
+"aout",
+"septembre",
+"octobre",
+"novembre"
+],
+"pic": [
+"septembre",
+"octobre"
+]
+},
+"https://fruits-legumes.org/datte/": {
+"name": "Datte",
+"type": "fruit",
+"cat": "fruit exotique",
+"fam": "arecacees",
+"mois": [
+"janvier",
+"fevrier",
+"mars",
+"aout",
+"septembre",
+"octobre",
+"novembre",
+"decembre"
+],
+"pic": [
+"novembre",
+"decembre"
+]
+},
+"https://fruits-legumes.org/figue-de-barbarie/": {
+"name": "Figue de Barbarie",
+"type": "fruit",
+"cat": "fruit exotique",
+"fam": "cactacees",
+"mois": [
+"aout",
+"septembre",
+"octobre"
+],
+"pic": [
+"septembre"
+]
+},
+"https://fruits-legumes.org/fruit-a-pain/": {
+"name": "Fruit à pain",
+"type": "fruit",
+"cat": "fruit exotique",
+"fam": "moracees",
+"mois": [
+"juin",
+"juillet",
+"aout",
+"septembre",
+"octobre"
+],
+"pic": [
+"aout",
+"septembre"
+]
+},
+"https://fruits-legumes.org/fruit-de-la-passion/": {
+"name": "Fruit de la passion",
+"type": "fruit",
+"cat": "fruit exotique",
+"fam": "passifloracees",
+"mois": [
+"janvier",
+"fevrier",
+"mars",
+"avril",
+"mai",
+"juin",
+"juillet",
+"aout",
+"septembre",
+"octobre",
+"novembre",
+"decembre"
+],
+"pic": [
+"janvier",
+"fevrier"
+]
+},
+"https://fruits-legumes.org/kaki/": {
+"name": "Kaki",
+"type": "fruit",
+"cat": "fruit exotique",
+"fam": "ebenacees",
+"mois": [
+"janvier",
+"octobre",
+"novembre",
+"decembre"
+],
+"pic": [
+"novembre",
+"decembre"
+]
+},
+"https://fruits-legumes.org/kiwi/": {
+"name": "Kiwi",
+"type": "fruit",
+"cat": "fruit exotique",
+"fam": "actinidiacees",
+"mois": [
+"janvier",
+"fevrier",
+"mars",
+"avril",
+"mai",
+"novembre",
+"decembre"
+],
+"pic": [
+"janvier",
+"fevrier"
+]
+},
+"https://fruits-legumes.org/litchi/": {
+"name": "Litchi",
+"type": "fruit",
+"cat": "fruit exotique",
+"fam": "sapindacees",
+"mois": [
+"janvier",
+"fevrier",
+"avril",
+"juin",
+"juillet",
+"aout",
+"septembre",
+"octobre",
+"decembre"
+],
+"pic": [
+"janvier",
+"decembre"
+]
+},
+"https://fruits-legumes.org/longane/": {
+"name": "Longane",
+"type": "fruit",
+"cat": "fruit exotique",
+"fam": "sapindacees",
+"mois": [
+"juillet",
+"aout",
+"septembre",
+"octobre"
+],
+"pic": [
+"aout",
+"septembre"
+]
+},
+"https://fruits-legumes.org/mangue/": {
+"name": "Mangue",
+"type": "fruit",
+"cat": "fruit exotique",
+"fam": "anacardiacees",
+"mois": [
+"janvier",
+"fevrier",
+"mars",
+"avril",
+"mai",
+"juin",
+"juillet",
+"aout",
+"septembre",
+"octobre",
+"novembre",
+"decembre"
+],
+"pic": [
+"mai",
+"juin"
+]
+},
+"https://fruits-legumes.org/papaye/": {
+"name": "Papaye",
+"type": "fruit",
+"cat": "fruit exotique",
+"fam": "caricacees",
+"mois": [
+"janvier",
+"fevrier",
+"mars",
+"avril",
+"mai",
+"juin",
+"juillet",
+"aout",
+"septembre",
+"octobre",
+"novembre",
+"decembre"
+],
+"pic": [
+"octobre",
+"novembre"
+]
+},
+"https://fruits-legumes.org/pawpaw/": {
+"name": "Pawpaw",
+"type": "fruit",
+"cat": "fruit exotique",
+"fam": "annonacees",
+"mois": [
+"septembre",
+"octobre"
+],
+"pic": [
+"septembre"
+]
+},
+"https://fruits-legumes.org/pepino/": {
+"name": "Pepino",
+"type": "fruit",
+"cat": "fruit exotique",
+"fam": "solanacees",
+"mois": [
+"janvier",
+"fevrier",
+"mars",
+"avril",
+"mai",
+"juin",
+"juillet",
+"aout",
+"septembre",
+"octobre",
+"novembre",
+"decembre"
+],
+"pic": [
+"septembre",
+"octobre"
+]
+},
+"https://fruits-legumes.org/pomme-cannelle/": {
+"name": "Pomme cannelle",
+"type": "fruit",
+"cat": "fruit exotique",
+"fam": "annonacees",
+"mois": [
+"aout",
+"septembre",
+"octobre",
+"novembre"
+],
+"pic": [
+"septembre",
+"octobre"
+]
+},
+"https://fruits-legumes.org/safou/": {
+"name": "Safou",
+"type": "fruit",
+"cat": "fruit exotique",
+"fam": "burseracees",
+"mois": [
+"juin",
+"juillet",
+"aout",
+"septembre",
+"octobre"
+],
+"pic": [
+"aout",
+"septembre"
+]
+},
+"https://fruits-legumes.org/melon/": {
+"name": "Melon",
+"type": "fruit",
+"cat": "melon et pasteque",
+"fam": "cucurbitacees",
+"mois": [
+"juin",
+"juillet",
+"aout",
+"septembre"
+],
+"pic": [
+"juillet",
+"aout"
+]
+},
+"https://fruits-legumes.org/pasteque/": {
+"name": "Pastèque",
+"type": "fruit",
+"cat": "melon et pasteque",
+"fam": "cucurbitacees",
+"mois": [
+"juin",
+"juillet",
+"aout",
+"septembre"
+],
+"pic": [
+"juillet",
+"aout"
+]
+},
+"https://fruits-legumes.org/tomate/": {
+"name": "Tomate",
+"type": "fruit",
+"cat": "legume-fruit",
+"fam": "solanacees",
+"mois": [
+"juin",
+"juillet",
+"aout",
+"septembre"
+],
+"pic": [
+"juillet",
+"aout"
+]
+},
+"https://fruits-legumes.org/tomate-charnue/": {
+"name": "Tomate charnue",
+"type": "fruit",
+"cat": "legume-fruit",
+"fam": "solanacees",
+"mois": [
+"juin",
+"juillet",
+"aout",
+"septembre"
+],
+"pic": [
+"juillet",
+"aout"
+]
+},
+"https://fruits-legumes.org/tomate-peretti/": {
+"name": "Tomate Peretti",
+"type": "fruit",
+"cat": "legume-fruit",
+"fam": "solanacees",
+"mois": [
+"juin",
+"juillet",
+"aout",
+"septembre"
+],
+"pic": [
+"juillet",
+"aout"
+]
+},
+"https://fruits-legumes.org/cepe/": {
+"name": "Cèpe",
+"type": "legume",
+"cat": "champignon",
+"fam": "boletacees",
+"mois": [
+"aout",
+"septembre",
+"octobre",
+"novembre"
+],
+"pic": [
+"septembre",
+"octobre"
+]
+},
+"https://fruits-legumes.org/champignon-de-paris/": {
+"name": "Champignon de Paris",
+"type": "legume",
+"cat": "champignon",
+"fam": "agaricacees",
+"mois": [
+"janvier",
+"fevrier",
+"mars",
+"avril",
+"mai",
+"juin",
+"juillet",
+"aout",
+"septembre",
+"octobre",
+"novembre",
+"decembre"
+],
+"pic": [
+"octobre",
+"novembre"
+]
+},
+"https://fruits-legumes.org/girolle/": {
+"name": "Girolle",
+"type": "legume",
+"cat": "champignon",
+"fam": "cantharellacees",
+"mois": [
+"juin",
+"juillet",
+"aout",
+"septembre",
+"octobre",
+"novembre"
+],
+"pic": [
+"aout",
+"septembre"
+]
+},
+"https://fruits-legumes.org/pied-de-mouton/": {
+"name": "Pied de mouton",
+"type": "legume",
+"cat": "champignon",
+"fam": "hydnacees",
+"mois": [
+"aout",
+"septembre",
+"octobre",
+"novembre"
+],
+"pic": [
+"octobre"
+]
+},
+"https://fruits-legumes.org/rose-des-pres/": {
+"name": "Rosé des prés",
+"type": "legume",
+"cat": "champignon",
+"fam": "agaricacees",
+"mois": [
+"aout",
+"septembre",
+"octobre",
+"novembre"
+],
+"pic": [
+"septembre",
+"octobre"
+]
+},
+"https://fruits-legumes.org/shiitake/": {
+"name": "Shiitaké",
+"type": "legume",
+"cat": "champignon",
+"fam": "omphalotacees",
+"mois": [
+"janvier",
+"fevrier",
+"mars",
+"avril",
+"mai",
+"juin",
+"juillet",
+"aout",
+"septembre",
+"octobre",
+"novembre",
+"decembre"
+],
+"pic": [
+"octobre",
+"novembre"
+]
+},
+"https://fruits-legumes.org/trompette-de-la-mort/": {
+"name": "Trompette de la mort",
+"type": "legume",
+"cat": "champignon",
+"fam": "cantharellacees",
+"mois": [
+"septembre",
+"octobre",
+"novembre"
+],
+"pic": [
+"octobre"
+]
+},
+"https://fruits-legumes.org/laurier/": {
+"name": "Laurier",
+"type": "legume",
+"cat": "herbe et condiment",
+"fam": "lauracees",
+"mois": [
+"janvier",
+"fevrier",
+"mars",
+"avril",
+"mai",
+"juin",
+"juillet",
+"aout",
+"septembre",
+"octobre",
+"novembre",
+"decembre"
+],
+"pic": [
+"aout",
+"septembre"
+]
+},
+"https://fruits-legumes.org/quatre-epices/": {
+"name": "Quatre-épices",
+"type": "legume",
+"cat": "herbe et condiment",
+"fam": "myrtacees",
+"mois": [
+"janvier",
+"fevrier",
+"mars",
+"avril",
+"mai",
+"juin",
+"juillet",
+"aout",
+"septembre",
+"octobre",
+"novembre",
+"decembre"
+],
+"pic": [
+"aout",
+"septembre"
+]
+},
+"https://fruits-legumes.org/brocoli/": {
+"name": "Brocoli",
+"type": "legume",
+"cat": "chou",
+"fam": "brassicacees",
+"mois": [
+"juin",
+"juillet",
+"aout",
+"septembre",
+"octobre"
+],
+"pic": [
+"septembre",
+"octobre"
+]
+},
+"https://fruits-legumes.org/chou-blanc/": {
+"name": "Chou blanc",
+"type": "legume",
+"cat": "chou",
+"fam": "brassicacees",
+"mois": [
+"janvier",
+"fevrier",
+"mars",
+"avril",
+"juin",
+"juillet",
+"aout",
+"septembre",
+"octobre",
+"novembre",
+"decembre"
+],
+"pic": [
+"octobre",
+"novembre"
+]
+},
+"https://fruits-legumes.org/chou-de-bruxelles/": {
+"name": "Chou de Bruxelles",
+"type": "legume",
+"cat": "chou",
+"fam": "brassicacees",
+"mois": [
+"janvier",
+"aout",
+"septembre",
+"octobre",
+"novembre",
+"decembre"
+],
+"pic": [
+"novembre",
+"decembre"
+]
+},
+"https://fruits-legumes.org/chou-frise/": {
+"name": "Chou frisé",
+"type": "legume",
+"cat": "chou",
+"fam": "brassicacees",
+"mois": [
+"janvier",
+"fevrier",
+"mars",
+"mai",
+"juin",
+"juillet",
+"aout",
+"septembre",
+"octobre",
+"novembre",
+"decembre"
+],
+"pic": [
+"janvier",
+"fevrier"
+]
+},
+"https://fruits-legumes.org/chou-romanesco/": {
+"name": "Chou Romanesco",
+"type": "legume",
+"cat": "chou",
+"fam": "brassicacees",
+"mois": [
+"juin",
+"juillet",
+"aout",
+"septembre"
+],
+"pic": [
+"aout",
+"septembre"
+]
+},
+"https://fruits-legumes.org/chou-rouge/": {
+"name": "Chou rouge",
+"type": "legume",
+"cat": "chou",
+"fam": "brassicacees",
+"mois": [
+"janvier",
+"fevrier",
+"mars",
+"avril",
+"juin",
+"juillet",
+"aout",
+"septembre",
+"octobre",
+"novembre",
+"decembre"
+],
+"pic": [
+"octobre",
+"novembre"
+]
+},
+"https://fruits-legumes.org/chou-vert/": {
+"name": "Chou vert",
+"type": "legume",
+"cat": "chou",
+"fam": "brassicacees",
+"mois": [
+"janvier",
+"fevrier",
+"mars",
+"avril",
+"octobre",
+"novembre",
+"decembre"
+],
+"pic": [
+"janvier",
+"fevrier"
+]
+},
+"https://fruits-legumes.org/chou-chinois/": {
+"name": "Chou-chinois",
+"type": "legume",
+"cat": "chou",
+"fam": "brassicacees",
+"mois": [
+"janvier",
+"fevrier",
+"mai",
+"juin",
+"juillet",
+"aout",
+"septembre",
+"octobre",
+"novembre",
+"decembre"
+],
+"pic": [
+"septembre",
+"octobre"
+]
+},
+"https://fruits-legumes.org/chou-fleur/": {
+"name": "Chou-fleur",
+"type": "legume",
+"cat": "chou",
+"fam": "brassicacees",
+"mois": [
+"mai",
+"juin",
+"juillet",
+"aout",
+"septembre",
+"octobre"
+],
+"pic": [
+"septembre",
+"octobre"
+]
+},
+"https://fruits-legumes.org/chou-rave/": {
+"name": "Chou-rave",
+"type": "legume",
+"cat": "chou",
+"fam": "brassicacees",
+"mois": [
+"mars",
+"avril",
+"mai",
+"juin",
+"juillet",
+"aout",
+"septembre",
+"octobre",
+"novembre"
+],
+"pic": [
+"juin",
+"octobre"
+]
+},
+"https://fruits-legumes.org/cima-di-rapa/": {
+"name": "Cima di Rapa",
+"type": "legume",
+"cat": "chou",
+"fam": "brassicacees",
+"mois": [
+"janvier",
+"fevrier",
+"mars",
+"octobre",
+"novembre",
+"decembre"
+],
+"pic": [
+"fevrier",
+"novembre"
+]
+},
+"https://fruits-legumes.org/pak-choi/": {
+"name": "Pak choï",
+"type": "legume",
+"cat": "chou",
+"fam": "brassicacees",
+"mois": [
+"mai",
+"juin",
+"septembre",
+"octobre",
+"novembre"
+],
+"pic": [
+"octobre",
+"novembre"
+]
+},
+"https://fruits-legumes.org/betterave-rouge/": {
+"name": "Betterave rouge",
+"type": "legume",
+"cat": "legume-racine",
+"fam": "amaranthacees",
+"mois": [
+"mai",
+"juin",
+"juillet",
+"aout",
+"septembre",
+"octobre"
+],
+"pic": [
+"septembre",
+"octobre"
+]
+},
+"https://fruits-legumes.org/carotte/": {
+"name": "Carotte",
+"type": "legume",
+"cat": "legume-racine",
+"fam": "apiacees",
+"mois": [
+"janvier",
+"fevrier",
+"mars",
+"avril",
+"aout",
+"septembre",
+"octobre",
+"novembre",
+"decembre"
+],
+"pic": [
+"septembre",
+"octobre"
+]
+},
+"https://fruits-legumes.org/celeri/": {
+"name": "Céleri",
+"type": "legume",
+"cat": "legume-racine",
+"fam": "apiacees",
+"mois": [
+"janvier",
+"fevrier",
+"mars",
+"octobre",
+"novembre",
+"decembre"
+],
+"pic": [
+"novembre",
+"decembre"
+]
+},
+"https://fruits-legumes.org/celeri-rave/": {
+"name": "Céleri rave",
+"type": "legume",
+"cat": "legume-racine",
+"fam": "apiacees",
+"mois": [
+"janvier",
+"fevrier",
+"septembre",
+"octobre",
+"novembre",
+"decembre"
+],
+"pic": [
+"octobre",
+"novembre"
+]
+},
+"https://fruits-legumes.org/navet/": {
+"name": "Navet",
+"type": "legume",
+"cat": "legume-racine",
+"fam": "brassicacees",
+"mois": [
+"juin",
+"juillet",
+"aout",
+"septembre"
+],
+"pic": [
+"juin",
+"septembre"
+]
+},
+"https://fruits-legumes.org/panais/": {
+"name": "Panais",
+"type": "legume",
+"cat": "legume-racine",
+"fam": "apiacees",
+"mois": [
+"septembre",
+"octobre",
+"novembre",
+"decembre"
+],
+"pic": [
+"novembre",
+"decembre"
+]
+},
+"https://fruits-legumes.org/radis/": {
+"name": "Radis",
+"type": "legume",
+"cat": "legume-racine",
+"fam": "brassicacees",
+"mois": [
+"avril",
+"mai",
+"juin",
+"juillet"
+],
+"pic": [
+"mai",
+"juin"
+]
+},
+"https://fruits-legumes.org/radislong/": {
+"name": "Radis long",
+"type": "legume",
+"cat": "legume-racine",
+"fam": "brassicacees",
+"mois": [
+"mai",
+"juin",
+"juillet",
+"aout"
+],
+"pic": [
+"juin",
+"juillet"
+]
+},
+"https://fruits-legumes.org/radis-noir/": {
+"name": "Radis noir",
+"type": "legume",
+"cat": "legume-racine",
+"fam": "brassicacees",
+"mois": [
+"septembre",
+"octobre",
+"novembre",
+"decembre",
+"janvier",
+"fevrier"
+],
+"pic": [
+"octobre",
+"novembre"
+]
+},
+"https://fruits-legumes.org/salsifis/": {
+"name": "Salsifis",
+"type": "legume",
+"cat": "legume-racine",
+"fam": "asteracees",
+"mois": [
+"janvier",
+"fevrier",
+"mars",
+"octobre",
+"novembre",
+"decembre"
+],
+"pic": [
+"novembre",
+"decembre"
+]
+},
+"https://fruits-legumes.org/aubergine/": {
+"name": "Aubergine",
+"type": "legume",
+"cat": "legume-fruit",
+"fam": "solanacees",
+"mois": [
+"mai",
+"juin",
+"juillet",
+"aout",
+"septembre"
+],
+"pic": [
+"juillet",
+"aout"
+]
+},
+"https://fruits-legumes.org/chayote/": {
+"name": "Chayote",
+"type": "legume",
+"cat": "legume-fruit",
+"fam": "cucurbitacees",
+"mois": [
+"septembre",
+"octobre",
+"novembre"
+],
+"pic": [
+"octobre",
+"novembre"
+]
+},
+"https://fruits-legumes.org/concombre/": {
+"name": "Concombre",
+"type": "legume",
+"cat": "legume-fruit",
+"fam": "cucurbitacees",
+"mois": [
+"mai",
+"juin",
+"juillet",
+"aout",
+"septembre"
+],
+"pic": [
+"juillet",
+"aout"
+]
+},
+"https://fruits-legumes.org/courgette/": {
+"name": "Courgette",
+"type": "legume",
+"cat": "legume-fruit",
+"fam": "cucurbitacees",
+"mois": [
+"juin",
+"juillet",
+"aout",
+"septembre"
+],
+"pic": [
+"juillet",
+"aout"
+]
+},
+"https://fruits-legumes.org/mais/": {
+"name": "Maïs",
+"type": "legume",
+"cat": "legume-fruit",
+"fam": "poacees",
+"mois": [
+"juillet",
+"aout",
+"septembre",
+"octobre"
+],
+"pic": [
+"aout",
+"septembre"
+]
+},
+"https://fruits-legumes.org/piment/": {
+"name": "Piment",
+"type": "legume",
+"cat": "legume-fruit",
+"fam": "solanacees",
+"mois": [
+"juillet",
+"aout",
+"septembre",
+"octobre"
+],
+"pic": [
+"aout",
+"septembre"
+]
+},
+"https://fruits-legumes.org/poivron/": {
+"name": "Poivron",
+"type": "legume",
+"cat": "legume-fruit",
+"fam": "solanacees",
+"mois": [
+"juin",
+"juillet",
+"aout",
+"septembre",
+"octobre"
+],
+"pic": [
+"aout",
+"septembre"
+]
+},
+"https://fruits-legumes.org/artichaut/": {
+"name": "Artichaut",
+"type": "legume",
+"cat": "legume-tige",
+"fam": "asteracees",
+"mois": [
+"juin",
+"juillet",
+"aout",
+"septembre"
+],
+"pic": [
+"juin",
+"juillet"
+]
+},
+"https://fruits-legumes.org/asperge-blanche/": {
+"name": "Asperge blanche",
+"type": "legume",
+"cat": "legume-tige",
+"fam": "asparagacees",
+"mois": [
+"avril",
+"mai",
+"juin"
+],
+"pic": [
+"mai"
+]
+},
+"https://fruits-legumes.org/asperge-verte/": {
+"name": "Asperge verte",
+"type": "legume",
+"cat": "legume-tige",
+"fam": "asparagacees",
+"mois": [
+"mai",
+"juin"
+],
+"pic": [
+"mai",
+"juin"
+]
+},
+"https://fruits-legumes.org/canne-a-sucre/": {
+"name": "Canne à sucre",
+"type": "legume",
+"cat": "legume-tige",
+"fam": "poacees",
+"mois": [
+"janvier",
+"fevrier",
+"mars",
+"avril",
+"mai",
+"juin",
+"juillet",
+"aout",
+"septembre",
+"octobre",
+"novembre",
+"decembre"
+],
+"pic": [
+"aout",
+"septembre"
+]
+},
+"https://fruits-legumes.org/celeri-branche/": {
+"name": "Céleri branche",
+"type": "legume",
+"cat": "legume-tige",
+"fam": "apiacees",
+"mois": [
+"janvier",
+"fevrier",
+"septembre",
+"octobre",
+"novembre",
+"decembre"
+],
+"pic": [
+"octobre",
+"novembre"
+]
+},
+"https://fruits-legumes.org/poireau/": {
+"name": "Poireau",
+"type": "legume",
+"cat": "legume-tige",
+"fam": "amaryllidacees",
+"mois": [
+"janvier",
+"fevrier",
+"mars",
+"septembre",
+"octobre",
+"novembre",
+"decembre"
+],
+"pic": [
+"janvier",
+"fevrier"
+]
+},
+"https://fruits-legumes.org/rhubarbe/": {
+"name": "Rhubarbe",
+"type": "legume",
+"cat": "legume-tige",
+"fam": "polygonacees",
+"mois": [
+"mai",
+"juin"
+],
+"pic": [
+"mai",
+"juin"
+]
+},
+"https://fruits-legumes.org/ail/": {
+"name": "Ail",
+"type": "legume",
+"cat": "legume-bulbe",
+"fam": "amaryllidacees",
+"mois": [
+"avril",
+"mai",
+"juin",
+"juillet",
+"aout"
+],
+"pic": [
+"juin",
+"juillet"
+]
+},
+"https://fruits-legumes.org/fenouil/": {
+"name": "Fenouil",
+"type": "legume",
+"cat": "legume-bulbe",
+"fam": "apiacees",
+"mois": [
+"mai",
+"juin",
+"juillet",
+"aout",
+"septembre",
+"octobre",
+"novembre"
+],
+"pic": [
+"septembre",
+"octobre"
+]
+},
+"https://fruits-legumes.org/oignon/": {
+"name": "Oignon",
+"type": "legume",
+"cat": "legume-bulbe",
+"fam": "amaryllidacees",
+"mois": [
+"janvier",
+"fevrier",
+"mars",
+"avril",
+"aout",
+"septembre",
+"octobre",
+"novembre",
+"decembre"
+],
+"pic": [
+"septembre",
+"octobre"
+]
+},
+"https://fruits-legumes.org/oignon-rouge/": {
+"name": "Oignon rouge",
+"type": "legume",
+"cat": "legume-bulbe",
+"fam": "amaryllidacees",
+"mois": [
+"juillet",
+"aout",
+"septembre"
+],
+"pic": [
+"aout",
+"septembre"
+]
+},
+"https://fruits-legumes.org/petit-oignon-blanc/": {
+"name": "Petit oignon blanc",
+"type": "legume",
+"cat": "legume-bulbe",
+"fam": "amaryllidacees",
+"mois": [
+"mars",
+"avril",
+"mai",
+"juin",
+"juillet",
+"aout",
+"septembre",
+"octobre"
+],
+"pic": [
+"avril",
+"mai"
+]
+},
+"https://fruits-legumes.org/bette/": {
+"name": "Bette",
+"type": "legume",
+"cat": "legume-feuille",
+"fam": "amaranthacees",
+"mois": [
+"avril",
+"mai",
+"juin",
+"juillet",
+"aout",
+"septembre",
+"octobre"
+],
+"pic": [
+"juillet",
+"aout"
+]
+},
+"https://fruits-legumes.org/cresson/": {
+"name": "Cresson",
+"type": "legume",
+"cat": "legume-feuille",
+"fam": "brassicacees",
+"mois": [
+"janvier",
+"juillet",
+"aout",
+"septembre",
+"octobre",
+"novembre",
+"decembre"
+],
+"pic": [
+"octobre",
+"novembre"
+]
+},
+"https://fruits-legumes.org/endive/": {
+"name": "Endive",
+"type": "legume",
+"cat": "legume-feuille",
+"fam": "asteracees",
+"mois": [
+"janvier",
+"fevrier",
+"mars",
+"novembre",
+"decembre"
+],
+"pic": [
+"janvier",
+"fevrier"
+]
+},
+"https://fruits-legumes.org/epinard/": {
+"name": "Epinard",
+"type": "legume",
+"cat": "legume-feuille",
+"fam": "amaranthacees",
+"mois": [
+"avril",
+"mai",
+"juin",
+"juillet",
+"aout",
+"septembre",
+"octobre",
+"novembre"
+],
+"pic": [
+"mai",
+"octobre"
+]
+},
+"https://fruits-legumes.org/tetragone/": {
+"name": "Tétragone",
+"type": "legume",
+"cat": "legume-feuille",
+"fam": "aizoacees",
+"mois": [
+"juin",
+"juillet",
+"aout",
+"septembre",
+"octobre"
+],
+"pic": [
+"aout",
+"septembre"
+]
+},
+"https://fruits-legumes.org/catalonia/": {
+"name": "Catalonia",
+"type": "legume",
+"cat": "salade",
+"fam": "asteracees",
+"mois": [
+"aout",
+"septembre",
+"octobre",
+"novembre",
+"decembre"
+],
+"pic": [
+"septembre",
+"octobre"
+]
+},
+"https://fruits-legumes.org/feuille-de-chene/": {
+"name": "Feuille de chêne",
+"type": "legume",
+"cat": "salade",
+"fam": "asteracees",
+"mois": [
+"mai",
+"juin",
+"juillet",
+"aout",
+"septembre",
+"octobre"
+],
+"pic": [
+"juin",
+"septembre"
+]
+},
+"https://fruits-legumes.org/frisee/": {
+"name": "Frisée",
+"type": "legume",
+"cat": "salade",
+"fam": "asteracees",
+"mois": [
+"janvier",
+"fevrier",
+"septembre",
+"octobre",
+"novembre",
+"decembre"
+],
+"pic": [
+"octobre",
+"novembre"
+]
+},
+"https://fruits-legumes.org/laitue-romaine/": {
+"name": "Laitue romaine",
+"type": "legume",
+"cat": "salade",
+"fam": "asteracees",
+"mois": [
+"avril",
+"mai",
+"juin",
+"juillet",
+"aout",
+"septembre",
+"octobre"
+],
+"pic": [
+"mai",
+"juin"
+]
+},
+"https://fruits-legumes.org/mache/": {
+"name": "Mâche",
+"type": "legume",
+"cat": "salade",
+"fam": "caprifoliacees",
+"mois": [
+"janvier",
+"fevrier",
+"novembre",
+"decembre"
+],
+"pic": [
+"janvier",
+"fevrier"
+]
+},
+"https://fruits-legumes.org/roquette/": {
+"name": "Roquette",
+"type": "legume",
+"cat": "salade",
+"fam": "brassicacees",
+"mois": [
+"avril",
+"mai",
+"juin",
+"juillet",
+"aout",
+"septembre",
+"octobre",
+"novembre"
+],
+"pic": [
+"mai",
+"septembre"
+]
+},
+"https://fruits-legumes.org/butternut/": {
+"name": "Butternut",
+"type": "legume",
+"cat": "courge",
+"fam": "cucurbitacees",
+"mois": [
+"janvier",
+"fevrier",
+"septembre",
+"octobre",
+"novembre",
+"decembre"
+],
+"pic": [
+"octobre",
+"novembre"
+]
+},
+"https://fruits-legumes.org/citrouille/": {
+"name": "Citrouille",
+"type": "legume",
+"cat": "courge",
+"fam": "cucurbitacees",
+"mois": [
+"janvier",
+"fevrier",
+"septembre",
+"octobre",
+"novembre",
+"decembre"
+],
+"pic": [
+"octobre",
+"novembre"
+]
+},
+"https://fruits-legumes.org/courge/": {
+"name": "Courge",
+"type": "legume",
+"cat": "courge",
+"fam": "cucurbitacees",
+"mois": [
+"aout",
+"septembre",
+"octobre",
+"novembre",
+"decembre"
+],
+"pic": [
+"septembre",
+"octobre"
+]
+},
+"https://fruits-legumes.org/courge-musquee/": {
+"name": "Courge musquée",
+"type": "legume",
+"cat": "courge",
+"fam": "cucurbitacees",
+"mois": [
+"janvier",
+"fevrier",
+"septembre",
+"octobre",
+"novembre",
+"decembre"
+],
+"pic": [
+"octobre",
+"novembre"
+]
+},
+"https://fruits-legumes.org/courge-spaghetti/": {
+"name": "Courge spaghetti",
+"type": "legume",
+"cat": "courge",
+"fam": "cucurbitacees",
+"mois": [
+"septembre",
+"octobre",
+"novembre"
+],
+"pic": [
+"octobre"
+]
+},
+"https://fruits-legumes.org/patisson/": {
+"name": "Pâtisson",
+"type": "legume",
+"cat": "courge",
+"fam": "cucurbitacees",
+"mois": [
+"juillet",
+"aout",
+"septembre"
+],
+"pic": [
+"aout",
+"septembre"
+]
+},
+"https://fruits-legumes.org/potimarron/": {
+"name": "Potimarron",
+"type": "legume",
+"cat": "courge",
+"fam": "cucurbitacees",
+"mois": [
+"octobre",
+"novembre"
+],
+"pic": [
+"octobre",
+"novembre"
+]
+},
+"https://fruits-legumes.org/potiron/": {
+"name": "Potiron",
+"type": "legume",
+"cat": "courge",
+"fam": "cucurbitacees",
+"mois": [
+"juillet",
+"aout",
+"septembre",
+"octobre"
+],
+"pic": [
+"septembre",
+"octobre"
+]
+},
+"https://fruits-legumes.org/sucrine-du-berry/": {
+"name": "Sucrine du Berry",
+"type": "legume",
+"cat": "courge",
+"fam": "cucurbitacees",
+"mois": [
+"septembre",
+"octobre",
+"novembre"
+],
+"pic": [
+"octobre"
+]
+},
+"https://fruits-legumes.org/haricot/": {
+"name": "Haricot",
+"type": "legume",
+"cat": "legumineuse",
+"fam": "fabacees",
+"mois": [
+"juin",
+"juillet",
+"aout",
+"septembre"
+],
+"pic": [
+"juillet",
+"aout"
+]
+},
+"https://fruits-legumes.org/haricot-coco/": {
+"name": "Haricot coco",
+"type": "legume",
+"cat": "legumineuse",
+"fam": "fabacees",
+"mois": [
+"juillet",
+"aout",
+"septembre",
+"octobre"
+],
+"pic": [
+"aout",
+"septembre"
+]
+},
+"https://fruits-legumes.org/petit-pois/": {
+"name": "Petit pois",
+"type": "legume",
+"cat": "legumineuse",
+"fam": "fabacees",
+"mois": [
+"juin",
+"juillet"
+],
+"pic": [
+"juin",
+"juillet"
+]
+},
+"https://fruits-legumes.org/pois-mange-tout/": {
+"name": "Pois mange-tout",
+"type": "legume",
+"cat": "legumineuse",
+"fam": "fabacees",
+"mois": [
+"juin",
+"juillet"
+],
+"pic": [
+"juin",
+"juillet"
+]
+},
+"https://fruits-legumes.org/manioc/": {
+"name": "Manioc",
+"type": "legume",
+"cat": "tubercule",
+"fam": "euphorbiacees",
+"mois": [
+"janvier",
+"fevrier",
+"mars",
+"avril",
+"mai",
+"juin",
+"juillet",
+"aout",
+"septembre",
+"octobre",
+"novembre",
+"decembre"
+],
+"pic": [
+"septembre",
+"octobre"
+]
+},
+"https://fruits-legumes.org/patate-douce/": {
+"name": "Patate douce",
+"type": "legume",
+"cat": "tubercule",
+"fam": "convolvulacees",
+"mois": [
+"janvier",
+"fevrier",
+"mars",
+"avril",
+"mai",
+"juin",
+"juillet",
+"aout",
+"septembre",
+"octobre",
+"novembre",
+"decembre"
+],
+"pic": [
+"octobre",
+"novembre"
+]
+},
+"https://fruits-legumes.org/pomme-de-terre/": {
+"name": "Pomme de terre",
+"type": "legume",
+"cat": "tubercule",
+"fam": "solanacees",
+"mois": [
+"janvier",
+"fevrier",
+"mai",
+"juin",
+"juillet",
+"aout",
+"septembre",
+"octobre",
+"novembre",
+"decembre"
+],
+"pic": [
+"septembre",
+"octobre"
+]
+},
+"https://fruits-legumes.org/taro/": {
+"name": "Taro",
+"type": "legume",
+"cat": "tubercule",
+"fam": "aracees",
+"mois": [
+"janvier",
+"fevrier",
+"mars",
+"avril",
+"mai",
+"juin",
+"juillet",
+"aout",
+"septembre",
+"octobre",
+"novembre",
+"decembre"
+],
+"pic": [
+"octobre",
+"novembre"
+]
+},
+"https://fruits-legumes.org/topinambour/": {
+"name": "Topinambour",
+"type": "legume",
+"cat": "tubercule",
+"fam": "asteracees",
+"mois": [
+"janvier",
+"fevrier",
+"octobre",
+"novembre",
+"decembre"
+],
+"pic": [
+"novembre",
+"decembre"
+]
+}
+}

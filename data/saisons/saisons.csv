@@ -1,0 +1,290 @@
+Catégorie;Produit;Jan;Fév;Mar;Avr;Mai;Juin;Juil;Août;Sep;Oct;Nov;Déc;Sources (sept.);Notes (sept.)
+Légume · alliacées;Ail sec (de garde);;;;;;;;;1;;;;GP, IF, BNA, CV, BM;FL ne le donne que d'avril à août (récolte). Les autres sources le donnent toute l'année (garde)
+Légume · alliacées;Ail frais / ail nouveau;;;;;;;;;;;;;IF (juin-juil.), FL (mai-juil.);Hors saison en septembre
+Légume · alliacées;Ail rose de Lautrec (Label rouge);;;;;;;;;1;;;;= Ail sec (assimilé);Aucune source consultée ne le distingue de l'ail sec
+Légume · alliacées;Ail violet de Cadours (AOP);;;;;;;;;1;;;;= Ail sec (assimilé);Aucune source consultée ne le distingue de l'ail sec
+Légume · alliacées;Ail fumé d'Arleux;;;;;;;;;1;;;;= Ail sec (assimilé);Aucune source consultée ne le distingue de l'ail sec
+Légume · alliacées;Aillet (ail vert);;;;;;;;;;;;;BNA (avr.-juin);Hors saison en septembre
+Légume · alliacées;Ail des ours;;;;;;;;;;;;;ML (mars-avr.);Hors saison en septembre
+Légume · alliacées;Oignon jaune (de garde);;;;;;;;;2;;;;FL (pleine saison sept.-oct.), GP, IF (cœur sept.-déc.), BNA, CV, BM, PG;
+Légume · alliacées;Oignon rouge;;;;;;;;;2;;;;FL (pleine saison août-sept.), IF;
+Légume · alliacées;Oignon doux des Cévennes (AOP);;;;;;;;;1;;;;IF (fiche oignon : variété citée, récolte d'automne);
+Légume · alliacées;Oignon rosé de Roscoff (AOP);;;;;;;;;1;;;;IF (fiche oignon : variété citée, récolte d'automne);
+Légume · alliacées;Oignon blanc / oignon nouveau (botte);;;;;;;;;1;;;;FL « petit oignon blanc » (mars-oct., pleine saison avr.-mai), IF « oignon primeur » (cœur sept.-avr.);
+Légume · alliacées;Cébette / ciboule;;;;;;;;;1;;;;IF « oignon primeur » (même fiche), CJ (bottes dès mi-mars, via résumé);
+Légume · alliacées;Échalote;;;;;;;;;2;;;;IF (cœur jan.-mai et sept.-déc.), BNA (juil.-déc.), PG;GP ne la donne qu'en oct.-déc.
+Légume · alliacées;Échalote grise;;;;;;;;;2;;;;= Échalote (assimilée);La fiche IF ne distingue aucune variété
+Légume · alliacées;Poireau;;;;;;;;;1;;;;FL, GP, BNA, CV (début), PG;
+Légume · alliacées;Poireau primeur;;;;;;;;;1;;;;GF;Le calendrier IF prévoit une période « P » (primeur) non lisible dans le PDF
+Légume · alliacées;Asperge blanche;;;;;;;;;;;;;FL (avr.-juin);Hors saison en septembre
+Légume · alliacées;Asperge verte;;;;;;;;;;;;;FL (mai-juin);Hors saison en septembre
+Légume · alliacées;Asperge violette;;;;;;;;;;;;;= Asperge blanche (assimilée);Hors saison en septembre
+Légume · alliacées;Asperge sauvage;;;;;;;;;;;;;—;Printemps, non vérifié
+Légume · choux;Chou blanc (cabus);;;;;;;;;1;;;;FL, GP, BNA, SM, BM;
+Légume · choux;Chou rouge;;;;;;;;;1;;;;FL, GP, GF, SM;
+Légume · choux;Chou vert (cabus lisse);;;;;;;;;1;;;;FL (premières récoltes en sept.);
+Légume · choux;Chou vert frisé / chou de Milan;;;;;;;;;1;;;;FL « chou frisé », GP, SM;
+Légume · choux;Chou kale;;;;;;;;;1;;;;GF;SM et Truffaut donnent oct.-mars : début de saison au mieux
+Légume · choux;Chou pointu;;;;;;;;;1;;;;SM (juin-fév.);
+Légume · choux;Chou de Bruxelles;;;;;;;;;1;;;;FL, GP, IF, BNA, SM (sept.-jan.);
+Légume · choux;Chou de Pontoise;;;;;;;;;;;;;—;Hiver, non vérifié
+Légume · choux;Chou-fleur;;;;;;;;;2;;;;FL (pleine saison sept.-oct.), GP, DBB, CV, BM, BNA, SM;
+Légume · choux;Chou-fleur coloré (vert, violet, orange);;;;;;;;;1;;;;DBB (« chou-fleur d'été vert, violet, orange »);
+Légume · choux;Chou romanesco;;;;;;;;;2;;;;FL (pleine saison août-sept.), GP, DBB, SM;
+Légume · choux;Brocoli;;;;;;;;;2;;;;FL (pleine saison sept.-oct.), GP, GF, DBB, CV, BM, SM, BNA, PG;
+Légume · choux;Brocoli à jets violet;;;;;;;;;;;;;—;Hiver-printemps, non vérifié
+Légume · choux;Chou-rave;;;;;;;;;1;;;;FL, SM (avr.-nov.);
+Légume · choux;Chou chinois (pé-tsaï);;;;;;;;;2;;;;FL (pleine saison sept.-oct.), SM;
+Légume · choux;Pak choï;;;;;;;;;1;;;;FL, SM;
+Légume · choux;Cima di rapa (brocoli-rave);;;;;;;;;1;;;;SM (avr.-oct.);FL l'exclut en septembre (jan.-mars, oct.-déc.)
+Légume · choux;Kalettes (chou-fleur de Bruxelles);;;;;;;;;;;;;SM (nov.-mars);Hors saison en septembre
+Légume · courges;Courgette;;;;;;;;;1;;;;FL, GP, IF, GF (fin de saison), DBB, CV, BM, BNA;
+Légume · courges;Courgette ronde / jaune;;;;;;;;;1;;;;= Courgette (assimilée);
+Légume · courges;Fleur de courgette;;;;;;;;;?;;;;—;Aucune source consultée
+Légume · courges;Pâtisson;;;;;;;;;2;;;;FL (pleine saison août-sept.), ML (fin août-oct.);
+Légume · courges;Potimarron;;;;;;;;;1;;;;ML (sept.-déc.), GF, BM, BNA;FL ne le met qu'en oct.-nov.
+Légume · courges;Potiron;;;;;;;;;2;;;;FL (pleine saison sept.-oct.), GP, GF, BM, BNA, PG, CV;ML donne oct.-jan.
+Légume · courges;Citrouille;;;;;;;;;1;;;;FL;ML donne oct.-jan.
+Légume · courges;Butternut (doubeurre);;;;;;;;;1;;;;FL, ML (sept.-mars);
+Légume · courges;Courge spaghetti;;;;;;;;;1;;;;FL, ML (sept.-nov.);
+Légume · courges;Courge musquée de Provence;;;;;;;;;1;;;;FL, ML (juil.-nov.);
+Légume · courges;Courge longue de Nice;;;;;;;;;1;;;;ML (sept.-nov.);
+Légume · courges;Sucrine du Berry;;;;;;;;;1;;;;FL;
+Légume · courges;Courge (autres : Jack be little, Delicata, Bleue de Hongrie, Hokkaido…);;;;;;;;;2;;;;FL « courge » (pleine saison sept.-oct.), GP, BNA;
+Légume · courges;Chayotte (christophine);;;;;;;;;1;;;;FL;
+Légume · courges;Concombre;;;;;;;;;1;;;;FL, GP, IF, DBB, CV, BM, BNA;
+Légume · courges;Cornichon;;;;;;;;;?;;;;—;Aucune source consultée
+Légume · solanacées;Tomate ronde / grappe;;;;;;;;;1;;;;FL, GP, GF, DBB, CV, BM, BNA;Pleine saison juil.-août (FL)
+Légume · solanacées;Tomate cerise / cocktail;;;;;;;;;1;;;;GF;
+Légume · solanacées;Tomate cœur de bœuf;;;;;;;;;1;;;;GF, FL « tomate charnue »;
+Légume · solanacées;Tomates anciennes (noire de Crimée, ananas, green zebra…);;;;;;;;;1;;;;GF, recherche (variétés tardives août-oct., via résumé);
+Légume · solanacées;Tomate allongée (Roma, San Marzano, Peretti);;;;;;;;;1;;;;FL « tomate Peretti »;
+Légume · solanacées;Tomate verte (à confire);;;;;;;;;?;;;;—;Aucune source consultée
+Légume · solanacées;Aubergine;;;;;;;;;1;;;;FL, GP, IF, GF, DBB, CV, BNA;
+Légume · solanacées;Poivron;;;;;;;;;2;;;;FL (pleine saison août-sept.), GP, GF, DBB, CV, BM, BNA;
+Légume · solanacées;Piment (doux des Landes, d'Espelette…);;;;;;;;;2;;;;FL (pleine saison août-sept.);
+Légume · solanacées;Pomme de terre de conservation;;;;;;;;;2;;;;FL (pleine saison sept.-oct.), GP, GF (Charlotte, Bintje), CV, BM, BNA, PG;
+Légume · solanacées;Pomme de terre primeur / nouvelle;;;;;;;;;;;;;PDT (avr.-15 août), GP (avr.-août);Hors saison en septembre
+Légume · solanacées;Pomme de terre grenaille;;;;;;;;;?;;;;—;Aucune source consultée
+Légume · solanacées;Vitelotte;;;;;;;;;1;;;;GF;
+Légume · solanacées;Ratte (du Touquet);;;;;;;;;?;;;;PDT (variété citée, sans mois);
+Légume · légumineuses;Haricot vert;;;;;;;;;2;;;;IF (cœur juin-sept.), FL, GP, DBB, CV, BM, BNA;
+Légume · légumineuses;Haricot beurre;;;;;;;;;2;;;;IF (fiche haricot, type cité, même calendrier);
+Légume · légumineuses;Haricot plat / mange-tout;;;;;;;;;1;;;;IF (fiche haricot);BNA ne donne les haricots plats qu'en juil.-août
+Légume · légumineuses;Coco de Paimpol (AOP) / cocos frais;;;;;;;;;2;;;;FL « haricot coco » (pleine saison août-sept.), BNA « haricot à écosser » (août-oct.);
+Légume · légumineuses;Mogette de Vendée (fraîche / demi-sèche);;;;;;;;;1;;;;PG;
+Légume · légumineuses;Haricot tarbais frais;;;;;;;;;1;;;;recherche (grain frais juil.-sept., via résumé);
+Légume · légumineuses;Flageolet frais;;;;;;;;;1;;;;recherche (grain frais juil.-sept., via résumé);
+Légume · légumineuses;Petit pois;;;;;;;;;;;;;FL (juin-juil.), GP;BNA seul le donne encore en sept.
+Légume · légumineuses;Pois gourmand / mange-tout;;;;;;;;;;;;;FL (juin-juil.);Hors saison en septembre
+Légume · légumineuses;Fève;;;;;;;;;;;;;BNA (mai-août);Hors saison en septembre
+Légume · légumineuses;Maïs doux (épi);;;;;;;;;2;;;;FL (pleine saison août-sept.), GP, CV, BNA;
+Légume · légumineuses;Germe de haricot mungo (soja vert);;;;;;;;;1;;;;IF;
+Légume · racines;Carotte;;;;;;;;;2;;;;FL (pleine saison sept.-oct.), GP, GF (Créances IGP), CV, BM, BNA, PG;
+Légume · racines;Carotte nouvelle (botte);;;;;;;;;;;;;—;Primeur de printemps-été, non distinguée par les sources
+Légume · racines;Betterave rouge;;;;;;;;;2;;;;FL (pleine saison sept.-oct.), GP, IF, GF, CV, BNA;
+Légume · racines;Betterave Chioggia / jaune;;;;;;;;;2;;;;= Betterave rouge (assimilée);
+Légume · racines;Navet;;;;;;;;;2;;;;FL (pleine saison sept.), GF (Pardailhan), BNA, PG;GP le donne oct.-mai
+Légume · racines;Navet boule d'or;;;;;;;;;2;;;;= Navet (assimilé);
+Légume · racines;Radis rose (botte);;;;;;;;;1;;;;GP, CV, BM, BNA;FL ne le donne qu'avr.-juil.
+Légume · racines;Radis noir;;;;;;;;;1;;;;FL;
+Légume · racines;Radis long / demi-long;;;;;;;;;;;;;FL (mai-août);Hors saison en septembre
+Légume · racines;Radis daikon (blanc japonais);;;;;;;;;?;;;;—;Aucune source consultée
+Légume · racines;Panais;;;;;;;;;1;;;;FL, GP, GF, PG;BNA ne le donne qu'à partir d'oct.
+Légume · racines;Céleri-rave;;;;;;;;;1;;;;FL, PG, BNA et CV (« céleri »);
+Légume · racines;Céleri-branche;;;;;;;;;1;;;;FL, GP, GF, DBB, PG;
+Légume · racines;Rutabaga;;;;;;;;;1;;;;SM (juil.-avr.);GP le donne oct.-déc.
+Légume · racines;Topinambour;;;;;;;;;;;;;FL (oct.-fév.);PG l'inscrit à l'automne dès sept.
+Légume · racines;Crosne;;;;;;;;;1;;;;PG, VD (sept.-mars, via résumé);Fin septembre au plus tôt
+Légume · racines;Salsifis / scorsonère;;;;;;;;;;;;;FL (oct.-mars);PG l'inscrit à l'automne dès sept.
+Légume · racines;Patate douce;;;;;;;;;1;;;;FL, GP, IF, BM;
+Légume · racines;Cerfeuil tubéreux;;;;;;;;;?;;;;—;Aucune source consultée
+Légume · racines;Persil tubéreux (racine);;;;;;;;;?;;;;—;Aucune source consultée
+Légume · racines;Raifort;;;;;;;;;?;;;;—;Aucune source consultée
+Légume · feuilles & salades;Laitue pommée (beurre);;;;;;;;;1;;;;IF, GP, CV, BM, BNA (« salade »);
+Légume · feuilles & salades;Batavia;;;;;;;;;1;;;;IF (fiche salade : cœur mars-nov.);
+Légume · feuilles & salades;Feuille de chêne;;;;;;;;;2;;;;FL (pleine saison sept.);
+Légume · feuilles & salades;Romaine;;;;;;;;;1;;;;FL;
+Légume · feuilles & salades;Sucrine;;;;;;;;;1;;;;IF (fiche salade);
+Légume · feuilles & salades;Iceberg;;;;;;;;;1;;;;IF (fiche salade);
+Légume · feuilles & salades;Rougette;;;;;;;;;1;;;;IF (fiche salade);
+Légume · feuilles & salades;Frisée;;;;;;;;;1;;;;FL, GP, IF;BNA la donne à partir d'oct.
+Légume · feuilles & salades;Scarole;;;;;;;;;1;;;;IF (fiche salade);
+Légume · feuilles & salades;Trévise / radicchio;;;;;;;;;1;;;;IF (fiche salade);
+Légume · feuilles & salades;Chicorée pain de sucre;;;;;;;;;?;;;;—;Aucune source consultée
+Légume · feuilles & salades;Catalogne / puntarelle;;;;;;;;;1;;;;FL « Catalonia »;
+Légume · feuilles & salades;Endive;;;;;;;;;;;;;FL (oct.-mars), GP;Hors saison en septembre
+Légume · feuilles & salades;Mâche;;;;;;;;;;;;;FL (nov.-fév.), GP;IF la dit disponible toute l'année
+Légume · feuilles & salades;Roquette;;;;;;;;;2;;;;FL (pleine saison sept.), DBB, GP;
+Légume · feuilles & salades;Cresson;;;;;;;;;1;;;;FL, IF, CV;
+Légume · feuilles & salades;Pourpier;;;;;;;;;1;;;;IF, GP;
+Légume · feuilles & salades;Pissenlit;;;;;;;;;1;;;;IF (fiche salade : toute l'année);
+Légume · feuilles & salades;Pousses d'épinard / mesclun;;;;;;;;;1;;;;IF (fiche salade);
+Légume · feuilles & salades;Épinard;;;;;;;;;1;;;;FL, GP, DBB, BNA;
+Légume · feuilles & salades;Blette / bette à carde;;;;;;;;;1;;;;FL, GP, IF, GF, DBB, CV, BNA;
+Légume · feuilles & salades;Oseille;;;;;;;;;1;;;;IF;
+Légume · feuilles & salades;Tétragone;;;;;;;;;2;;;;FL (pleine saison août-sept.);
+Légume · feuilles & salades;Mizuna / moutardes asiatiques;;;;;;;;;?;;;;—;Aucune source consultée
+Légume · feuilles & salades;Cardon;;;;;;;;;;;;;GP (nov.), BNA (déc.);Hors saison en septembre
+Légume · tiges & fleurs;Fenouil;;;;;;;;;2;;;;FL (pleine saison sept.-oct.), GP, DBB, CV, BNA;
+Légume · tiges & fleurs;Artichaut (camus, gros);;;;;;;;;1;;;;FL, GP, DBB, CV, BNA;
+Légume · tiges & fleurs;Artichaut violet / poivrade;;;;;;;;;1;;;;= Artichaut (assimilé);
+Légume · tiges & fleurs;Rhubarbe;;;;;;;;;1;;;;IF;FL (mai-juin) et GP (mai-juil.) l'excluent : 2e pousse d'automne
+Légume · tiges & fleurs;Salicorne;;;;;;;;;?;;;;—;Aucune source consultée
+Champignon;Champignon de Paris;;;;;;;;;1;;;;FL, IF, GF;
+Champignon;Pleurote;;;;;;;;;1;;;;IF (« champignons cultivés »);MC donne oct.-fév.
+Champignon;Shiitaké;;;;;;;;;1;;;;FL, IF (« champignons cultivés »);
+Champignon;Cèpe / bolets;;;;;;;;;2;;;;FL (pleine saison sept.-oct.), IF, GP, GF, DBB, MC (août-nov.), CDC;
+Champignon;Girolle / chanterelle;;;;;;;;;2;;;;FL (pleine saison août-sept.), GF, MC (juin-nov.), CDC (dernières girolles);
+Champignon;Chanterelle en tube / grise;;;;;;;;;2;;;;= Girolle (assimilée par MC);
+Champignon;Trompette de la mort;;;;;;;;;1;;;;FL, GF, MC (sept.-déc.);
+Champignon;Pied de mouton;;;;;;;;;1;;;;FL, MC (août-nov.), CDC;
+Champignon;Coulemelle;;;;;;;;;1;;;;MC (sept.-oct.), CDC;
+Champignon;Rosé des prés;;;;;;;;;2;;;;FL (pleine saison sept.-oct.), MC (juil.-oct.), CDC;
+Champignon;Lactaire délicieux (sanguin);;;;;;;;;1;;;;MC (sept.-nov.), CDC (fin sept.);
+Champignon;Pied bleu;;;;;;;;;1;;;;MC (sept.-fév.);
+Champignon;Oronge (amanite des Césars);;;;;;;;;1;;;;CDC (via résumé);
+Champignon;Morille;;;;;;;;;;;;;MC (mars-mai);Hors saison en septembre
+Champignon;Mousseron (tricholome de la Saint-Georges);;;;;;;;;;;;;MC (avr.-mai);Hors saison en septembre
+Champignon;Truffe de Bourgogne / truffe d'été;;;;;;;;;1;;;;IF (« truffe » en sept.);
+Champignon;Truffe noire du Périgord;;;;;;;;;;;;;MC (nov.-fév.);Hors saison en septembre
+Herbe aromatique;Persil;;;;;;;;;1;;;;IF, GF, ML;
+Herbe aromatique;Basilic;;;;;;;;;1;;;;recherche (mai-sept., pleine saison juil.-août, via résumé);ML donne mai-août
+Herbe aromatique;Ciboulette;;;;;;;;;1;;;;recherche (avr.-sept., via résumé);ML la donne hors été
+Herbe aromatique;Coriandre;;;;;;;;;1;;;;recherche (août-oct., via résumé);
+Herbe aromatique;Estragon;;;;;;;;;1;;;;ML (mars-sept.);
+Herbe aromatique;Menthe;;;;;;;;;1;;;;ML, recherche (juin-sept.);
+Herbe aromatique;Aneth;;;;;;;;;1;;;;GF, recherche (juin-sept.);ML donne mai-août
+Herbe aromatique;Cerfeuil;;;;;;;;;1;;;;ML (sept.), recherche (juin-sept.);
+Herbe aromatique;Sauge;;;;;;;;;1;;;;ML;
+Herbe aromatique;Thym;;;;;;;;;1;;;;ML;
+Herbe aromatique;Romarin;;;;;;;;;1;;;;ML;
+Herbe aromatique;Laurier;;;;;;;;;2;;;;FL (pleine saison août-sept.);ML le donne en hiver
+Herbe aromatique;Origan / marjolaine;;;;;;;;;;;;;ML (mars-août);Hors saison en septembre
+Herbe aromatique;Sarriette;;;;;;;;;1;;;;ML (juin-sept.);
+Herbe aromatique;Mélisse;;;;;;;;;1;;;;ML;
+Herbe aromatique;Bourrache;;;;;;;;;;;;;ML (juil.-août);Hors saison en septembre
+Herbe aromatique;Verveine citronnelle;;;;;;;;;?;;;;—;Aucune source consultée
+Herbe aromatique;Livèche;;;;;;;;;?;;;;—;Aucune source consultée
+Herbe aromatique;Ortie (jeunes pousses);;;;;;;;;?;;;;—;Aucune source consultée
+Fruit · à noyau;Pêche jaune;;;;;;;;;1;;;;FL, GP, IF (juil.-sept.), DBB, CV (fin), BM, BNA;
+Fruit · à noyau;Pêche blanche;;;;;;;;;1;;;;IF (juil.-sept.);
+Fruit · à noyau;Pêche plate;;;;;;;;;?;;;;—;Non distinguée par les sources
+Fruit · à noyau;Pêche de vigne;;;;;;;;;2;;;;IF (variété tardive, sept.-oct.);BNA la donne en oct.
+Fruit · à noyau;Nectarine;;;;;;;;;1;;;;FL, IF, BM;GP ne la donne qu'en juil.-août
+Fruit · à noyau;Brugnon;;;;;;;;;1;;;;IF (juil.-sept.);
+Fruit · à noyau;Abricot;;;;;;;;;;;;;FL (juin-juil.), GP;Hors saison en septembre
+Fruit · à noyau;Cerise;;;;;;;;;;;;;FL (juin-juil.);Hors saison en septembre
+Fruit · à noyau;Reine-claude (dorée, de Bavay);;;;;;;;;1;;;;FL, IF (Bavay mi-sept.);
+Fruit · à noyau;Mirabelle;;;;;;;;;2;;;;FL (pleine saison août-sept.), GP, IF, DBB, CV, BM, BNA;
+Fruit · à noyau;Quetsche;;;;;;;;;2;;;;FL (pleine saison sept.), CV, IF;
+Fruit · à noyau;Prune d'Ente (pruneau frais);;;;;;;;;1;;;;GP (« pruneau » août-sept.), BM, BNA;
+Fruit · à noyau;Prune Président;;;;;;;;;?;;;;IF (variété citée, sans mois);
+Fruit · à noyau;Prune japonaise (Angeleno, Friar, Black Amber);;;;;;;;;1;;;;IF (Angeleno mi-sept., Friar ~20 août);
+Fruit · à noyau;Prune (toutes variétés);;;;;;;;;2;;;;FL (pleine saison août-sept.), GP, IF, DBB, CV, BM, BNA;
+Fruit · à noyau;Jujube;;;;;;;;;1;;;;FL;
+Fruit · à noyau;Nèfle du Japon (bibace);;;;;;;;;;;;;—;Printemps, non vérifié
+Fruit · à noyau;Olive verte fraîche (à confire);;;;;;;;;?;;;;—;Aucune source consultée
+Fruit · à pépins;Pomme (toutes variétés);;;;;;;;;2;;;;FL (pleine saison sept.-oct.), GP, DBB, CV, BM, BNA, PG;
+Fruit · à pépins;Pomme d'été précoce (Delbard Estivale, Vergheat, Akane…);;;;;;;;;1;;;;FM (Vergheat sept., Akane sept.-nov.), BNA (« pomme d'été »);
+Fruit · à pépins;Pomme Reine des reinettes;;;;;;;;;2;;;;FM (sept.-déc.), DBB, recherche (fin août-sept.);
+Fruit · à pépins;Pomme Gala / Royal Gala;;;;;;;;;2;;;;DBB, recherche (récolte fin août-début sept., via résumé);
+Fruit · à pépins;Pomme Golden;;;;;;;;;1;;;;DBB;FM la donne oct.-mars
+Fruit · à pépins;Pomme Elstar;;;;;;;;;?;;;;PPF (variété citée, sans mois);
+Fruit · à pépins;Pomme Reinette grise du Canada;;;;;;;;;;;;;FM (oct.-mars);Hors saison en septembre
+Fruit · à pépins;Pomme Belle de Boskoop;;;;;;;;;;;;;FM (nov.-mars);Récolte sept.-oct. mais vente à partir de nov.
+Fruit · à pépins;Pomme Chantecler;;;;;;;;;;;;;FM (nov.-mars);
+Fruit · à pépins;Pomme Granny Smith / Pink Lady / Fuji (tardives);;;;;;;;;;;;;—;Récolte oct.-nov., non vérifié
+Fruit · à pépins;Poire (toutes variétés);;;;;;;;;2;;;;FL (pleine saison sept.-oct.), GP, IF, CV, BM, BNA, PG;
+Fruit · à pépins;Poire Williams;;;;;;;;;1;;;;IF (dès juillet), FL (fiche);
+Fruit · à pépins;Poire Guyot;;;;;;;;;;;;;IF (juil.-août), BNA (août);Hors saison en septembre
+Fruit · à pépins;Poire Conférence;;;;;;;;;2;;;;IF (sept.-avr.), FL (fiche);
+Fruit · à pépins;Poire Comice;;;;;;;;;1;;;;IF (sept.-déc.);Récolte fin oct. selon la recherche
+Fruit · à pépins;Poire Beurré Hardy;;;;;;;;;2;;;;DBB, IF (automne);
+Fruit · à pépins;Poire Louise-Bonne d'Avranches;;;;;;;;;2;;;;DBB;
+Fruit · à pépins;Poire Alexandrine Douillard;;;;;;;;;1;;;;DBB;
+Fruit · à pépins;Poire Passe-Crassane;;;;;;;;;;;;;IF (hiver);Hors saison en septembre
+Fruit · à pépins;Poire Angélys;;;;;;;;;;;;;FL (fiche : après Conférence et Comice);Hiver
+Fruit · à pépins;Poire Abate Fetel;;;;;;;;;?;;;;—;Aucune source consultée
+Fruit · à pépins;Nashi;;;;;;;;;2;;;;FL (pleine saison sept.);
+Fruit · à pépins;Coing;;;;;;;;;1;;;;FL, GP, DBB, CV, BNA, PG;
+Fruit · petits fruits;Fraise remontante (Charlotte, Mara des bois, Seascape…);;;;;;;;;1;;;;DBB, BNA;FL « fraise » s'arrête en août
+Fruit · petits fruits;Fraise Gariguette / Ciflorette (non remontantes);;;;;;;;;;;;;FL (mai-août), GP;Hors saison en septembre
+Fruit · petits fruits;Fraise des bois;;;;;;;;;;;;;FL (mai-août);Hors saison en septembre
+Fruit · petits fruits;Framboise (remontante);;;;;;;;;1;;;;FL, IF, DBB, BNA;GP la reprend en oct.
+Fruit · petits fruits;Mûre;;;;;;;;;2;;;;FL (pleine saison août-sept.), GP, IF, DBB, CV, BM, BNA;
+Fruit · petits fruits;Myrtille;;;;;;;;;1;;;;FL, GP, IF, DBB, CV, BM, BNA;
+Fruit · petits fruits;Groseille;;;;;;;;;1;;;;IF;FL la donne juin-juil.
+Fruit · petits fruits;Groseille à maquereau;;;;;;;;;;;;;FL (juin-août);Hors saison en septembre
+Fruit · petits fruits;Cassis;;;;;;;;;1;;;;IF, DBB;FL le donne juin-juil.
+Fruit · petits fruits;Airelle rouge;;;;;;;;;;;;;FL (juil.-août);Hors saison en septembre
+Fruit · petits fruits;Cranberry (canneberge);;;;;;;;;;;;;FL (oct.-jan.);Hors saison en septembre
+Fruit · petits fruits;Sureau (baies);;;;;;;;;2;;;;FL (pleine saison sept.);
+Fruit · petits fruits;Argousier;;;;;;;;;2;;;;FL (pleine saison sept.);
+Fruit · petits fruits;Aronia;;;;;;;;;2;;;;FL (pleine saison sept.);
+Fruit · petits fruits;Cornouille;;;;;;;;;2;;;;FL (pleine saison sept.);
+Fruit · petits fruits;Baie de goji;;;;;;;;;2;;;;FL (pleine saison sept.-oct.), GP;
+Fruit · petits fruits;Kiwaï;;;;;;;;;2;;;;FL (pleine saison sept.-oct.);
+Fruit · petits fruits;Physalis (coqueret du Pérou);;;;;;;;;2;;;;FL (pleine saison sept.-oct.);GP le donne oct.-fév.
+Fruit · petits fruits;Arbouse;;;;;;;;;?;;;;—;Aucune source consultée
+Fruit · raisin & figue;Raisin (toutes variétés);;;;;;;;;2;;;;FL (pleine saison sept.-oct.), GP, IF, DBB, CV, BM, BNA, PG;
+Fruit · raisin & figue;Raisin Chasselas (de Moissac AOP);;;;;;;;;2;;;;IF (fin août-fin oct.), LN (mi-août-nov.);
+Fruit · raisin & figue;Raisin Muscat de Hambourg / du Ventoux;;;;;;;;;2;;;;IF (début août-mi-oct.), LN;
+Fruit · raisin & figue;Raisin Italia;;;;;;;;;2;;;;LN (sept.-déc.);
+Fruit · raisin & figue;Raisin Alphonse Lavallée;;;;;;;;;2;;;;IF (mi-août-mi-oct.), LN;
+Fruit · raisin & figue;Raisin Danlas;;;;;;;;;1;;;;LN (mi-août-sept.);
+Fruit · raisin & figue;Raisin Cardinal;;;;;;;;;;;;;LN (fin juil.-août);Hors saison en septembre
+Fruit · raisin & figue;Raisin sans pépins (Centennial, Sultanine…);;;;;;;;;1;;;;IF (variétés citées, calendrier commun);
+Fruit · raisin & figue;Figue (toutes variétés);;;;;;;;;2;;;;FL (pleine saison sept.), GP, IF (cœur juil.-sept.), DBB, CV, BM, BNA, PG;
+Fruit · raisin & figue;Figue violette de Solliès (AOP);;;;;;;;;2;;;;IF (unifère, fiche figue), FL;
+Fruit · raisin & figue;Figue Dauphine / Boule d'or (bifère);;;;;;;;;1;;;;IF (fiche figue);
+Fruit · raisin & figue;Figue noire de Caromb;;;;;;;;;1;;;;IF (fiche figue);
+Fruit · raisin & figue;Figue noire de Bursa (import Turquie);;;;;;;;;1;;;;IF (mi-juil.-oct.);
+Fruit · raisin & figue;Figue fleur (1re récolte);;;;;;;;;;;;;—;Juin-juillet, non vérifié
+Fruit · melon;Melon charentais (jaune, vert);;;;;;;;;1;;;;FL, GP, IF (cœur juil.-sept.), DBB, CV, BM, BNA;FL : derniers fruits du Sud-Ouest
+Fruit · melon;Melon Galia / canari / brodé / piel de sapo;;;;;;;;;1;;;;IF (fiche melon : variétés citées, calendrier commun);
+Fruit · melon;Pastèque;;;;;;;;;1;;;;FL, GP, CV, BM, BNA, PG;
+Fruit · agrumes;Citron;;;;;;;;;1;;;;FL (disponible toute l'année);GP l'exclut en sept. (oct.-mars, juin)
+Fruit · agrumes;Clémentine;;;;;;;;;;;;;FL (nov.-jan.), GP;Hors saison en septembre
+Fruit · agrumes;Mandarine;;;;;;;;;;;;;FL (nov.-mars), GP;Hors saison en septembre
+Fruit · agrumes;Orange;;;;;;;;;;;;;FL (nov.-fév.), GP;Hors saison en septembre
+Fruit · agrumes;Orange sanguine;;;;;;;;;;;;;FL (déc.-mars);Hors saison en septembre
+Fruit · agrumes;Pamplemousse / pomelo;;;;;;;;;;;;;FL (déc.-mars), GP (jan.-juin);Hors saison en septembre
+Fruit · agrumes;Kumquat;;;;;;;;;;;;;FL (nov.-déc.);Hors saison en septembre
+Fruit · agrumes;Cédrat;;;;;;;;;;;;;—;Hiver, non vérifié
+Fruit · agrumes;Bergamote;;;;;;;;;;;;;—;Hiver, non vérifié
+Fruit · agrumes;Yuzu;;;;;;;;;;;;;—;Hiver, non vérifié
+Fruit · à coque;Noix fraîche;;;;;;;;;1;;;;FL, GP, BNA (« noix fraîche »), BM, PG, DNC (mi-sept.-oct.);
+Fruit · à coque;Noix sèche (nouvelle récolte);;;;;;;;;;;;;DNC (séchage après récolte);À partir d'oct.
+Fruit · à coque;Noisette;;;;;;;;;2;;;;FL (pleine saison sept.-oct.), GP, IF, PG;
+Fruit · à coque;Amande fraîche;;;;;;;;;;;;;GP (juil.-août);Hors saison en septembre
+Fruit · à coque;Amande sèche (nouvelle récolte);;;;;;;;;2;;;;FL (pleine saison sept.), GP, IF;
+Fruit · à coque;Châtaigne;;;;;;;;;1;;;;FL, CV (premières), PG, recherche (premières fin sept.);GP la donne oct.-déc.
+Fruit · à coque;Marron;;;;;;;;;1;;;;FL;
+Fruit · à coque;Pignon de pin;;;;;;;;;1;;;;IF;
+Fruit · à coque;Kiwi;;;;;;;;;;;;;FL (nov.-mai), GP;Hors saison en septembre
+Fruit · à coque;Kaki;;;;;;;;;;;;;FL (oct.-déc.), GP;IF seul le donne en sept. (import)
+Fruit · à coque;Grenade;;;;;;;;;;;;;FL (nov.-déc.), GP (oct.-déc.);IF seul la donne en sept. (import)
+Exotique (import);Avocat;;;;;;;;;1;;;;FL;
+Exotique (import);Banane;;;;;;;;;1;;;;FL;
+Exotique (import);Banane plantain;;;;;;;;;1;;;;FL;
+Exotique (import);Ananas;;;;;;;;;;;;;FL (nov.-mars);
+Exotique (import);Mangue;;;;;;;;;1;;;;FL;
+Exotique (import);Papaye;;;;;;;;;1;;;;FL;
+Exotique (import);Litchi;;;;;;;;;1;;;;FL;
+Exotique (import);Fruit de la passion;;;;;;;;;1;;;;FL;
+Exotique (import);Datte;;;;;;;;;1;;;;FL;
+Exotique (import);Figue de Barbarie;;;;;;;;;2;;;;FL (pleine saison sept.), IF;
+Exotique (import);Carambole;;;;;;;;;1;;;;IF;
+Exotique (import);Mangoustan;;;;;;;;;1;;;;IF;
+Exotique (import);Pitaya;;;;;;;;;1;;;;IF;
+Exotique (import);Sapotille;;;;;;;;;1;;;;IF;
+Exotique (import);Longane;;;;;;;;;2;;;;FL (pleine saison août-sept.);
+Exotique (import);Manioc;;;;;;;;;2;;;;FL (pleine saison sept.-oct.);
+Exotique (import);Taro;;;;;;;;;1;;;;FL;
+Exotique (import);Canne à sucre;;;;;;;;;2;;;;FL (pleine saison août-sept.);
+Exotique (import);Pistache;;;;;;;;;2;;;;FL (pleine saison sept.-oct.);
+Exotique (import);Noix de pécan;;;;;;;;;1;;;;FL;
+Exotique (import);Cacahuète;;;;;;;;;2;;;;FL (pleine saison sept.-oct.);
+Exotique (import);Combava;;;;;;;;;1;;;;FL;
+Exotique (import);Calamansi;;;;;;;;;2;;;;FL (pleine saison sept.-oct.);

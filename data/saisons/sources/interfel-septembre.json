@@ -1,0 +1,818 @@
+{
+"Champignon de Paris": {
+"mois": [
+"avril",
+"decembre",
+"fevrier",
+"janvier",
+"mai",
+"mars",
+"novembre",
+"octobre",
+"septembre"
+],
+"fam": [
+"champignons"
+],
+"typ": [
+"legumes"
+]
+},
+"Salade": {
+"mois": [
+"aout",
+"avril",
+"decembre",
+"fevrier",
+"janvier",
+"juillet",
+"juin",
+"mai",
+"mars",
+"novembre",
+"octobre",
+"septembre"
+],
+"fam": [
+"legumes-feuilles"
+],
+"typ": [
+"legumes"
+]
+},
+"Oignon Primeur": {
+"mois": [
+"avril",
+"decembre",
+"fevrier",
+"janvier",
+"mars",
+"novembre",
+"octobre",
+"septembre"
+],
+"fam": [
+"legumes-racines-tubercules-et-tiges"
+],
+"typ": [
+"legumes"
+]
+},
+"Choux de Bruxelles": {
+"mois": [
+"decembre",
+"fevrier",
+"janvier",
+"mars",
+"novembre",
+"octobre",
+"septembre"
+],
+"fam": [
+"choux"
+],
+"typ": [
+"legumes"
+]
+},
+"Herbes aromatiques fraîches": {
+"mois": [
+"aout",
+"avril",
+"decembre",
+"fevrier",
+"janvier",
+"juillet",
+"juin",
+"mai",
+"mars",
+"novembre",
+"octobre",
+"septembre"
+],
+"fam": [
+"aromatiques-fraiches"
+],
+"typ": [
+"legumes"
+]
+},
+"Champignons cultivés": {
+"mois": [
+"avril",
+"decembre",
+"fevrier",
+"janvier",
+"juin",
+"mai",
+"mars",
+"novembre",
+"octobre",
+"septembre"
+],
+"fam": [
+"champignons"
+],
+"typ": [
+"legumes"
+]
+},
+"Pourpier": {
+"mois": [
+"aout",
+"avril",
+"juillet",
+"juin",
+"mai",
+"novembre",
+"octobre",
+"septembre"
+],
+"fam": [
+"salades"
+],
+"typ": [
+"legumes"
+]
+},
+"Laitue": {
+"mois": [
+"avril",
+"decembre",
+"fevrier",
+"janvier",
+"juin",
+"mai",
+"mars",
+"novembre",
+"octobre",
+"septembre"
+],
+"fam": [
+"salades"
+],
+"typ": [
+"legumes"
+]
+},
+"Cresson": {
+"mois": [
+"avril",
+"decembre",
+"fevrier",
+"janvier",
+"mai",
+"mars",
+"novembre",
+"octobre",
+"septembre"
+],
+"fam": [
+"salades"
+],
+"typ": [
+"legumes"
+]
+},
+"Betterave": {
+"mois": [
+"aout",
+"avril",
+"decembre",
+"fevrier",
+"janvier",
+"juillet",
+"juin",
+"mai",
+"mars",
+"novembre",
+"octobre",
+"septembre"
+],
+"fam": [
+"legumes-racines-tubercules-et-tiges"
+],
+"typ": [
+"legumes"
+]
+},
+"Oignon": {
+"mois": [
+"aout",
+"avril",
+"decembre",
+"fevrier",
+"janvier",
+"mai",
+"mars",
+"novembre",
+"octobre",
+"septembre"
+],
+"fam": [
+"legumes-racines-tubercules-et-tiges"
+],
+"typ": [
+"legumes"
+]
+},
+"Aubergine": {
+"mois": [
+"aout",
+"juillet",
+"juin",
+"mai",
+"septembre"
+],
+"fam": [
+"legumes-fruits"
+],
+"typ": [
+"legumes"
+]
+},
+"Concombre": {
+"mois": [
+"aout",
+"avril",
+"juillet",
+"juin",
+"mai",
+"mars",
+"septembre"
+],
+"fam": [
+"legumes-fruits"
+],
+"typ": [
+"legumes"
+]
+},
+"Patate douce": {
+"mois": [
+"avril",
+"decembre",
+"fevrier",
+"janvier",
+"mai",
+"mars",
+"novembre",
+"octobre",
+"septembre"
+],
+"fam": [
+"legumes-exotiques"
+],
+"typ": [
+"legumes"
+]
+},
+"Blette": {
+"mois": [
+"aout",
+"avril",
+"decembre",
+"fevrier",
+"janvier",
+"juillet",
+"juin",
+"mai",
+"mars",
+"novembre",
+"octobre",
+"septembre"
+],
+"fam": [
+"legumes-feuilles"
+],
+"typ": [
+"legumes"
+]
+},
+"Germe de haricot mungo Soja vert": {
+"mois": [
+"aout",
+"avril",
+"decembre",
+"fevrier",
+"janvier",
+"juillet",
+"juin",
+"mai",
+"mars",
+"novembre",
+"octobre",
+"septembre"
+],
+"fam": [
+"haricots-pois-legumes-secs-graines-germees"
+],
+"typ": [
+"legumes"
+]
+},
+"Haricot vert": {
+"mois": [
+"aout",
+"juillet",
+"juin",
+"octobre",
+"septembre"
+],
+"fam": [
+"haricots-pois-legumes-secs-graines-germees"
+],
+"typ": [
+"legumes"
+]
+},
+"Courgette": {
+"mois": [
+"aout",
+"avril",
+"juillet",
+"juin",
+"mai",
+"mars",
+"septembre"
+],
+"fam": [
+"courges"
+],
+"typ": [
+"legumes"
+]
+},
+"Oseille": {
+"mois": [
+"aout",
+"juillet",
+"juin",
+"mai",
+"octobre",
+"septembre"
+],
+"fam": [
+"aromatiques-fraiches"
+],
+"typ": [
+"legumes"
+]
+},
+"Persil": {
+"mois": [
+"aout",
+"avril",
+"juin",
+"mai",
+"novembre",
+"octobre",
+"septembre"
+],
+"fam": [
+"aromatiques-fraiches"
+],
+"typ": [
+"legumes"
+]
+},
+"Cèpe": {
+"mois": [
+"aout",
+"novembre",
+"octobre",
+"septembre"
+],
+"fam": [
+"champignons"
+],
+"typ": [
+"legumes"
+]
+},
+"Ail": {
+"mois": [
+"aout",
+"avril",
+"decembre",
+"fevrier",
+"janvier",
+"juillet",
+"juin",
+"mai",
+"mars",
+"novembre",
+"octobre",
+"septembre"
+],
+"fam": [
+"legumes-racines-tubercules-et-tiges"
+],
+"typ": [
+"legumes"
+]
+},
+"Échalote": {
+"mois": [
+"aout",
+"avril",
+"decembre",
+"fevrier",
+"janvier",
+"mai",
+"mars",
+"novembre",
+"octobre",
+"septembre"
+],
+"fam": [
+"legumes-racines-tubercules-et-tiges"
+],
+"typ": [
+"legumes"
+]
+},
+"Groseille": {
+"mois": [
+"aout",
+"juillet",
+"juin",
+"septembre"
+],
+"fam": [
+"petits-fruits-et-fruits-rouges"
+],
+"typ": [
+"fruits"
+]
+},
+"Mûre": {
+"mois": [
+"aout",
+"juillet",
+"octobre",
+"septembre"
+],
+"fam": [
+"petits-fruits-et-fruits-rouges"
+],
+"typ": [
+"fruits"
+]
+},
+"Myrtille": {
+"mois": [
+"aout",
+"juillet",
+"juin",
+"septembre"
+],
+"fam": [
+"petits-fruits-et-fruits-rouges"
+],
+"typ": [
+"fruits"
+]
+},
+"Figue": {
+"mois": [
+"aout",
+"octobre",
+"septembre"
+],
+"fam": [
+"fruits-sauvages"
+],
+"typ": [
+"fruits"
+]
+},
+"Noisette": {
+"mois": [
+"decembre",
+"janvier",
+"juin",
+"mai",
+"novembre",
+"octobre",
+"septembre"
+],
+"fam": [
+"fruits-a-coque"
+],
+"typ": [
+"fruits"
+]
+},
+"Melon": {
+"mois": [
+"aout",
+"juillet",
+"juin",
+"septembre"
+],
+"fam": [
+"legumes-fruits"
+],
+"typ": [
+"fruits"
+]
+},
+"Cassis": {
+"mois": [
+"aout",
+"septembre"
+],
+"fam": [
+"petits-fruits-et-fruits-rouges"
+],
+"typ": [
+"fruits"
+]
+},
+"Framboise": {
+"mois": [
+"aout",
+"juillet",
+"septembre"
+],
+"fam": [
+"petits-fruits-et-fruits-rouges"
+],
+"typ": [
+"fruits"
+]
+},
+"Pitaya": {
+"mois": [
+"aout",
+"avril",
+"decembre",
+"fevrier",
+"janvier",
+"juillet",
+"juin",
+"mai",
+"mars",
+"novembre",
+"octobre",
+"septembre"
+],
+"fam": [
+"fruits-exotiques-et-tropicaux"
+],
+"typ": [
+"fruits"
+]
+},
+"Sapotille": {
+"mois": [
+"aout",
+"avril",
+"decembre",
+"fevrier",
+"janvier",
+"juillet",
+"juin",
+"mai",
+"mars",
+"novembre",
+"octobre",
+"septembre"
+],
+"fam": [
+"fruits-exotiques-et-tropicaux"
+],
+"typ": [
+"fruits"
+]
+},
+"Grenade": {
+"mois": [
+"aout",
+"decembre",
+"fevrier",
+"janvier",
+"novembre",
+"octobre",
+"septembre"
+],
+"fam": [
+"fruits-exotiques-et-tropicaux"
+],
+"typ": [
+"fruits"
+]
+},
+"Kaki": {
+"mois": [
+"decembre",
+"janvier",
+"novembre",
+"octobre",
+"septembre"
+],
+"fam": [
+"fruits-exotiques-et-tropicaux"
+],
+"typ": [
+"fruits"
+]
+},
+"Mangoustan": {
+"mois": [
+"aout",
+"avril",
+"decembre",
+"fevrier",
+"janvier",
+"juillet",
+"juin",
+"mai",
+"mars",
+"novembre",
+"octobre",
+"septembre"
+],
+"fam": [
+"fruits-exotiques-et-tropicaux"
+],
+"typ": [
+"fruits"
+]
+},
+"Carambole": {
+"mois": [
+"aout",
+"avril",
+"decembre",
+"fevrier",
+"janvier",
+"juillet",
+"juin",
+"mai",
+"mars",
+"novembre",
+"octobre",
+"septembre"
+],
+"fam": [
+"fruits-exotiques-et-tropicaux"
+],
+"typ": [
+"fruits"
+]
+},
+"Figue de Barbarie": {
+"mois": [
+"aout",
+"octobre",
+"septembre"
+],
+"fam": [
+"fruits-exotiques-et-tropicaux"
+],
+"typ": [
+"fruits"
+]
+},
+"Raisin": {
+"mois": [
+"aout",
+"novembre",
+"octobre",
+"septembre"
+],
+"fam": [
+"fruits-de-plantes-grimpantes"
+],
+"typ": [
+"fruits"
+]
+},
+"Poire": {
+"mois": [
+"avril",
+"decembre",
+"fevrier",
+"janvier",
+"mars",
+"novembre",
+"octobre",
+"septembre"
+],
+"fam": [
+"fruits-a-pepins"
+],
+"typ": [
+"fruits"
+]
+},
+"Pignon de pin": {
+"mois": [
+"aout",
+"avril",
+"decembre",
+"fevrier",
+"janvier",
+"juillet",
+"juin",
+"mai",
+"mars",
+"novembre",
+"octobre",
+"septembre"
+],
+"fam": [
+"fruits-a-coque"
+],
+"typ": [
+"fruits"
+]
+},
+"Mirabelle": {
+"mois": [
+"aout",
+"septembre"
+],
+"fam": [
+"fruits-a-noyaux"
+],
+"typ": [
+"fruits"
+]
+},
+"Pêche, Nectarine": {
+"mois": [
+"aout",
+"juillet",
+"juin",
+"septembre"
+],
+"fam": [
+"fruits-a-noyaux"
+],
+"typ": [
+"fruits"
+]
+},
+"Prune": {
+"mois": [
+"aout",
+"juillet",
+"octobre",
+"septembre"
+],
+"fam": [
+"fruits-a-noyaux"
+],
+"typ": [
+"fruits"
+]
+},
+"Amande": {
+"mois": [
+"octobre",
+"septembre"
+],
+"fam": [
+"fruits-a-coque"
+],
+"typ": [
+"fruits"
+]
+},
+"Rhubarbe": {
+"mois": [
+"aout",
+"juillet",
+"juin",
+"mai",
+"octobre",
+"septembre"
+],
+"fam": [
+"autres-fruits"
+],
+"typ": [
+"fruits"
+]
+},
+"Truffe": {
+"mois": [
+"decembre",
+"fevrier",
+"janvier",
+"mars",
+"novembre",
+"octobre",
+"septembre"
+],
+"fam": [
+"champignons"
+],
+"typ": [
+"legumes"
+]
+}
+}
