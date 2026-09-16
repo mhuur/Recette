@@ -105,6 +105,7 @@
             <span class="filter-sheet-title"><span class="filter-sheet-title-ico" data-icon="filter" aria-hidden="true"></span>Filtres</span>
             <div style="display:flex;gap:8px;align-items:center;">
               <button class="btn btn-ghost btn-sm js-save-preset" type="button" style="display:none">Enregistrer</button>
+              <button class="btn btn-ghost btn-sm js-save-preset-new" type="button" style="display:none">Enregistrer nouveau</button>
               <button class="filter-clear-btn js-clear-filters" id="btn-reset-filters" type="button"><span class="tb-ico" data-icon="rotateCcw" aria-hidden="true"></span><span class="js-clear-label">Tout effacer</span></button>
               <button class="filter-sheet-close" id="filter-sheet-close" title="Fermer"><span class="tb-ico" data-icon="x"></span></button>
             </div>
@@ -173,6 +174,7 @@
             <span id="filter-active-count">Aucun filtre actif</span>
             <button type="button" class="filter-clear-btn js-clear-filters" id="btn-reset-filters-rail"><span class="tb-ico" data-icon="rotateCcw" aria-hidden="true"></span><span class="js-clear-label">Tout effacer</span></button>
             <span class="preset-save-foot" style="display:none"><span aria-hidden="true">·</span><button type="button" class="js-save-preset">Enregistrer</button></span>
+            <span class="preset-save-foot preset-save-foot-new" style="display:none"><span aria-hidden="true">·</span><button type="button" class="js-save-preset-new">Enregistrer nouveau</button></span>
           </div>
         </div>
       </div>
@@ -5062,23 +5064,25 @@ function presetDescription(p) {
 let presetEditId = null;
 // null = retirer les critères (recherche et tri conservés), sinon appliquer le modèle.
 function applyFilterPreset(p) {
-  presetEditId = null; // appliquer un autre modèle, ou tout retirer, clôt la modification
+  // Le modèle appliqué devient le modèle de départ : dès qu'un critère change,
+  // « Mettre à jour » le vise et « Enregistrer nouveau » en crée un autre.
+  // Retirer le modèle (re-clic sur sa puce) ou « Tout effacer » clôt cela.
+  presetEditId = p ? p.id : null;
   Object.assign(state.filters, presetCriteria(p ? p.filters : null));
   saveLocal();
   buildFilterBar();
   renderRecipes();
 }
 function startPresetEdit(p) {
-  applyFilterPreset(p);
-  presetEditId = p.id;
+  applyFilterPreset(p); // pose presetEditId
   renderFilterPresets();
   switchTab('recipes');
   if (!isFilterRailDocked()) openFilterSheet();
   toast('Modifie les filtres, puis « Mettre à jour »');
 }
-function saveFilterPreset() {
+function saveFilterPreset(forceNew) {
   if (!activeFilterCount()) return;
-  const editing = (state.filterPresets || []).find(p => p.id === presetEditId);
+  const editing = forceNew ? null : (state.filterPresets || []).find(p => p.id === presetEditId);
   if (editing) {
     editing.filters = presetCriteria(state.filters);
     presetEditId = null;
@@ -5092,6 +5096,7 @@ function saveFilterPreset() {
     const dup = presets.find(p => normalizeText(p.name) === normalizeText(name));
     if (dup) dup.filters = presetCriteria(state.filters); // même nom = on le remplace
     else presets.push({ id: uid(), name, filters: presetCriteria(state.filters) });
+    presetEditId = (dup || presets[presets.length - 1]).id; // le modèle enregistré devient le modèle de départ
     save();
     renderFilterPresets();
     toast('Modèle « ' + name + ' » ' + (dup ? 'mis à jour' : 'enregistré'), 'success');
@@ -5139,14 +5144,20 @@ function renderFilterPresets() {
       if (p) applyFilterPreset(p.id === curId ? null : p); // recliquer le modèle actif le retire
     };
   });
-  // Rien à enregistrer sans filtre, ni quand les filtres en cours sont déjà un modèle
-  // (sauf en cours de modification : c'est précisément l'état à mettre à jour).
-  const canSave = activeFilterCount() > 0 && (editing ? true : !curId);
+  // Rien à enregistrer sans filtre, ni quand les filtres en cours sont déjà un
+  // modèle (puce allumée). Sinon : « Enregistrer » crée ; avec un modèle de
+  // départ, « Mettre à jour » l'écrase et « Enregistrer nouveau » en crée un autre.
+  const canSave = activeFilterCount() > 0 && !curId;
   document.querySelectorAll('.js-save-preset').forEach(b => {
     const foot = b.closest('.preset-save-foot');
     (foot || b).style.display = canSave ? '' : 'none';
     b.textContent = editing ? 'Mettre à jour' : 'Enregistrer';
     b.title = editing ? 'Mettre à jour « ' + editing.name + ' »' : '';
+  });
+  document.querySelectorAll('.js-save-preset-new').forEach(b => {
+    const foot = b.closest('.preset-save-foot');
+    (foot || b).style.display = (canSave && editing) ? '' : 'none';
+    b.title = 'Enregistrer ces filtres comme un nouveau modèle, sans toucher « ' + (editing ? editing.name : '') + ' »';
   });
   renderFilterPresetsSettings();
 }
@@ -5181,7 +5192,8 @@ function renderFilterPresetsSettings() {
     list.appendChild(el);
   });
 }
-document.querySelectorAll('.js-save-preset').forEach(b => { b.onclick = saveFilterPreset; });
+document.querySelectorAll('.js-save-preset').forEach(b => { b.onclick = () => saveFilterPreset(false); });
+document.querySelectorAll('.js-save-preset-new').forEach(b => { b.onclick = () => saveFilterPreset(true); });
 
 // Count active filters and update badge
 function activeFilterCount() {
