@@ -860,8 +860,11 @@ service cloud.firestore {
      scroll et au blur du rail de filtres, comme .autocomplete-dropdown. -->
 <div class="filter-menu" id="filter-ing-menu" role="dialog" aria-label="Ingrédients">
   <div class="filter-menu-head">
-    <input type="text" class="filter-menu-search" id="filter-ing-search" placeholder="Rechercher un ingrédient…"
-           autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" data-form-type="other">
+    <div class="filter-menu-search-wrap">
+      <input type="text" class="filter-menu-search" id="filter-ing-search" placeholder="Rechercher un ingrédient…"
+             autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" data-form-type="other">
+      <button type="button" class="filter-menu-search-clear" title="Effacer la recherche" aria-label="Effacer la recherche" data-icon="x"></button>
+    </div>
     <!-- Plusieurs requis : OU par défaut (« de la tomate, peu importe laquelle »),
          ET sur demande (« tomate ET mozzarella »). Sans ça, cocher 3 tomates = 0 recette. -->
     <div class="filter-menu-mode" id="filter-ing-mode">
@@ -880,8 +883,11 @@ service cloud.firestore {
 
 <div class="filter-menu" id="filter-meal-menu" role="dialog" aria-label="Type de plat">
   <div class="filter-menu-head">
-    <input type="text" class="filter-menu-search" id="filter-meal-search" placeholder="Rechercher un type…"
-           autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" data-form-type="other">
+    <div class="filter-menu-search-wrap">
+      <input type="text" class="filter-menu-search" id="filter-meal-search" placeholder="Rechercher un type…"
+             autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" data-form-type="other">
+      <button type="button" class="filter-menu-search-clear" title="Effacer la recherche" aria-label="Effacer la recherche" data-icon="x"></button>
+    </div>
   </div>
   <div class="filter-menu-list" id="filter-meal-list" role="listbox" aria-multiselectable="true"></div>
   <div class="filter-menu-foot">
@@ -4483,6 +4489,10 @@ function createFilterMenu(cfg) {
         cfg.toggle(o.id);
         saveLocal();
         renderRecipes(); // → refreshAllFacets → refresh() → relance ce rendu
+        // La recherche reprend la main, texte sélectionné : taper relance une
+        // recherche, cliquer une autre variante (« tomate ») reste possible.
+        // Pas sur mobile : le focus ferait monter le clavier à chaque coche.
+        if (search && window.innerWidth >= 769) { search.focus(); search.select(); }
       };
       list.appendChild(b);
     });
@@ -4507,6 +4517,7 @@ function createFilterMenu(cfg) {
   function open() {
     FILTER_MENUS.forEach(m => { if (m.menu !== menu) m.close(); }); // un seul à la fois
     if (search) search.value = '';
+    if (clearBtn) clearBtn.classList.remove('show');
     renderList();
     menu.classList.add('active');
     btn.setAttribute('aria-expanded', 'true');
@@ -4522,7 +4533,10 @@ function createFilterMenu(cfg) {
   // stopPropagation coupe le listener global du back-guard → syncBackGuard à la main
   btn.addEventListener('click', e => { e.stopPropagation(); if (isOpen()) close(); else open(); syncBackGuard(); });
   menu.addEventListener('click', e => e.stopPropagation());
-  search?.addEventListener('input', renderList);
+  const clearBtn = search?.parentElement?.querySelector('.filter-menu-search-clear');
+  const syncClear = () => { if (clearBtn) clearBtn.classList.toggle('show', !!search.value); };
+  search?.addEventListener('input', () => { syncClear(); renderList(); });
+  clearBtn?.addEventListener('click', () => { search.value = ''; syncClear(); renderList(); search.focus(); });
   document.getElementById(cfg.clear)?.addEventListener('click', () => { cfg.clearAll(); saveLocal(); renderRecipes(); });
   document.getElementById(cfg.done)?.addEventListener('click', () => { close(); syncBackGuard(); });
 
@@ -4705,7 +4719,12 @@ createFilterMenu({
   list: 'filter-ing-list', clear: 'filter-ing-clear', done: 'filter-ing-done',
   options: () => {
     const av = availableIngredientIds();
-    return state.ingredients.slice()
+    // Seuls les ingrédients d'au moins une recette : les autres (produits
+    // ménagers de la liste de courses, restes de recettes supprimées) ne
+    // filtreraient jamais rien et encombraient la liste en grisé.
+    const used = new Set();
+    state.recipes.forEach(r => (r.ingredients || []).forEach(i => used.add(i.ingredientId)));
+    return state.ingredients.filter(i => used.has(i.id))
       .sort((a, b) => a.name.localeCompare(b.name, 'fr'))
       .map(i => ({ id: i.id, name: i.name, dim: !av.has(i.id) }));
   },

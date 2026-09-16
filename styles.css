@@ -2224,6 +2224,17 @@ body.sugg-preview-open .sugg-preview { display: flex; }
   color: var(--text); font: inherit; font-size: 13px;
 }
 .filter-menu-search:focus { outline: none; border-color: var(--green-500); }
+.filter-menu-search-wrap { position: relative; }
+.filter-menu-search-wrap .filter-menu-search { padding-right: 32px; }
+.filter-menu-search-clear {
+  position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
+  display: none; align-items: center; justify-content: center;
+  width: 24px; height: 24px; border-radius: 50%;
+  background: none; border: 0; padding: 0; cursor: pointer; color: var(--mist-500);
+}
+.filter-menu-search-clear.show { display: inline-flex; }
+.filter-menu-search-clear:hover { background: var(--green-100); color: var(--green-700); }
+.filter-menu-search-clear svg { width: 14px; height: 14px; }
 /* overscroll-behavior : au bout de la liste, la molette ne doit pas enchaîner sur
    le rail — ce défilement fermerait le menu (voir le listener scroll). */
 .filter-menu-list { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 0 8px 4px; display: flex; flex-direction: column; gap: 1px; }
