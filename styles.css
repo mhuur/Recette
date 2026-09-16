@@ -2139,7 +2139,8 @@ body.sugg-preview-open .sugg-preview { display: flex; }
   display: none;
   margin-top: auto;
   align-items: center;
-  gap: 8px;
+  flex-wrap: wrap;          /* « 63 filtres actifs · Effacer 63 · Enregistrer » dépasse 188px : le dernier passe dessous */
+  gap: 6px 8px;
   border-top: 1px solid var(--mist-200);
   padding-top: 12px;
   font-size: 12px;
@@ -2536,6 +2537,7 @@ body.filter-rail-on .time-presets-group { gap: 12px; }
   .filter-sheet-section { margin-bottom: 18px; }
   /* Pied du rail : « N filtre(s) actif(s) · Tout effacer » */
   .filter-rail-foot { display: flex; }
+  .filter-rail-foot #filter-active-count { white-space: nowrap; }
   /* Un rail permanent n'a ni croix ni bouton « Voir N recettes » ni déclencheur.
      (Ce bloc doit rester APRÈS .filter-sheet-close/-footer : même spécificité.) */
   .filter-sheet-close,

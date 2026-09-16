@@ -5181,6 +5181,10 @@ function activeFilterCount() {
 }
 function updateFilterBadge() {
   const count = activeFilterCount();
+  // « Enregistrer » et la puce du modèle actif dépendent des filtres en cours ;
+  // les menus flottants (Ingrédients, Type de plat) rendent via renderRecipes()
+  // sans repasser par buildFilterBar(), d'où le rappel ici (appelé à chaque rendu).
+  if (typeof renderFilterPresets === 'function') renderFilterPresets();
   // Deux porteurs du compteur : barre du haut (desktop) et chip (mobile).
   document.querySelectorAll('.js-filter-count').forEach(badge => {
     badge.textContent = count;
