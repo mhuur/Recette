@@ -69,6 +69,7 @@ setTimeout(function () {
     c.seasons = (typeof SEASON_CALENDAR === 'object') && Object.keys(SEASON_CALENDAR).length > 200
       && (typeof SEASON_ALIASES === 'object') && typeof applySeasonCalendar === 'function'
       && document.querySelectorAll('#filter-season .month-chip').length === 12
+      && typeof renderSeasonGrid === 'function' && (renderSeasonGrid(), !!document.querySelector('#season-grid .season-head'))
       && ingredientOutOfSeason({ seasonMonths: [5, 6, 7] }, 1) === true
       && ingredientOutOfSeason({ seasonMonths: [5, 6, 7] }, 6) === false
       && ingredientOutOfSeason({ seasonMonths: [] }, 1) === false

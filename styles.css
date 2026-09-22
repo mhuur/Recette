@@ -2299,6 +2299,56 @@ body.sugg-preview-open .sugg-preview { display: flex; }
 .month-chip { padding: 4px 8px; min-width: 42px; text-align: center; position: relative; }
 .month-chip.now::after { content: ''; position: absolute; top: 3px; right: 5px; width: 4px; height: 4px; border-radius: 50%; background: var(--green-600); }
 .month-chip.now.on::after { background: #fff; }
+
+/* Données › Saisons : grille ingrédient × 12 mois, éditable case par case */
+.season-tools { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 8px; }
+.season-search { flex: 1 1 200px; min-width: 160px; }
+.season-select { width: auto; padding: 7px 30px 7px 12px; border-radius: 999px; font-size: 13px; }
+.season-check { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-muted); cursor: pointer; white-space: nowrap; }
+.season-check input { accent-color: var(--green-600); }
+.season-grid { max-height: 62vh; overflow: auto; border-radius: 12px; }
+.season-row {
+  display: grid; grid-template-columns: minmax(140px, 1fr) repeat(12, 28px) 28px;
+  gap: 3px; align-items: center; padding: 2px 4px; border-radius: 8px;
+}
+.season-row:hover { background: rgba(47, 125, 85, .06); }
+.season-head {
+  position: sticky; top: 0; z-index: 2; background: var(--menu-fill);
+  font-size: 11px; font-weight: 700; color: var(--text-dim); text-transform: uppercase; letter-spacing: .04em;
+}
+.season-head:hover { background: var(--menu-fill); }
+.season-head .season-name { color: var(--text-dim); cursor: default; padding-left: 6px; }
+.season-head .season-m { text-align: center; }
+.season-head .season-m.now { color: var(--green-700); }
+.season-m-short { display: none; }
+.season-name {
+  text-align: left; background: none; border: 0; padding: 5px 6px; font: inherit; font-size: 13.5px;
+  color: var(--text); cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; border-radius: 6px; min-width: 0;
+}
+button.season-name:hover { color: var(--green-700); text-decoration: underline; }
+.season-cell {
+  width: 26px; height: 26px; margin: 0 auto; padding: 0; border-radius: 7px; cursor: pointer;
+  border: 1px solid var(--border); background: rgba(255, 255, 255, .7);
+  transition: background var(--dur-fast), border-color var(--dur-fast);
+}
+.season-cell:hover { border-color: var(--green-600); }
+.season-cell.now:not(.on) { border-style: dashed; border-color: var(--green-600); }
+.season-cell.on { background: var(--green-600); border-color: var(--green-600); }
+.season-cell.on:hover { background: var(--green-700); }
+.season-clear { background: none; border: 0; padding: 4px; color: var(--text-dim); cursor: pointer; border-radius: 6px; display: inline-flex; justify-content: center; }
+.season-clear svg { width: 14px; height: 14px; }
+.season-clear:hover { color: var(--danger); background: var(--danger-soft); }
+.season-clear:disabled { opacity: 0; pointer-events: none; }
+.season-empty { padding: 14px; color: var(--text-dim); text-align: center; font-size: 13px; }
+body.guest-mode .season-cell, body.guest-mode .season-clear, body.guest-mode #btn-apply-seasons { pointer-events: none; }
+@media (max-width: 768px) {
+  .season-row { grid-template-columns: minmax(84px, 1fr) repeat(12, 20px) 22px; gap: 2px; padding: 2px 0; }
+  .season-cell { width: 20px; height: 20px; border-radius: 5px; }
+  .season-name { font-size: 12.5px; padding: 4px 4px; }
+  .season-m-long { display: none; }
+  .season-m-short { display: inline; }
+  .season-grid { max-height: 70dvh; }
+}
 /* Modèles de filtres : chips d'application (panneau Filtres) et lignes de gestion (Réglages › Avancé) */
 .preset-chip { max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
 .filter-rail-foot .preset-save-foot { display: inline-flex; align-items: center; gap: 5px; }
