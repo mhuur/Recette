@@ -2345,6 +2345,18 @@ button.season-name:hover { color: var(--green-700); text-decoration: underline; 
 .season-ok svg { width: 15px; height: 15px; }
 .season-ok:hover { background: rgba(47, 125, 85, .12); color: var(--green-700); }
 .season-empty { padding: 14px; color: var(--text-dim); text-align: center; font-size: 13px; }
+/* Filtre Saison : recette gardée malgré UN ingrédient hors saison (liste, cartes Idées),
+   ingrédient hors saison marqué dans le détail / l'aperçu. */
+.season-warn, .sugg-tag-warn {
+  display: inline-block; vertical-align: 1px; margin-left: 8px; padding: 1px 8px; border-radius: 999px;
+  background: var(--warning-soft); color: #7a5410; font-size: 11px; font-weight: 600; white-space: nowrap;
+}
+.sugg-tag-warn { margin-left: 0; }
+.ingredients-list li.ing-off .ing-name { color: var(--text-dim); }
+.ing-off-tag {
+  display: inline-block; margin-left: 6px; padding: 0 7px; border-radius: 999px;
+  background: var(--warning-soft); color: #7a5410; font-size: 11px; font-weight: 600; white-space: nowrap;
+}
 body.guest-mode .season-cell, body.guest-mode .season-clear, body.guest-mode .season-ok, body.guest-mode #season-bulk-ok { pointer-events: none; }
 @media (max-width: 768px) {
   .season-row { grid-template-columns: minmax(84px, 1fr) repeat(12, 20px) 22px; gap: 2px; padding: 2px 0; }

@@ -73,6 +73,8 @@ setTimeout(function () {
       && ingredientOutOfSeason({ seasonMonths: [5, 6, 7] }, 1) === true
       && ingredientOutOfSeason({ seasonMonths: [5, 6, 7] }, 6) === false
       && ingredientOutOfSeason({ seasonMonths: [] }, 1) === false
+      && seasonRangeLabel([11, 12, 1, 2]) === 'nov. \u2192 f\u00e9v.' && seasonRangeLabel([3, 6, 7]) === 'mars, juin \u2192 juil.'
+      && seasonRangeLabel([1,2,3,4,5,6,7,8,9,10,11,12]) === "toute l’année".replace("’", "'") && typeof recipeOutOfSeasonIngredients === 'function'
       && JSON.stringify(calendarSeasonMonths('Tomates')) === JSON.stringify(SEASON_CALENDAR['Tomate ronde / grappe'])
       && JSON.stringify(calendarSeasonMonths('Oignons')) === '[]'
       && JSON.stringify(calendarSeasonMonths('Ail')) === '[]'

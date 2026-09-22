@@ -2621,6 +2621,8 @@ function renderSuggestions() {
     // déjà été cuisinée — l'annoncer « jamais faite » était faux.
     const unrated = r.rating == null || r.rating === '';
     if (!r.lastPickedAt && unrated) meta.push('<span class="sugg-tag-new">à tester</span>');
+    const warn = seasonWarnHtml(r, 'sugg-tag-warn');
+    if (warn) meta.push(warn);
     main.innerHTML = '<div class="sugg-card-name">' + escapeHtml(r.name) + '</div>'
       + '<div class="sugg-card-meta">' + meta.join('') + '</div>';
     main.onclick = () => openSuggPreview(r.id);
@@ -2696,6 +2698,7 @@ function suggPreviewHtml(r) {
   if (r.servings) meta.push(r.servings + ' pers.');
   if (r.prepTime) meta.push('Prépa ' + formatTime(r.prepTime));
   if (r.cookTime) meta.push('Cuisson ' + formatTime(r.cookTime));
+  meta.push(recipeSeasonLabel(r));
   if (meta.length) {
     h += '<div class="recipe-detail-meta">' + meta.map(escapeHtml).join('<span class="meta-dot" aria-hidden="true">·</span>') + '</div>';
   }
@@ -2708,11 +2711,9 @@ function suggPreviewHtml(r) {
       + '</div>';
   }
   if (r.ingredients && r.ingredients.length) {
+    const month = seasonRefMonth();
     h += '<div class="recipe-section"><div class="recipe-section-title"><span>Ingrédients</span></div><ul class="ingredients-list">'
-      + r.ingredients.map(i => {
-          const qty = i.quantity ? i.quantity + (i.unitId ? ' ' + getUnitName(i.unitId) : '') : '';
-          return '<li><span class="ing-qty">' + escapeHtml(qty) + '</span><span class="ing-name">' + escapeHtml(getIngredientName(i.ingredientId)) + '</span></li>';
-        }).join('')
+      + r.ingredients.map(i => ingredientLineHtml(i, month)).join('')
       + '</ul></div>';
   }
   const steps = (r.instructions || '').split('\n').map(s => s.trim()).filter(Boolean);
@@ -3549,7 +3550,7 @@ function recipeMatches(r, f, skip) {
   if ((f.temperatures || []).length && !f.temperatures.includes(r.temperature || null)) return false;
   if (f.vegetarianOnly && !isVegetarianRecipe(r)) return false;
   if (f.pescatarianOnly && !isPescatarianRecipe(r)) return false;
-  if (f.seasonMonth && recipeHasOutOfSeason(r, f.seasonMonth)) return false;
+  if (f.seasonMonth && recipeOutOfSeasonIngredients(r, f.seasonMonth).length > 1) return false;
   if (!skip.selected && f.selectedOnly && !state.selectedRecipeIds.includes(r.id)) return false;
   return true;
 }
@@ -3563,8 +3564,77 @@ function ingredientOutOfSeason(ing, month) {
   const m = ing && ing.seasonMonths;
   return Array.isArray(m) && m.length > 0 && m.length < 12 && !m.includes(month);
 }
-function recipeHasOutOfSeason(r, month) {
-  return (r.ingredients || []).some(i => ingredientOutOfSeason(state.ingredients.find(x => x.id === i.ingredientId), month));
+// Ingrédients hors saison d'une recette pour un mois (dédoublonnés). Le filtre
+// tolère UN ingrédient hors saison (la recette reste listée avec un badge qui le
+// nomme) et écarte à partir de deux : un zeste ou une garniture ne doit pas cacher
+// un plat, mais une salade tomates-concombre en janvier n'a rien à faire là.
+function recipeOutOfSeasonIngredients(r, month) {
+  const seen = new Set(), out = [];
+  (r.ingredients || []).forEach(i => {
+    if (seen.has(i.ingredientId)) return;
+    seen.add(i.ingredientId);
+    const ing = state.ingredients.find(x => x.id === i.ingredientId);
+    if (ingredientOutOfSeason(ing, month)) out.push(ing);
+  });
+  return out;
+}
+// Mois où TOUS les ingrédients datés de la recette sont de saison (intersection).
+// null = aucun ingrédient daté (toute l'année) ; [] = aucun mois commun.
+function recipeSeasonMonths(r) {
+  let months = null;
+  (r.ingredients || []).forEach(i => {
+    const ing = state.ingredients.find(x => x.id === i.ingredientId);
+    const m = ing && ing.seasonMonths;
+    if (!Array.isArray(m) || !m.length || m.length >= 12) return;
+    const set = new Set(m);
+    months = months === null ? [...set] : months.filter(x => set.has(x));
+  });
+  return months;
+}
+const MONTHS_SHORT = ['jan.', 'fév.', 'mars', 'avr.', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.'];
+// « mai → oct. », « nov. → fév. » (plages circulaires), « mars, juin » pour des mois isolés.
+function seasonRangeLabel(months) {
+  const set = new Set(months || []);
+  if (!set.size) return '';
+  if (set.size >= 12) return 'toute l\'année';
+  const prev = m => (m === 1 ? 12 : m - 1), next = m => (m === 12 ? 1 : m + 1);
+  let start = 1;
+  while (!(set.has(start) && !set.has(prev(start)))) start = next(start);
+  const runs = [];
+  let m = start, guard = 0;
+  while (guard++ < 12) {
+    if (set.has(m) && !set.has(prev(m))) runs.push([m, m]);
+    if (set.has(m)) runs[runs.length - 1][1] = m;
+    m = next(m);
+  }
+  return runs.map(([a, b]) => a === b ? MONTHS_SHORT[a - 1] : MONTHS_SHORT[a - 1] + ' → ' + MONTHS_SHORT[b - 1]).join(', ');
+}
+// Texte « Saison » d'une recette pour la ligne méta du détail / de l'aperçu.
+function recipeSeasonLabel(r) {
+  const months = recipeSeasonMonths(r);
+  if (months === null) return 'Toute l\'année';
+  if (!months.length) return 'Saison : aucun mois commun';
+  return 'Saison ' + seasonRangeLabel(months);
+}
+// Mois de référence pour marquer les ingrédients hors saison : le mois filtré, sinon le mois courant.
+function seasonRefMonth() { return state.filters.seasonMonth || (new Date().getMonth() + 1); }
+// <li> d'ingrédient du détail et de l'aperçu : quantité + nom, marqué s'il est hors saison ce mois-ci.
+function ingredientLineHtml(i, month) {
+  const qty = i.quantity ? i.quantity + (i.unitId ? ' ' + getUnitName(i.unitId) : '') : '';
+  const ing = state.ingredients.find(x => x.id === i.ingredientId);
+  const off = ingredientOutOfSeason(ing, month);
+  const seasonTitle = ing && (ing.seasonMonths || []).length ? ' title="De saison ' + escapeHtml(seasonRangeLabel(ing.seasonMonths)) + '"' : '';
+  // La colonne quantité est toujours rendue (même vide) pour aligner les noms.
+  return '<li' + (off ? ' class="ing-off"' : '') + '><span class="ing-qty">' + escapeHtml(qty) + '</span><span class="ing-name"' + seasonTitle + '>' + escapeHtml(getIngredientName(i.ingredientId))
+    + (off ? ' <span class="ing-off-tag">hors saison en ' + MONTHS_SHORT[month - 1] + '</span>' : '') + '</span></li>';
+}
+// Badge de liste / de carte : la recette est gardée malgré un ingrédient hors saison.
+function seasonWarnHtml(r, cls) {
+  const month = state.filters.seasonMonth;
+  if (!month) return '';
+  const off = recipeOutOfSeasonIngredients(r, month);
+  if (!off.length) return '';
+  return '<span class="' + cls + '" title="Hors saison en ' + MONTHS_FR[month - 1].toLowerCase() + ' : ' + escapeHtml(off.map(i => i.name).join(', ')) + '">hors saison : ' + escapeHtml(off[0].name.toLowerCase()) + '</span>';
 }
 // Mois de saison d'un ingrédient d'après le calendrier : table de correspondance
 // (SEASON_ALIASES, nom normalisé → produit ; '' = explicitement toute l'année), sinon
@@ -3724,7 +3794,7 @@ function renderRecipes() {
 
     const name = document.createElement('span');
     name.className = 'recipe-row-name';
-    name.textContent = r.name;
+    name.innerHTML = escapeHtml(r.name) + seasonWarnHtml(r, 'season-warn');
     name.title = r.name;
     row.appendChild(name);
 
@@ -3873,6 +3943,7 @@ function renderRecipeDetail() {
   if (r.servings) meta.push(r.servings + ' pers.');
   if (r.prepTime) meta.push('Prépa ' + formatTime(r.prepTime));
   if (r.cookTime) meta.push('Cuisson ' + formatTime(r.cookTime));
+  meta.push(recipeSeasonLabel(r));
   if (meta.length) {
     head += '<div class="recipe-detail-meta">'
       + meta.map(escapeHtml).join('<span class="meta-dot" aria-hidden="true">·</span>')
@@ -3886,12 +3957,9 @@ function renderRecipeDetail() {
   const steps = (r.instructions || '').split('\n').map(s => s.trim()).filter(Boolean);
   body += '<div class="recipe-detail-cols">';
   if (hasIngs) {
+    const month = seasonRefMonth();
     body += '<div class="recipe-section"><div class="recipe-section-title"><span>Ingrédients</span></div><ul class="ingredients-list">'
-      + r.ingredients.map(i => {
-          const qty = i.quantity ? i.quantity + (i.unitId ? ' ' + getUnitName(i.unitId) : '') : '';
-          // La colonne quantité est toujours rendue (même vide) pour aligner les noms.
-          return '<li><span class="ing-qty">' + escapeHtml(qty) + '</span><span class="ing-name">' + escapeHtml(getIngredientName(i.ingredientId)) + '</span></li>';
-        }).join('')
+      + r.ingredients.map(i => ingredientLineHtml(i, month)).join('')
       + '</ul></div>';
   }
   if (steps.length) {
