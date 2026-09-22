@@ -157,6 +157,26 @@
                 <button type="button" class="chip-toggle" data-diet="pescatarian">Pescarien</button>
               </div>
             </div>
+            <!-- Saison : un mois, exclusif (recliquer = tout). Écarte les recettes ayant
+                 un ingrédient dont les mois de saison n'incluent pas ce mois ; les
+                 ingrédients sans mois (ou 12 mois) ne comptent pas. -->
+            <div class="filter-sheet-section">
+              <div class="filter-sheet-label"><span class="sec-ico" data-icon="calendar"></span>Saison</div>
+              <div class="chip-row month-row" id="filter-season">
+                <button type="button" class="chip-toggle month-chip" data-month="1">Jan</button>
+                <button type="button" class="chip-toggle month-chip" data-month="2">Fév</button>
+                <button type="button" class="chip-toggle month-chip" data-month="3">Mar</button>
+                <button type="button" class="chip-toggle month-chip" data-month="4">Avr</button>
+                <button type="button" class="chip-toggle month-chip" data-month="5">Mai</button>
+                <button type="button" class="chip-toggle month-chip" data-month="6">Juin</button>
+                <button type="button" class="chip-toggle month-chip" data-month="7">Juil</button>
+                <button type="button" class="chip-toggle month-chip" data-month="8">Août</button>
+                <button type="button" class="chip-toggle month-chip" data-month="9">Sep</button>
+                <button type="button" class="chip-toggle month-chip" data-month="10">Oct</button>
+                <button type="button" class="chip-toggle month-chip" data-month="11">Nov</button>
+                <button type="button" class="chip-toggle month-chip" data-month="12">Déc</button>
+              </div>
+            </div>
             <!-- Time -->
             <div class="filter-sheet-section">
               <div class="filter-sheet-label"><span class="sec-ico" data-icon="clock"></span>Temps (min)</div>
@@ -275,6 +295,8 @@
   <section id="tab-data" class="tab">
     <div class="data-section">
       <h3><span class="tb-ico" data-icon="carrot"></span>Ingrédients <span id="ing-count-badge" class="count-badge" style="background:var(--surface);">0</span></h3>
+      <p style="font-size:13px; color:var(--text-muted);">Les <b>mois de saison</b> alimentent le filtre « Saison ». Le calendrier (fruits, légumes, herbes, champignons de France) remplace ceux de <b>tous</b> les ingrédients : un ingrédient qu'il ne connaît pas repasse « toute l'année ».</p>
+      <div style="margin-bottom:10px;"><button class="btn btn-sm" id="btn-apply-seasons" type="button"><span class="tb-ico" data-icon="calendar"></span>Appliquer le calendrier de saison</button></div>
       <div id="ingredients-list" class="data-list"></div>
     </div>
     <div class="data-section">
@@ -902,6 +924,7 @@ service cloud.firestore {
 
 <!-- ICONS/_ICO/injectIcons : doivent exister avant le script principal -->
 <script src="icons.js"></script>
+<script src="saisons.js"></script>
 
 <script>
 /* ========================================================================
@@ -958,6 +981,7 @@ let state = {
     ingredientsMode: 'any', // 'any' = au moins un des requis · 'all' = tous
     includeFamilies: [],
     excludeFamilies: [],
+    seasonMonth: null, // 1-12 : écarte les recettes ayant un ingrédient hors saison ce mois-là
     selectedOnly: false
   }
 };
@@ -1562,8 +1586,9 @@ function load() {
       if (!state.mealTypes.some(m => normalizeText(m) === 'aucun')) {
         state.mealTypes.unshift('Aucun');
       }
-      if (!state.filters) state.filters = { search: '', sort: 'name-asc', ratingSel: [], prepMax: null, cookMax: null, mealTypes: [], temperatures: [], vegetarianOnly: false, pescatarianOnly: false, includeIngredients: [], excludeIngredients: [], ingredientsMode: 'any', includeFamilies: [], excludeFamilies: [], selectedOnly: false };
+      if (!state.filters) state.filters = { search: '', sort: 'name-asc', ratingSel: [], prepMax: null, cookMax: null, mealTypes: [], temperatures: [], vegetarianOnly: false, pescatarianOnly: false, includeIngredients: [], excludeIngredients: [], ingredientsMode: 'any', includeFamilies: [], excludeFamilies: [], seasonMonth: null, selectedOnly: false };
       // Migration : ajouter nouveaux champs filtres s'ils manquent
+      { const sm = parseInt(state.filters.seasonMonth, 10); state.filters.seasonMonth = sm >= 1 && sm <= 12 ? sm : null; }
       // Filtre Familles retiré de l'UI : on purge d'anciens filtres persistés,
       // sinon ils resteraient actifs sans moyen de les enlever.
       state.filters.includeFamilies = [];
@@ -2404,7 +2429,7 @@ function suggFiltersSignature() {
   const f = state.filters || {};
   return JSON.stringify([f.includeIngredients, f.excludeIngredients, f.ingredientsMode,
     f.mealTypes, f.ratingSel, f.temperatures, f.vegetarianOnly, f.pescatarianOnly,
-    f.prepMax, f.cookMax]);
+    f.prepMax, f.cookMax, f.seasonMonth]);
 }
 let suggFilterSig = '';
 
@@ -2435,6 +2460,7 @@ function suggActiveCriteria(filters) {
   if (f.pescatarianOnly) out.push('pescarien');
   if (f.prepMax != null && f.prepMax !== '') out.push('prépa ≤ ' + f.prepMax + ' min');
   if (f.cookMax != null && f.cookMax !== '') out.push('cuisson ≤ ' + f.cookMax + ' min');
+  if (f.seasonMonth) out.push('de saison en ' + MONTHS_FR[f.seasonMonth - 1].toLowerCase());
   return out;
 }
 
@@ -3505,8 +3531,60 @@ function recipeMatches(r, f, skip) {
   if ((f.temperatures || []).length && !f.temperatures.includes(r.temperature || null)) return false;
   if (f.vegetarianOnly && !isVegetarianRecipe(r)) return false;
   if (f.pescatarianOnly && !isPescatarianRecipe(r)) return false;
+  if (f.seasonMonth && recipeHasOutOfSeason(r, f.seasonMonth)) return false;
   if (!skip.selected && f.selectedOnly && !state.selectedRecipeIds.includes(r.id)) return false;
   return true;
+}
+
+// Saison : un ingrédient est hors saison pour un mois s'il porte des mois de saison
+// (seasonMonths non vide) qui n'incluent pas ce mois. Sans mois, ou avec les 12,
+// il n'est pas spécifique à une saison (riz, lardons, sardines…) et ne compte pas.
+// Les mois viennent du calendrier data/saisons (bouton « Appliquer le calendrier »
+// dans Données) ou de la modale de l'ingrédient.
+function ingredientOutOfSeason(ing, month) {
+  const m = ing && ing.seasonMonths;
+  return Array.isArray(m) && m.length > 0 && m.length < 12 && !m.includes(month);
+}
+function recipeHasOutOfSeason(r, month) {
+  return (r.ingredients || []).some(i => ingredientOutOfSeason(state.ingredients.find(x => x.id === i.ingredientId), month));
+}
+// Mois de saison d'un ingrédient d'après le calendrier : table de correspondance
+// (SEASON_ALIASES, nom normalisé → produit ; '' = explicitement toute l'année), sinon
+// produit du calendrier de même nom. Retourne null si le calendrier ne le connaît pas.
+// 12 mois → [] : pour l'app c'est la même chose que « pas de saison ».
+function calendarSeasonMonths(name) {
+  if (typeof SEASON_CALENDAR !== 'object') return null;
+  const key = normalizeText(name).trim();
+  let product = SEASON_ALIASES[key];
+  if (product === undefined) {
+    if (!calendarSeasonMonths._index) {
+      calendarSeasonMonths._index = {};
+      Object.keys(SEASON_CALENDAR).forEach(p => { calendarSeasonMonths._index[normalizeText(p).trim()] = p; });
+    }
+    product = calendarSeasonMonths._index[key];
+    if (product === undefined) return null;
+  }
+  const months = product ? (SEASON_CALENDAR[product] || []) : [];
+  return months.length === 12 ? [] : months.slice();
+}
+// Données › Ingrédients : remplace les mois de saison de TOUS les ingrédients par ceux
+// du calendrier. Un ingrédient absent du calendrier repasse « toute l'année » — c'est
+// voulu : les seasonMonths saisis en juillet 2026 dataient à tort conserves, fruits
+// secs et viandes, et le calendrier ne connaît que le frais.
+function applySeasonCalendar() {
+  if (typeof SEASON_CALENDAR !== 'object') { toast('Calendrier de saison non chargé', 'error'); return; }
+  let dated = 0, cleared = 0, changed = 0;
+  state.ingredients.forEach(ing => {
+    const months = calendarSeasonMonths(ing.name) || [];
+    const before = JSON.stringify(ing.seasonMonths || []);
+    ing.seasonMonths = months;
+    if (before !== JSON.stringify(months)) changed++;
+    if (months.length) dated++; else cleared++;
+  });
+  save();
+  renderDataTab();
+  renderRecipes();
+  toast(dated + ' ingrédient' + (dated > 1 ? 's' : '') + ' de saison, ' + cleared + ' toute l\'année (' + changed + ' modifié' + (changed > 1 ? 's' : '') + ')', 'success');
 }
 
 // Facettes : valeurs encore atteignables compte tenu des AUTRES filtres actifs.
@@ -4633,6 +4711,23 @@ function buildFilterBar() {
     };
   });
 
+  // Filtre Saison : un seul mois, recliquer le retire. Le mois en cours est marqué.
+  const nowMonth = new Date().getMonth() + 1;
+  document.querySelectorAll('#filter-season .month-chip').forEach(b => {
+    const m = parseInt(b.dataset.month, 10);
+    const on = state.filters.seasonMonth === m;
+    b.classList.toggle('on', on);
+    b.classList.toggle('now', m === nowMonth);
+    b.title = MONTHS_FR[m - 1] + (m === nowMonth ? ' (mois en cours)' : '');
+    b.setAttribute('aria-pressed', String(on));
+    b.onclick = () => {
+      state.filters.seasonMonth = on ? null : m;
+      saveLocal();
+      buildFilterBar();
+      renderRecipes();
+    };
+  });
+
   // Filtre Temps : presets pour préparation et cuisson
   renderTimePresets('filter-prep-presets', 'prepMax');
   renderTimePresets('filter-cook-presets', 'cookMax');
@@ -5014,7 +5109,7 @@ document.addEventListener('keydown', e => {
 
 function resetAllFilters() {
   presetEditId = null;
-  state.filters = { search: '', sort: 'name-asc', ratingSel: [], prepMax: null, cookMax: null, mealTypes: [], temperatures: [], vegetarianOnly: false, pescatarianOnly: false, includeIngredients: [], excludeIngredients: [], ingredientsMode: 'any', includeFamilies: [], excludeFamilies: [], selectedOnly: false };
+  state.filters = { search: '', sort: 'name-asc', ratingSel: [], prepMax: null, cookMax: null, mealTypes: [], temperatures: [], vegetarianOnly: false, pescatarianOnly: false, includeIngredients: [], excludeIngredients: [], ingredientsMode: 'any', includeFamilies: [], excludeFamilies: [], seasonMonth: null, selectedOnly: false };
   document.getElementById('search-input').value = '';
   setSortValue('name-asc');
   const sb = document.getElementById('btn-toggle-selection-only');
@@ -5035,7 +5130,7 @@ document.querySelectorAll('.js-clear-filters').forEach(b => { b.onclick = resetA
    Application = chips du panneau Filtres ; gestion (renommer, modifier les
    filtres, supprimer) = Réglages › Avancé. */
 const PRESET_DEFAULTS = { ratingSel: [], prepMax: null, cookMax: null, mealTypes: [], temperatures: [],
-  vegetarianOnly: false, pescatarianOnly: false, includeIngredients: [], excludeIngredients: [], ingredientsMode: 'any' };
+  vegetarianOnly: false, pescatarianOnly: false, includeIngredients: [], excludeIngredients: [], ingredientsMode: 'any', seasonMonth: null };
 // Copie normalisée des seuls critères du rail (tableaux dupliqués, valeurs manquantes → défaut).
 function presetCriteria(f) {
   const out = {};
@@ -5206,6 +5301,7 @@ function activeFilterCount() {
   if (f.pescatarianOnly) count++;
   if (f.prepMax !== null && f.prepMax !== undefined) count++;
   if (f.cookMax !== null && f.cookMax !== undefined) count++;
+  if (f.seasonMonth) count++;
   if (f.includeIngredients && f.includeIngredients.length) count += f.includeIngredients.length;
   if (f.excludeIngredients && f.excludeIngredients.length) count += f.excludeIngredients.length;
   return count;
@@ -6878,6 +6974,13 @@ document.getElementById('btn-add-family').onclick = () => {
    EXPORT / IMPORT JSON
    ======================================================================== */
 {
+  const btnSeasons = document.getElementById('btn-apply-seasons');
+  if (btnSeasons) btnSeasons.onclick = () => showConfirm(
+    'Appliquer le calendrier de saison',
+    'Les mois de saison de tous les ingrédients seront remplacés par ceux du calendrier. Les saisies manuelles seront écrasées, et un ingrédient absent du calendrier repasse « toute l\'année ».',
+    'Appliquer',
+    applySeasonCalendar
+  );
   const btnExport = document.getElementById('btn-export-json');
   if (btnExport) btnExport.onclick = () => {
     const data = {

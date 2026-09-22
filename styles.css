@@ -2293,6 +2293,12 @@ body.sugg-preview-open .sugg-preview { display: flex; }
 }
 .temp-chip:hover, .chip-toggle:hover { border-color: var(--mist-300); color: var(--text-strong); }
 .temp-chip.on, .chip-toggle.on { background: var(--green-600); border-color: var(--green-600); color: #fff; }
+/* Filtre Saison : 12 puces serrées (3 rangées dans le rail de 224px) ; le mois en cours
+   est marqué d'un point, distinct de l'état « on » qui est le mois choisi. */
+.month-row { gap: 5px; }
+.month-chip { padding: 4px 8px; min-width: 42px; text-align: center; position: relative; }
+.month-chip.now::after { content: ''; position: absolute; top: 3px; right: 5px; width: 4px; height: 4px; border-radius: 50%; background: var(--green-600); }
+.month-chip.now.on::after { background: #fff; }
 /* Modèles de filtres : chips d'application (panneau Filtres) et lignes de gestion (Réglages › Avancé) */
 .preset-chip { max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
 .filter-rail-foot .preset-save-foot { display: inline-flex; align-items: center; gap: 5px; }

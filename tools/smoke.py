@@ -65,6 +65,17 @@ setTimeout(function () {
     c.appRendered  = !!document.querySelector('#recipes-container');
     c.starPicker   = typeof createStarPicker === 'function';
     c.filterPresets = typeof renderFilterPresets === 'function' && typeof renderFilterPresetsSettings === 'function';
+    // Filtre Saison : saisons.js chargé (calendrier + alias) et la logique branchée.
+    c.seasons = (typeof SEASON_CALENDAR === 'object') && Object.keys(SEASON_CALENDAR).length > 200
+      && (typeof SEASON_ALIASES === 'object') && typeof applySeasonCalendar === 'function'
+      && document.querySelectorAll('#filter-season .month-chip').length === 12
+      && ingredientOutOfSeason({ seasonMonths: [5, 6, 7] }, 1) === true
+      && ingredientOutOfSeason({ seasonMonths: [5, 6, 7] }, 6) === false
+      && ingredientOutOfSeason({ seasonMonths: [] }, 1) === false
+      && JSON.stringify(calendarSeasonMonths('Tomates')) === JSON.stringify(SEASON_CALENDAR['Tomate ronde / grappe'])
+      && JSON.stringify(calendarSeasonMonths('Oignons')) === '[]'
+      && JSON.stringify(calendarSeasonMonths('Ail')) === '[]'
+      && calendarSeasonMonths('Bicarbonate de soude') === null;
     c.ratingStars  = (ratingStars(10).match(/<svg/g) || []).length;
     c.renderTabs   = ['renderRecipes','renderDataTab','renderDebug','renderShopping']
                        .filter(function (f) { return typeof window[f] === 'function'; }).length;
@@ -173,6 +184,8 @@ def main():
         problems.append("createStarPicker absent")
     if not c.get("filterPresets"):
         problems.append("renderFilterPresets / renderFilterPresetsSettings absentes")
+    if not c.get("seasons"):
+        problems.append("filtre Saison : saisons.js non charge, 12 puces absentes ou logique hors saison fausse")
 
     if problems:
         for p in problems:
