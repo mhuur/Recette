@@ -2304,8 +2304,10 @@ body.sugg-preview-open .sugg-preview { display: flex; }
 .season-tools { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 8px; }
 .season-search { flex: 1 1 200px; min-width: 160px; }
 .season-select { width: auto; padding: 7px 30px 7px 12px; border-radius: 999px; font-size: 13px; }
-.season-check { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-muted); cursor: pointer; white-space: nowrap; }
-.season-check input { accent-color: var(--green-600); }
+.season-views { display: flex; gap: 6px; flex-wrap: wrap; }
+.season-n { display: inline-block; min-width: 18px; padding: 0 5px; margin-left: 4px; border-radius: 999px; font-size: 11px; line-height: 17px; text-align: center; background: rgba(47, 125, 85, .12); color: var(--green-700); }
+.chip-toggle.on .season-n { background: rgba(255, 255, 255, .25); color: #fff; }
+.season-type-tag { font-size: 11px; color: var(--text-dim); font-weight: 500; margin-left: 4px; }
 .season-grid { max-height: 62vh; overflow: auto; border-radius: 12px; }
 .season-row {
   display: grid; grid-template-columns: minmax(140px, 1fr) repeat(12, 28px) 28px;
@@ -2339,14 +2341,18 @@ button.season-name:hover { color: var(--green-700); text-decoration: underline; 
 .season-clear svg { width: 14px; height: 14px; }
 .season-clear:hover { color: var(--danger); background: var(--danger-soft); }
 .season-clear:disabled { opacity: 0; pointer-events: none; }
+.season-ok { background: none; border: 0; padding: 4px; color: var(--green-600); cursor: pointer; border-radius: 6px; display: inline-flex; justify-content: center; }
+.season-ok svg { width: 15px; height: 15px; }
+.season-ok:hover { background: rgba(47, 125, 85, .12); color: var(--green-700); }
 .season-empty { padding: 14px; color: var(--text-dim); text-align: center; font-size: 13px; }
-body.guest-mode .season-cell, body.guest-mode .season-clear, body.guest-mode #btn-apply-seasons { pointer-events: none; }
+body.guest-mode .season-cell, body.guest-mode .season-clear, body.guest-mode .season-ok, body.guest-mode #season-bulk-ok { pointer-events: none; }
 @media (max-width: 768px) {
   .season-row { grid-template-columns: minmax(84px, 1fr) repeat(12, 20px) 22px; gap: 2px; padding: 2px 0; }
   .season-cell { width: 20px; height: 20px; border-radius: 5px; }
   .season-name { font-size: 12.5px; padding: 4px 4px; }
   .season-m-long { display: none; }
   .season-m-short { display: inline; }
+  .season-type-tag { display: none; }
   .season-grid { max-height: 70dvh; }
 }
 /* Modèles de filtres : chips d'application (panneau Filtres) et lignes de gestion (Réglages › Avancé) */

@@ -296,12 +296,16 @@
     <!-- Saisons : grille ingrédient × 12 mois, la vue d'ensemble de ce que le filtre « Saison » écarte -->
     <div class="data-section" id="season-section">
       <h3><span class="tb-ico" data-icon="calendar"></span>Saisons <span id="season-count-badge" class="count-badge" style="background:var(--surface);" title="Ingrédients avec des mois de saison">0</span></h3>
-      <p>Le filtre « Saison » écarte une recette dès qu'<b>un</b> de ses ingrédients n'est pas de saison le mois choisi. Un ingrédient sans mois est disponible toute l'année. Clique une case pour ajouter ou retirer un mois, le nom pour ouvrir l'ingrédient.</p>
+      <p>Le filtre « Saison » écarte une recette dès qu'<b>un</b> de ses ingrédients n'est pas de saison le mois choisi. Un ingrédient sans mois est disponible toute l'année. « À vérifier » liste ceux dont personne n'a encore fixé la saison (les nouveaux) : donne-leur des mois, ou valide « toute l'année » avec la coche. Clique le nom pour ouvrir l'ingrédient.</p>
       <div class="season-tools">
+        <div class="season-views" id="season-views">
+          <button type="button" class="chip-toggle" data-view="dated">De saison <span class="season-n" id="season-n-dated">0</span></button>
+          <button type="button" class="chip-toggle" data-view="todo">À vérifier <span class="season-n" id="season-n-todo">0</span></button>
+          <button type="button" class="chip-toggle" data-view="all">Tous</button>
+        </div>
         <div class="filter-menu-search-wrap season-search"><input type="search" class="filter-menu-search" id="season-search" placeholder="Rechercher un ingrédient" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"><button type="button" class="filter-menu-search-clear" id="season-search-clear" title="Effacer" data-icon="x"></button></div>
         <select id="season-type" class="season-select" title="Rayon"><option value="">Tous les rayons</option></select>
-        <label class="season-check"><input type="checkbox" id="season-show-all"> Toute l'année aussi</label>
-        <button class="btn btn-sm" id="btn-apply-seasons" type="button" title="Remplace les mois de tous les ingrédients par ceux du calendrier des fruits et légumes de France"><span class="tb-ico" data-icon="refreshCw"></span>Appliquer le calendrier</button>
+        <button class="btn btn-sm" id="season-bulk-ok" type="button" style="display:none;" title="Marquer vérifiés, disponibles toute l'année"><span class="tb-ico" data-icon="check"></span>Valider les <b id="season-bulk-n">0</b> affichés : toute l'année</button>
       </div>
       <div id="season-grid" class="season-grid"></div>
     </div>
@@ -1269,6 +1273,7 @@ function applyCloudData(data) {
     if (!i.familyIds) i.familyIds = [];
     if (!i.seasonMonths) i.seasonMonths = [];
   });
+  if (migrateSeasons() && canRateRecipes()) save(); // renvoie le carnet migré au cloud (pas en invité)
   migrateRecipes();
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch {}
   renderRecipes();
@@ -1621,6 +1626,9 @@ function load() {
         if (!i.familyIds) i.familyIds = [];
         if (!i.seasonMonths) i.seasonMonths = [];
       });
+      // Saisons : calendrier appliqué une fois ; le push cloud suivra le 1er snapshot
+      // (applyCloudData rejoue la migration si le cloud n'a pas encore le champ).
+      if (migrateSeasons()) { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch {} }
       // Modèle note = seuil minimal (ratingMin /10) + inclure les non notées.
       // Migration depuis l'ancien modèle "valeurs exactes" (ratingValues) : on dérive
       // le seuil de la plus petite valeur numérique sélectionnée, sinon on repart à vide.
@@ -2227,7 +2235,7 @@ function findOrCreateIngredient(name, typeId = null) {
   if (!name) return null;
   let ing = state.ingredients.find(i => normalizeText(i.name) === normalizeText(name));
   if (!ing) {
-    ing = { id: uid(), name, typeId };
+    ing = { id: uid(), name, typeId, familyIds: [], seasonMonths: [], seasonReviewed: false };
     state.ingredients.push(ing);
     save();
   }
@@ -3577,24 +3585,23 @@ function calendarSeasonMonths(name) {
   const months = product ? (SEASON_CALENDAR[product] || []) : [];
   return months.length === 12 ? [] : months.slice();
 }
-// Données › Ingrédients : remplace les mois de saison de TOUS les ingrédients par ceux
-// du calendrier. Un ingrédient absent du calendrier repasse « toute l'année » — c'est
-// voulu : les seasonMonths saisis en juillet 2026 dataient à tort conserves, fruits
-// secs et viandes, et le calendrier ne connaît que le frais.
-function applySeasonCalendar() {
-  if (typeof SEASON_CALENDAR !== 'object') { toast('Calendrier de saison non chargé', 'error'); return; }
-  let dated = 0, cleared = 0, changed = 0;
-  state.ingredients.forEach(ing => {
-    const months = calendarSeasonMonths(ing.name) || [];
-    const before = JSON.stringify(ing.seasonMonths || []);
-    ing.seasonMonths = months;
-    if (before !== JSON.stringify(months)) changed++;
-    if (months.length) dated++; else cleared++;
+// Migration unique des saisons (2026-09-22). Tant qu'aucun ingrédient ne porte
+// seasonReviewed, les seasonMonths datent de la première passe de juillet 2026
+// (conserves, viandes, fruits secs datés à tort). On les remplace par le calendrier
+// data/saisons (saisons.js) : ingrédient connu → mois du calendrier, « vérifié » ;
+// inconnu → toute l'année, à vérifier (Données › Saisons › À vérifier). Retourne true
+// si elle a tourné. saisons.js ne sert plus qu'à ça : à retirer une fois la migration
+// passée sur tous les carnets.
+function migrateSeasons() {
+  if (typeof SEASON_CALENDAR !== 'object') return false;
+  const ings = state.ingredients || [];
+  if (!ings.length || ings.some(i => i.seasonReviewed !== undefined)) return false;
+  ings.forEach(ing => {
+    const months = calendarSeasonMonths(ing.name);
+    ing.seasonMonths = months || [];
+    ing.seasonReviewed = months !== null;
   });
-  save();
-  renderDataTab();
-  renderRecipes();
-  toast(dated + ' ingrédient' + (dated > 1 ? 's' : '') + ' de saison, ' + cleared + ' toute l\'année (' + changed + ' modifié' + (changed > 1 ? 's' : '') + ')', 'success');
+  return true;
 }
 
 // Facettes : valeurs encore atteignables compte tenu des AUTRES filtres actifs.
@@ -4242,12 +4249,14 @@ document.getElementById('btn-save-new-ing').onclick = () => {
     ing.typeId = type?.id || null;
     ing.familyIds = familyIds;
     ing.seasonMonths = months;
+    ing.seasonReviewed = true;
     toast('Ingrédient modifié', 'success');
   } else {
     // Mode création
     ing = findOrCreateIngredient(name, type?.id);
     ing.familyIds = familyIds;
     ing.seasonMonths = months;
+    ing.seasonReviewed = true;
     toast('Ingrédient créé', 'success');
   }
   if (pendingIngCreateCallback) pendingIngCreateCallback(ing);
@@ -5880,7 +5889,8 @@ function openMergeIngredientDialog(sourceIng) {
       const targetIng = state.ingredients.find(i => i.id === target.id);
       if (!targetIng) return;
       state.recipes.forEach(r => { (r.ingredients||[]).forEach(i => { if (i.ingredientId === sourceIng.id) i.ingredientId = targetIng.id; }); });
-      targetIng.seasonMonths = [...new Set([...(targetIng.seasonMonths||[]), ...(sourceIng.seasonMonths||[])])];
+      targetIng.seasonMonths = [...new Set([...(targetIng.seasonMonths||[]), ...(sourceIng.seasonMonths||[])])].sort((a, b) => a - b);
+      targetIng.seasonReviewed = !!(targetIng.seasonReviewed || sourceIng.seasonReviewed);
       targetIng.familyIds = [...new Set([...(targetIng.familyIds||[]), ...(sourceIng.familyIds||[])])];
       if (!targetIng.typeId && sourceIng.typeId) targetIng.typeId = sourceIng.typeId;
       state.ingredients = state.ingredients.filter(i => i.id !== sourceIng.id);
@@ -6473,39 +6483,63 @@ function moveIngredientType(idx, dir) {
   if (document.body.classList.contains('cart-open')) renderShopping();
 }
 
-// Données › Saisons : grille ingrédient × 12 mois. Par défaut ne liste que les
-// ingrédients datés (= ce que le filtre « Saison » peut écarter) ; une recherche
-// ou « Toute l'année aussi » montre les autres pour leur donner des mois.
-// Rendu par innerHTML avec un seul handler délégué ; le défilement est conservé.
-const seasonGridState = { search: '', typeId: '', showAll: false };
+// Données › Saisons : grille ingrédient × 12 mois, trois vues. « De saison » = les
+// ingrédients datés (ce que le filtre peut écarter) ; « À vérifier » = seasonReviewed
+// absent ou faux (nouveaux ingrédients, migration) ; « Tous ». Toute action sur une
+// ligne (mois, coche, croix, modale) marque l'ingrédient vérifié. Rendu par innerHTML,
+// un handler délégué sur #season-grid ; le défilement est conservé.
+const seasonGridState = { view: 'dated', search: '', typeId: '' };
+function seasonGridRows() {
+  const st = seasonGridState, q = normalizeText(st.search).trim();
+  const rows = state.ingredients.filter(i => {
+    if (st.typeId && i.typeId !== st.typeId) return false;
+    if (q && !normalizeText(i.name).includes(q)) return false;
+    if (st.view === 'dated') return (i.seasonMonths || []).length > 0;
+    if (st.view === 'todo') return !i.seasonReviewed;
+    return true;
+  });
+  const byName = (a, b) => a.name.localeCompare(b.name, 'fr');
+  if (st.view === 'todo') rows.sort((a, b) => getTypeName(a.typeId).localeCompare(getTypeName(b.typeId), 'fr') || byName(a, b));
+  else rows.sort(byName);
+  return rows;
+}
 function renderSeasonGrid() {
   const grid = document.getElementById('season-grid');
   if (!grid) return;
-  const nowM = new Date().getMonth() + 1;
-  const dated = state.ingredients.filter(i => (i.seasonMonths || []).length > 0);
-  document.getElementById('season-count-badge').textContent = dated.length;
+  const st = seasonGridState, nowM = new Date().getMonth() + 1;
+  const nDated = state.ingredients.filter(i => (i.seasonMonths || []).length > 0).length;
+  const nTodo = state.ingredients.filter(i => !i.seasonReviewed).length;
+  document.getElementById('season-count-badge').textContent = nDated;
+  document.getElementById('season-n-dated').textContent = nDated;
+  document.getElementById('season-n-todo').textContent = nTodo;
+  document.querySelectorAll('#season-views .chip-toggle').forEach(b => b.classList.toggle('on', b.dataset.view === st.view));
   const sel = document.getElementById('season-type');
   if (sel) {
     const types = [...state.ingredientTypes].sort((a, b) => a.name.localeCompare(b.name, 'fr'));
     sel.innerHTML = '<option value="">Tous les rayons</option>' + types.map(t => '<option value="' + escapeHtml(t.id) + '">' + escapeHtml(t.name) + '</option>').join('');
-    if (!types.some(t => t.id === seasonGridState.typeId)) seasonGridState.typeId = '';
-    sel.value = seasonGridState.typeId;
+    if (!types.some(t => t.id === st.typeId)) st.typeId = '';
+    sel.value = st.typeId;
   }
-  const q = normalizeText(seasonGridState.search).trim();
-  const rows = state.ingredients.filter(i => {
-    if (seasonGridState.typeId && i.typeId !== seasonGridState.typeId) return false;
-    if (q) return normalizeText(i.name).includes(q);
-    return seasonGridState.showAll || (i.seasonMonths || []).length > 0;
-  }).sort((a, b) => a.name.localeCompare(b.name, 'fr'));
+  const rows = seasonGridRows();
+  const bulk = document.getElementById('season-bulk-ok');
+  if (bulk) { bulk.style.display = st.view === 'todo' && rows.length ? '' : 'none'; document.getElementById('season-bulk-n').textContent = rows.length; }
   const heads = MONTHS_FR.map((n, i) => '<span class="season-m' + (i + 1 === nowM ? ' now' : '') + '" title="' + n + '"><b class="season-m-long">' + n.slice(0, 3) + '</b><b class="season-m-short">' + n.slice(0, 1) + '</b></span>').join('');
   let html = '<div class="season-row season-head"><span class="season-name">' + rows.length + ' ingrédient' + (rows.length > 1 ? 's' : '') + '</span>' + heads + '<span></span></div>';
   rows.forEach(ing => {
     const ms = ing.seasonMonths || [];
-    html += '<div class="season-row" data-id="' + escapeHtml(ing.id) + '"><button type="button" class="season-name" title="Modifier l\'ingrédient">' + escapeHtml(ing.name) + '</button>'
+    const tail = !ing.seasonReviewed
+      ? '<button type="button" class="season-ok" title="Vérifié : disponible toute l\'année">' + ICONS.check + '</button>'
+      : ms.length ? '<button type="button" class="season-clear" title="Toute l\'année">' + ICONS.x + '</button>' : '<span></span>';
+    html += '<div class="season-row" data-id="' + escapeHtml(ing.id) + '"><button type="button" class="season-name" title="Modifier l\'ingrédient">' + escapeHtml(ing.name)
+      + (ing.typeId ? ' <span class="season-type-tag">' + escapeHtml(getTypeName(ing.typeId)) + '</span>' : '') + '</button>'
       + MONTHS_FR.map((n, i) => { const m = i + 1; return '<button type="button" class="season-cell' + (ms.includes(m) ? ' on' : '') + (m === nowM ? ' now' : '') + '" data-m="' + m + '" title="' + escapeHtml(ing.name) + ' · ' + n + '"></button>'; }).join('')
-      + '<button type="button" class="season-clear" title="Toute l\'année"' + (ms.length ? '' : ' disabled') + '>' + ICONS.x + '</button></div>';
+      + tail + '</div>';
   });
-  if (!rows.length) html += '<div class="season-empty">' + (q || seasonGridState.typeId ? 'Aucun ingrédient ne correspond.' : 'Aucun ingrédient de saison. Coche « Toute l\'année aussi » ou applique le calendrier.') + '</div>';
+  if (!rows.length) {
+    const msg = st.search || st.typeId ? 'Aucun ingrédient ne correspond.'
+      : st.view === 'todo' ? 'Tout est vérifié.' : st.view === 'dated' ? 'Aucun ingrédient de saison.' : 'Aucun ingrédient.';
+    html += '<div class="season-empty">' + msg + '</div>';
+  }
   const top = grid.scrollTop;
   grid.innerHTML = html;
   grid.scrollTop = top;
@@ -6513,6 +6547,7 @@ function renderSeasonGrid() {
 function wireSeasonGrid() {
   const grid = document.getElementById('season-grid');
   if (!grid) return;
+  const commit = () => { save(); renderDataTab(); renderRecipes(); };
   grid.onclick = (e) => {
     const btn = e.target.closest('button');
     const row = e.target.closest('.season-row[data-id]');
@@ -6525,12 +6560,17 @@ function wireSeasonGrid() {
       const set = new Set(ing.seasonMonths || []);
       if (set.has(m)) set.delete(m); else set.add(m);
       ing.seasonMonths = [...set].sort((a, b) => a - b);
-    } else if (btn.classList.contains('season-clear')) {
+    } else if (btn.classList.contains('season-clear') || btn.classList.contains('season-ok')) {
       ing.seasonMonths = [];
     } else return;
-    save();
-    renderDataTab();
-    renderRecipes();
+    ing.seasonReviewed = true;
+    commit();
+  };
+  document.getElementById('season-views').onclick = (e) => {
+    const b = e.target.closest('[data-view]');
+    if (!b) return;
+    seasonGridState.view = b.dataset.view;
+    renderSeasonGrid();
   };
   const search = document.getElementById('season-search');
   const clear = document.getElementById('season-search-clear');
@@ -6538,7 +6578,17 @@ function wireSeasonGrid() {
   search.oninput = () => { seasonGridState.search = search.value; syncClear(); renderSeasonGrid(); };
   if (clear) clear.onclick = () => { search.value = ''; search.oninput(); search.focus(); };
   document.getElementById('season-type').onchange = (e) => { seasonGridState.typeId = e.target.value; renderSeasonGrid(); };
-  document.getElementById('season-show-all').onchange = (e) => { seasonGridState.showAll = e.target.checked; renderSeasonGrid(); };
+  document.getElementById('season-bulk-ok').onclick = () => {
+    const rows = seasonGridRows().filter(i => !i.seasonReviewed);
+    if (!rows.length) return;
+    showConfirm('Valider ' + rows.length + ' ingrédient' + (rows.length > 1 ? 's' : ''),
+      'Ils seront marqués vérifiés, disponibles toute l\'année. Un mois pourra toujours leur être donné plus tard.',
+      'Valider', () => {
+        rows.forEach(i => { i.seasonMonths = []; i.seasonReviewed = true; });
+        commit();
+        toast(rows.length + ' ingrédient' + (rows.length > 1 ? 's' : '') + ' vérifié' + (rows.length > 1 ? 's' : ''), 'success');
+      });
+  };
 }
 
 function renderDataTab() {
@@ -7054,13 +7104,6 @@ document.getElementById('btn-add-family').onclick = () => {
    ======================================================================== */
 {
   wireSeasonGrid();
-  const btnSeasons = document.getElementById('btn-apply-seasons');
-  if (btnSeasons) btnSeasons.onclick = () => showConfirm(
-    'Appliquer le calendrier de saison',
-    'Les mois de saison de tous les ingrédients seront remplacés par ceux du calendrier. Les saisies manuelles seront écrasées, et un ingrédient absent du calendrier repasse « toute l\'année ».',
-    'Appliquer',
-    applySeasonCalendar
-  );
   const btnExport = document.getElementById('btn-export-json');
   if (btnExport) btnExport.onclick = () => {
     const data = {
@@ -7106,6 +7149,7 @@ document.getElementById('btn-add-family').onclick = () => {
           state.filterPresets = Array.isArray(data.filterPresets) ? data.filterPresets : (state.filterPresets || []);
           state.selectedRecipeIds = [];
           state.checkedShoppingItems = [];
+          migrateSeasons(); // export antérieur à seasonReviewed
           save();
           rerenderAll();
           toast('Import réussi : ' + state.recipes.length + ' recettes', 'success');

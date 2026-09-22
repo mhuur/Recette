@@ -67,7 +67,7 @@ setTimeout(function () {
     c.filterPresets = typeof renderFilterPresets === 'function' && typeof renderFilterPresetsSettings === 'function';
     // Filtre Saison : saisons.js chargé (calendrier + alias) et la logique branchée.
     c.seasons = (typeof SEASON_CALENDAR === 'object') && Object.keys(SEASON_CALENDAR).length > 200
-      && (typeof SEASON_ALIASES === 'object') && typeof applySeasonCalendar === 'function'
+      && (typeof SEASON_ALIASES === 'object') && typeof migrateSeasons === 'function'
       && document.querySelectorAll('#filter-season .month-chip').length === 12
       && typeof renderSeasonGrid === 'function' && (renderSeasonGrid(), !!document.querySelector('#season-grid .season-head'))
       && ingredientOutOfSeason({ seasonMonths: [5, 6, 7] }, 1) === true
