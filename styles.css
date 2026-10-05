@@ -2946,14 +2946,14 @@ select.bug-tab-select option{background:#fff;color:var(--text);font-weight:500;t
   .app-layout {
     min-height: 100dvh;
     margin: 8px auto;
-    width: calc(100% - 16px);
-    padding: 10px;
+    width: calc(100% - 8px);
+    padding: 6px;
     border-radius: 18px;
   }
   .app-layout::before,
   .app-layout::after {
     top: 8px; bottom: 8px;
-    width: calc(100% - 16px);
+    width: calc(100% - 8px);
     border-radius: 18px;
   }
 
@@ -3085,9 +3085,11 @@ select.bug-tab-select option{background:#fff;color:var(--text);font-weight:500;t
 
   /* Recettes : colonnes secondaires masquées — grille resserrée */
   .recipe-list-head { display: none; }
-  .recipe-row { grid-template-columns: 24px 1fr 52px 44px; gap: 10px; padding: 10px 14px; }
-  .recipe-row-meta.time, .recipe-row-tags { display: none; }
-  .recipe-row-meta.servings { width: auto; }
+  /* Une seule colonne à droite du nom : la note. Le nombre de parts se lit dans
+     la carte de la recette, il coûtait 54px au nom (demande du 2026-10-05).
+     40px = étoile + « 10 » ; la note reste alignée à gauche, étoiles en colonne. */
+  .recipe-row { grid-template-columns: 24px 1fr 40px; gap: 10px; padding: 10px 12px; }
+  .recipe-row-meta.time, .recipe-row-meta.servings, .recipe-row-tags { display: none; }
   .recipe-row input[type="checkbox"] { width: 19px; height: 19px; }
   /* Note compacte : 1 étoile + note (ou 1 étoile vide = non noté) */
   .recipe-row-rating { width: auto; }
