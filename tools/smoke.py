@@ -79,6 +79,13 @@ setTimeout(function () {
       && JSON.stringify(calendarSeasonMonths('Oignons')) === '[]'
       && JSON.stringify(calendarSeasonMonths('Ail')) === '[]'
       && calendarSeasonMonths('Bicarbonate de soude') === null;
+    // Mode « tous » : les variantes d'un ingrédient partagent un mot-racine, pas les contenants.
+    c.ingVariants = typeof ingredientVariants === 'function'
+      && ingredientRootWords("Pousses d'épinards").join() === 'epinard'
+      && ingredientRootWords('Epinards (Pousses)').join() === 'epinard'
+      && ingredientRootWords("Huile d'Olive").join() === 'olive'
+      && ingredientRootWords('Pommes de terre (g)').join() === 'pomme-de-terre'
+      && ingredientRootWords('Lait').join() === 'lait';
     c.ratingStars  = (ratingStars(10).match(/<svg/g) || []).length;
     c.renderTabs   = ['renderRecipes','renderDataTab','renderDebug','renderShopping']
                        .filter(function (f) { return typeof window[f] === 'function'; }).length;
@@ -189,6 +196,9 @@ def main():
         problems.append("renderFilterPresets / renderFilterPresetsSettings absentes")
     if not c.get("seasons"):
         problems.append("filtre Saison : saisons.js non charge, 12 puces absentes ou logique hors saison fausse")
+
+    if not c.get("ingVariants"):
+        problems.append("mode « tous » : ingredientVariants absente ou mots-racines faux")
 
     if problems:
         for p in problems:

@@ -908,8 +908,9 @@ service cloud.firestore {
     <div class="filter-menu-mode" id="filter-ing-mode">
       <span class="filter-menu-mode-label">Requis :</span>
       <button type="button" class="chip-toggle chip-sm" data-mode="any">Au moins un</button>
-      <button type="button" class="chip-toggle chip-sm" data-mode="all">Tous</button>
+      <button type="button" class="chip-toggle chip-sm" data-mode="all" title="Tous les requis — les variantes cochées d'un même ingrédient comptent pour un seul">Tous</button>
     </div>
+    <div class="filter-menu-hint" id="filter-ing-variants" hidden></div>
     <div class="filter-menu-hint">1 clic = <b class="req">requis</b> · 2 clics = <b class="exc">interdit</b> · 3 = retiré</div>
   </div>
   <div class="filter-menu-list" id="filter-ing-list" role="listbox" aria-multiselectable="true"></div>
@@ -3533,8 +3534,11 @@ function recipeMatches(r, f, skip) {
       const ids = (r.ingredients || []).map(i => i.ingredientId);
       // 'any' (défaut) = au moins un des requis — « une recette avec de la tomate,
       // peu importe laquelle » ; 'all' = tous, pour croiser « tomate ET mozzarella ».
-      const ok = f.ingredientsMode === 'all'
-        ? f.includeIngredients.every(iid => ids.includes(iid))
+      // En 'all', un requis est aussi satisfait par une de ses variantes cochées
+      // (cf. ingredientVariants) : « épinards ET feta » quelle que soit la forme.
+      const variants = f.ingredientsMode === 'all' ? ingredientVariants(f.includeIngredients) : null;
+      const ok = variants
+        ? f.includeIngredients.every(iid => variants.get(iid).some(v => ids.includes(v)))
         : f.includeIngredients.some(iid => ids.includes(iid));
       if (!ok) return false;
     }
@@ -3682,6 +3686,74 @@ function availableMealTypes() {
   (f.mealTypes || []).forEach(m => set.add(m)); // garder les sélectionnés visibles
   return set;
 }
+/* Mode « tous » et variantes d'un même ingrédient. Le carnet porte le même produit
+   sous plusieurs noms (Epinards, Pousses d'épinards, Feuilles d'épinards ; 21
+   entrées « tomate »). Un ET strict entre ces variantes ne rendait aucune recette,
+   alors qu'on les coche justement pour être souple. Deux requis sont donc
+   VARIANTES l'un de l'autre s'ils partagent un mot-racine, et un requis est
+   satisfait par lui-même ou par une de ses variantes cochées.
+   - Mot-racine = mot du nom, sans accent ni pluriel, hors mots de liaison
+     (ING_LINK_WORDS) et hors mots qui décrivent une forme, une coupe, une couleur
+     ou un contenant (ING_GENERIC_WORDS) : « Huile d'olive » et « Huile de sésame »
+     ne sont pas variantes, « Cuisses de poulet » et « Blanc de poulet » le sont.
+     Nom fait uniquement de mots génériques (« Lait », « Crème fraîche ») → son
+     premier mot.
+   - Relation NON transitive : avec Epinards, Tortellini épinards-ricotta et
+     Ricotta cochés, épinards et ricotta restent deux exigences distinctes.
+   - Elle ne joue qu'entre ingrédients COCHÉS : rien n'est ajouté à la sélection. */
+const ING_LINK_WORDS = /^(de|du|des|d|l|la|le|les|a|au|aux|en|et|ou|pour|sans|avec|type|kg|g|cl|ml|cm|c|piece)$/;
+const ING_GENERIC_WORDS = new Set(('huile sauce vinaigre graine farine bouillon fumet jus zeste poudre lait fromage noix eau boisson '
+  + 'feuille pousse botte bouquet branche brin tete epi grain nid stigmate poignee tranche morceau '
+  + 'filet pave cuisse blanc escalope aiguilette supreme chair '
+  + 'frai fraiche sec seche sechee fume fumee marine marinee grille grillee hache hachee rape rapee moulu moulue '
+  + 'confit confite concasse concassee pele pelee surgele surgelee panne pannee entier entiere liquide epai epaisse '
+  + 'effile effilee pimente pimentee frit frite '
+  + 'blanche rouge vert verte noir noire jaune brun brune '
+  + 'petit petite gro grosse grand grande nouveau nouvelle dou douce plat vieux fin fine '
+  + 'melange conserve bocal soupe').split(' '));
+function ingredientRootWords(name) {
+  const words = normalizeText(name).replace(/œ/g, 'oe')
+    // noms composés : ne pas rapprocher pomme de terre et pomme, pois chiche et petits pois
+    .replace(/pommes? de terre/g, 'pomme-de-terre').replace(/pois chiches?/g, 'pois-chiche')
+    .split(/[^a-z0-9-]+/)
+    .map(w => w.replace(/(eau|ou)x$/, '$1').replace(/s$/, ''))
+    .filter(w => w && !/^\d+$/.test(w) && !ING_LINK_WORDS.test(w));
+  const kept = words.filter(w => !ING_GENERIC_WORDS.has(w));
+  return kept.length ? kept : words.slice(0, 1);
+}
+// id requis → ids cochés qui le satisfont (lui-même + ses variantes). Mémoïsé sur
+// la sélection : recipeMatches() l'appelle pour chaque recette. Remis à zéro par
+// renderRecipes(), un renommage d'ingrédient pouvant changer les mots-racines.
+let _ingVariantsCache = null;
+function ingredientVariants(ids) {
+  const key = ids.join('|');
+  if (_ingVariantsCache && _ingVariantsCache.key === key) return _ingVariantsCache.map;
+  const roots = ids.map(id => ingredientRootWords(getIngredientName(id)));
+  const map = new Map();
+  ids.forEach((id, i) => {
+    map.set(id, ids.filter((other, j) => i === j || roots[i].some(w => roots[j].includes(w))));
+  });
+  _ingVariantsCache = { key, map };
+  return map;
+}
+// Les mêmes variantes, regroupées pour l'affichage (libellé du bouton, rappel dans
+// le menu). Ici le regroupement est transitif : c'est un résumé, pas la règle.
+function ingredientVariantGroups(ids) {
+  const variants = ingredientVariants(ids), seen = new Set(), groups = [];
+  ids.forEach(id => {
+    if (seen.has(id)) return;
+    const group = [], queue = [id];
+    while (queue.length) {
+      const cur = queue.shift();
+      if (seen.has(cur)) continue;
+      seen.add(cur);
+      group.push(cur);
+      variants.get(cur).forEach(v => { if (!seen.has(v)) queue.push(v); });
+    }
+    groups.push(group);
+  });
+  return groups;
+}
 function availableIngredientIds() {
   const f = state.filters, set = new Set();
   state.recipes.forEach(r => { if (recipeMatches(r, f, { ingredients: true })) (r.ingredients || []).forEach(i => set.add(i.ingredientId)); });
@@ -3737,6 +3809,7 @@ function getFilteredRecipes() {
 }
 
 function renderRecipes() {
+  _ingVariantsCache = null; // les noms d'ingrédients ont pu changer depuis le dernier rendu
   const container = document.getElementById('recipes-container');
   const recipes = getFilteredRecipes();
   const total = state.recipes.length;
@@ -4935,19 +5008,34 @@ createFilterMenu({
       b.classList.toggle('on', on);
       b.setAttribute('aria-pressed', String(on));
     });
+    // Rappel des variantes regroupées par « tous » : la règle joue sans rien
+    // demander, il faut qu'elle se lise quelque part.
+    const note = document.getElementById('filter-ing-variants');
+    if (note) {
+      const multi = mode === 'all'
+        ? ingredientVariantGroups(state.filters.includeIngredients || []).filter(g => g.length > 1) : [];
+      note.hidden = !multi.length;
+      note.textContent = multi.length
+        ? 'Variantes comptées pour un seul requis : ' + multi.map(g => g.map(getIngredientName).join(' / ')).join(' · ')
+        : '';
+    }
   },
   summary: () => {
     const incIds = state.filters.includeIngredients || [];
-    const inc = incIds.map(id => '+' + getIngredientName(id));
+    const allMode = state.filters.ingredientsMode === 'all';
+    // En « tous », les variantes d'un même ingrédient forment une seule exigence.
+    const groups = allMode ? ingredientVariantGroups(incIds) : incIds.map(id => [id]);
+    const short = g => '+' + getIngredientName(g[0]) + (g.length > 1 ? ' (' + g.length + ' formes)' : '');
+    const full = g => '+' + g.map(getIngredientName).join(' ou ');
     const exc = (state.filters.excludeIngredients || []).map(id => '−' + getIngredientName(id));
-    const all = [...inc, ...exc];
-    // « tous » n'est signalé que quand il change vraiment le résultat (2 requis ou plus)
-    const suffix = (state.filters.ingredientsMode === 'all' && incIds.length > 1) ? ' (tous)' : '';
+    const count = groups.length + exc.length;
+    // « tous » n'est signalé que quand il change vraiment le résultat (2 exigences ou plus)
+    const suffix = (allMode && groups.length > 1) ? ' (tous)' : '';
     return {
-      active: all.length > 0,
-      label: !all.length ? 'Tous les ingrédients'
-           : (all.length <= 2 ? all.join(', ') : all.length + ' ingrédients') + suffix,
-      title: all.length ? 'Ingrédients : ' + all.join(', ') + suffix : 'Aucun ingrédient requis ni interdit'
+      active: count > 0,
+      label: !count ? 'Tous les ingrédients'
+           : (count <= 2 ? [...groups.map(short), ...exc].join(', ') : (incIds.length + exc.length) + ' ingrédients') + suffix,
+      title: count ? 'Ingrédients : ' + [...groups.map(full), ...exc].join(', ') + suffix : 'Aucun ingrédient requis ni interdit'
     };
   }
 });
