@@ -2967,6 +2967,12 @@ select.bug-tab-select option{background:#fff;color:var(--text);font-weight:500;t
     padding: 8px 10px;
     margin-bottom: 10px;
   }
+  /* Recettes : la barre colle à sa position de repos (marge 8 + bordure 1 +
+     padding 6 du cadre) et ne bouge donc plus du tout au défilement. À 4px elle
+     remontait de 11px et dépassait du haut du cadre, qui lui reste fixe. Les
+     autres onglets gardent 4px : rien n'y masque le contenu qui passerait dans
+     les 15px au-dessus d'elle (ici c'est .list-chips::before qui s'en charge). */
+  body:has(#tab-recipes.active) .topbar { top: 15px; }
   .cmd-search { order: 10; flex-basis: 100%; padding: 8px 14px; }
   .cmd-btn-label, .topbar-cart-label, .cmd-brand-count { display: none; }
   .cmd-sep { display: none; }
@@ -3022,7 +3028,10 @@ select.bug-tab-select option{background:#fff;color:var(--text);font-weight:500;t
      quand la recherche se replie, aucune constante ne tiendrait. */
   .list-chips {
     position: sticky;
-    top: calc(var(--topbar-h, 112px) + 10px);
+    /* = position de repos : 15px (barre) + sa hauteur + 10px de marge + 1px de
+       bordure de la carte. Les puces ne se déplacent donc jamais par rapport à
+       la barre, seules les lignes glissent dessous. */
+    top: calc(var(--topbar-h, 112px) + 26px);
     z-index: 20;   /* au-dessus des lignes, sous la topbar (100) */
     display: flex;
     /* Passage à la ligne, PAS de défilement horizontal : avec un filtre actif
@@ -3033,11 +3042,21 @@ select.bug-tab-select option{background:#fff;color:var(--text);font-weight:500;t
     gap: 8px;
     padding: 10px 12px;
     border-bottom: 1px solid var(--border-soft);
-    /* Barre qui RECOUVRE les lignes en défilant : --menu-fill, pas --glass-fill,
-       sinon le texte des recettes reste lisible au travers en style « Contour ». */
-    background: var(--menu-fill);
-    -webkit-backdrop-filter: blur(var(--blur-md));
-    backdrop-filter: blur(var(--blur-md));
+    /* Barre qui RECOUVRE les lignes en défilant : fond OPAQUE (--bg-2). Même
+       --menu-fill (98 %) laissait deviner le texte des recettes au travers. */
+    background: var(--bg-2);
+  }
+  /* Prolonge le fond des puces vers le haut, derrière la barre : sans lui les
+     lignes réapparaissaient dans les 10px entre la barre et les puces, et autour
+     des coins arrondis de la barre. Au repos il est hors de la carte, donc
+     invisible (.recipe-list est en overflow:clip) ; il se découvre à mesure que
+     le haut de la carte remonte. */
+  .list-chips::before {
+    content: "";
+    position: absolute;
+    left: 0; right: 0; bottom: 100%;
+    height: calc(var(--topbar-h, 112px) + 40px);
+    background: inherit;
   }
   .list-chip {
     display: inline-flex;
