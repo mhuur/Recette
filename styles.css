@@ -3025,6 +3025,11 @@ select.bug-tab-select option{background:#fff;color:var(--text);font-weight:500;t
     top: calc(var(--topbar-h, 112px) + 10px);
     z-index: 20;   /* au-dessus des lignes, sous la topbar (100) */
     display: flex;
+    /* Passage à la ligne, PAS de défilement horizontal : avec un filtre actif
+       (badge + puce « Effacer ») les 4 puces font ~414px pour ~286px utiles sur
+       un écran de 360px, et « Sélection » sortait de l'écran sans que rien
+       n'indique qu'on pouvait faire défiler. */
+    flex-wrap: wrap;
     gap: 8px;
     padding: 10px 12px;
     border-bottom: 1px solid var(--border-soft);
@@ -3033,10 +3038,7 @@ select.bug-tab-select option{background:#fff;color:var(--text);font-weight:500;t
     background: var(--menu-fill);
     -webkit-backdrop-filter: blur(var(--blur-md));
     backdrop-filter: blur(var(--blur-md));
-    overflow-x: auto;
-    scrollbar-width: none;
   }
-  .list-chips::-webkit-scrollbar { display: none; }
   .list-chip {
     display: inline-flex;
     align-items: center;
